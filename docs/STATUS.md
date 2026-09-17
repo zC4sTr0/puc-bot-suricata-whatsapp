@@ -12,7 +12,7 @@ Canário: **concluído sem entrega** — Job existente `suricata-canario-prod`, 
 
 Corte controlado: **concluído sem entrega real** — o Job de produção foi atualizado somente para o digest candidato e `SURICATA_ENTREGA=desligada`; nenhum secret, IAM, args, frequência ou sessão foi alterado. O digest anterior de rollback é `sha256:9622db22436d366a2b1b6224479eb5b3b6c5a66da4f5a8fe5da468216de763c3`.
 
-Observação: **passou** — execução controlada `suricata-rodada-t2nsm` completou com `succeededCount=1`, entre `20:21:35Z` e `20:21:50Z`. Foram encontrados dois relatórios sanitizados, `eventos=[]`, `coleta.falhas=[]` e erro nulo; não houve chamada/ACK de entrega observável nos logs. Isso não prova entrega WhatsApp, que permaneceu desligada.
+Observação: **passou** — execução controlada `suricata-rodada-t2nsm` completou com `succeededCount=1`, entre `20:21:35Z` e `20:21:50Z`. Foram encontrados dois relatórios sanitizados, `eventos=[]`, `coleta.falhas=[]` e erro nulo; não houve chamada/ACK de entrega observável nos logs. A observação posterior também confirmou `suricata-rodada-4w22x` com `succeeded=1`. Isso não prova entrega WhatsApp, que permaneceu desligada.
 
 Scheduler: **verificado** — existe exatamente um Scheduler Suricata, `suricata-rodada-10min`, `ENABLED`, `*/10 * * * *`, timezone `America/Sao_Paulo`, apontando para o Job de produção.
 
