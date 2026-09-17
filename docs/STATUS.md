@@ -1,13 +1,21 @@
 # Status Suricata
 
-Código local: **verificado no clone independente** — `compileall`, `pytest`, `unittest`, Node e shadow passaram no commit `203f0a3`.
+Última verificação: **2026-09-17**, read-back GitHub/GCP e execução controlada do Job.
 
-Infraestrutura: **verificada por read-back em 2026-09-17** — projeto Suricata `ACTIVE`, Job principal `Ready=True`, Scheduler único `ENABLED`, Artifact Registry e service account no namespace Suricata. IAM least-privilege não verificado.
+Código local e GitHub: **verificados** — PR `#1` foi aprovado por `zc4str0-revisor-bot` (identidade distinta do autor), com CI verde no SHA `561aa0b0656a83a37a94cd1be3bab33d92f6e199`, e merge squash confirmado no commit `30c5b2ff310a49a5cd57acd659676a0973cdeee6` da `main`. A árvore local permanece sem alterações de código.
 
-Build independente: **concluído** — Cloud Build `1e200017-3da4-4c6e-8302-12f478b2e636`, commit `203f0a3`, imagem `southamerica-east1-docker.pkg.dev/suricata-college-20260913/suricata/suricata`, digest `sha256:6071de09eb357e35f091173407760aabda091b5eb8f0f3e2c533dae9caa32f98`. O primeiro destino tentado estava incorreto e falhou sem alterar produção; o segundo usou o repositório Artifact Registry confirmado e passou.
+Build independente: **concluído** — Cloud Build `1e200017-3da4-4c6e-8302-12f478b2e636`, commit de origem `203f0a3`, imagem `southamerica-east1-docker.pkg.dev/suricata-college-20260913/suricata/suricata`, digest `sha256:6071de09eb357e35f091173407760aabda091b5eb8f0f3e2c533dae9caa32f98`. O Artifact Registry confirmou o digest. A árvore de entrada da imagem permaneceu idêntica entre `203f0a3` e a `main` promovida.
 
-Canário: **concluído sem entrega** — Job existente `suricata-canario-prod`, geração `2`, digest novo, args `--mode rodada`, `SURICATA_ENTREGA=desligada`, `maxRetries=0`, timeout `300s`; execução `suricata-canario-prod-8mx8z` terminou `succeededCount=1` em aproximadamente 17s. Nenhum Scheduler aponta para o canário.
+Infraestrutura: **verificada por read-back** — projeto `suricata-college-20260913`, região `southamerica-east1`, Job `suricata-rodada` na geração `24`, uma task, `maxRetries=1`, timeout `240s`, args `--mode rodada` e service account Suricata existente. IAM least-privilege não verificado.
 
-Produção e entrega: **não cortadas** — o Job `suricata-rodada` continua no digest anterior `sha256:9622db22436d366a2b1b6224479eb5b3b6c5a66da4f5a8fe5da468216de763c3`, com args `--mode rodada`; o único Scheduler continua `suricata-rodada-10min`. Nenhuma entrega real foi ativada a partir do novo repo.
+Canário: **concluído sem entrega** — Job existente `suricata-canario-prod`, geração `2`, digest novo, args `--mode rodada`, `SURICATA_ENTREGA=desligada`, `maxRetries=0`, timeout `300s`; execução anterior terminou com `succeededCount=1`. Nenhum Scheduler aponta para o canário.
 
-GitHub: **privado e publicado** em `https://github.com/zC4sTr0/suricata-whatsapp`; PR `#1` aberto, CI verde, aguardando review independente antes do merge. Nenhum segredo foi lido.
+Corte controlado: **concluído sem entrega real** — o Job de produção foi atualizado somente para o digest candidato e `SURICATA_ENTREGA=desligada`; nenhum secret, IAM, args, frequência ou sessão foi alterado. O digest anterior de rollback é `sha256:9622db22436d366a2b1b6224479eb5b3b6c5a66da4f5a8fe5da468216de763c3`.
+
+Observação: **passou** — execução controlada `suricata-rodada-t2nsm` completou com `succeededCount=1`, entre `20:21:35Z` e `20:21:50Z`. Foram encontrados dois relatórios sanitizados, `eventos=[]`, `coleta.falhas=[]` e erro nulo; não houve chamada/ACK de entrega observável nos logs. Isso não prova entrega WhatsApp, que permaneceu desligada.
+
+Scheduler: **verificado** — existe exatamente um Scheduler Suricata, `suricata-rodada-10min`, `ENABLED`, `*/10 * * * *`, timezone `America/Sao_Paulo`, apontando para o Job de produção.
+
+Repositório acadêmico: **intocado** — a limpeza permanece bloqueada até os gates finais de proveniência, rollback e validação completa.
+
+Segredos: **não lidos nem expostos** — somente nomes/metadados necessários foram consultados.
