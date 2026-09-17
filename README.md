@@ -44,10 +44,18 @@ Use variáveis de ambiente ou Secret Manager: `SURICATA_CANVAS_TOKEN`, `SURICATA
 
 O CI está em `.github/workflows/suricata.yml`. O build usa o `Dockerfile` da raiz e o lockfile Node. Para deploy, siga `docs/DEPLOYMENT.md`: build por digest, read-back do Job/Scheduler, canário desligado, rollback pela imagem anterior e nenhum scheduler duplicado.
 
-## Parar e reverter
+## 6. Retomada e continuidade
+
+O roteiro executável para um agente sem o histórico desta conversa está em
+`docs/PLANO-CONTINUIDADE-INDEPENDENTE.md`. Ele deve ser lido junto com
+`docs/PLANO-EXTRACAO-SURICATA.md` e `docs/STATUS.md`. O plano histórico
+`docs/PLANO-SURICATA-WHATSAPP.md` é referência de contratos e não autoriza
+comandos do Bot pessoal ou ações externas por cópia.
+
+## 7. Parar e reverter
 
 Não desligue recursos por suposição. Em incidente, desligue entrega no caminho autorizado, preserve estado/outbox e faça read-back. Rollback significa apontar o Job para o digest anterior conhecido, verificar a configuração e observar a próxima execução; nunca reescreva histórico nem apague estado.
 
-## Retomada
+## 8. Retomada rápida
 
-Um agente novo deve começar por `AGENTS.md`, `docs/PLANO-EXTRACAO-SURICATA.md` e `docs/STATUS.md`, executar a matriz de verificação e continuar a primeira etapa pendente.
+Um agente novo deve começar por `AGENTS.md`, `docs/PLANO-CONTINUIDADE-INDEPENDENTE.md`, `docs/PLANO-EXTRACAO-SURICATA.md` e `docs/STATUS.md`, executar a matriz de verificação e continuar a primeira etapa pendente.
