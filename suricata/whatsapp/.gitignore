@@ -1,0 +1,6 @@
+node_modules/
+.wa-auth/
+grupos.json
+*.hermes-update-staging
+*.bak
+*.log

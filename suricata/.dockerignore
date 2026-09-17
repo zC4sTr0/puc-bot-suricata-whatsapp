@@ -1,0 +1,45 @@
+# Dependências geradas localmente
+whatsapp/node_modules/
+**/node_modules/
+**/__pycache__/
+*.pyc
+
+# Segredos, autenticação e sessões — nunca entram na imagem
+auth.json
+**/auth.json
+.env
+.env.*
+.wa-auth*/
+**/.wa-auth*/
+**/auth/
+**/session/
+**/sessions/
+**/*session*/
+**/auth_info_baileys/
+**/logs/
+
+# Estado, chaves, QR e temporários
+*.log
+*.db
+*.db-*
+**/*.db
+**/*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.pem
+*.key
+*.qr
+*qr*.png
+qr*.txt
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+grupos.json
+**/grupos.json
+
+# Metadados de controle de versão
+.git/

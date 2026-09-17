@@ -1,0 +1,24 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+.env
+.env.*
+
+# WhatsApp, estado e segredos
+**/node_modules/
+**/.wa-auth*/
+**/auth.json
+**/qr.png
+**/grupos.json
+**/*session*/
+**/session/
+**/sessions/
+**/*.db
+**/*.sqlite*
+**/*.log
+**/*.bak
+
+# Build local
+dist/
+build/
