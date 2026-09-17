@@ -100,12 +100,16 @@ Após cada subpasso, atualizar `Último passo concluído`, `Evidência` e
 
 ---
 
+> Este plano começou no repositório acadêmico e foi preservado como histórico
+> da extração. Para executar a continuidade no repositório independente, use
+> primeiro `docs/PLANO-CONTINUIDADE-INDEPENDENTE.md` e `docs/STATUS.md`.
+
 ## 3. Retomada obrigatória após perda de contexto
 
 Execute sempre a partir da raiz:
 
 ```powershell
-Set-Location C:\GIT\puc-ciencia-dados-ia
+Set-Location C:\GIT\suricata-whatsapp
 Get-Content docs\PLANO-EXTRACAO-SURICATA.md
 git status --short
 git log --oneline -10

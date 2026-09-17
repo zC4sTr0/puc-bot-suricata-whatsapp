@@ -5,10 +5,10 @@
 > §R (retomada), corrija o registro de progresso para o estado real e continue do primeiro passo
 > não concluído.
 >
-> Runbook executável por uma IA sem contexto. Escrito em 2026-09-13 a partir da auditoria do repo
-> e das decisões do titular na mesma data. O porquê das regras gerais está no
-> [plano mestre](PLANO-BOT-ACADEMICO.md); a infraestrutura Cloud Run já existente está em
-> [`PLANO-NUVEM-CLOUD-RUN.md`](PLANO-NUVEM-CLOUD-RUN.md). **Para o grupo da turma, este plano vence.**
+> Referência histórica de contratos da Suricata. Não execute comandos deste
+> arquivo por cópia: a retomada e o deploy no repositório independente são
+> regidos por `PLANO-CONTINUIDADE-INDEPENDENTE.md`, `STATUS.md` e
+> `DEPLOYMENT.md`. Nenhum arquivo do Bot pessoal é requisito deste repo.
 
 > **Emenda de isolamento — 2026-09-14:** este produto é separado do Bot acadêmico
 > pessoal do Telegram. Antes de S1, a implementação deve ser migrada para a raiz
@@ -81,22 +81,12 @@ Legenda: ⏳ pendente · 🔄 em andamento · ✅ concluída · ⛔ bloqueada (m
 ## §R. Retomada (rode sempre antes de agir)
 
 1. `git status -sb && git log --oneline -5` — anote o que mudou desde a última evidência do registro.
-2. Leia, nesta ordem: `AGENTS.md`; este arquivo inteiro; `docs/PLANO-BOT-ACADEMICO.md` §1, §5 e §7;
-   **`docs/audits/suricata-auditoria-caminho-real-2026-09-14.md`** (a suíte verde não prova o produto:
-   rode `python -m unittest suricata.tests.test_caminho_real_e2e` e registre a
-   contagem/resultado real; não procure `expectedFailure` como gate vivo, pois
-   os testes atuais não usam esse decorador. Nenhuma etapa S1–S9 fica ✅ sem
-   evidência do artefato e do estado externo correspondente).
-3. Estado real da nuvem (somente leitura; `G` = gcloud):
-   ```bash
-   G="/c/Users/C4sTr/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud"
-   "$G" scheduler jobs list --location southamerica-east1 --project puc-bot-20260912
-   "$G" run jobs list --region southamerica-east1 --project puc-bot-20260912
-   "$G" run jobs executions list --job academico-sentinela --region southamerica-east1 --limit 6
-   "$G" storage ls gs://puc-bot-20260912-estado/ gs://puc-bot-20260912-estado/whatsapp/ 2>&1
-   "$G" storage cat gs://puc-bot-20260912-estado/ultima-sentinela.json
-   ```
-4. Suíte: `python -m unittest discover -s scripts/academico/tests` (sem `PYTHONIOENCODING` exportado).
+2. Leia, nesta ordem: `AGENTS.md` quando disponível; `docs/PLANO-CONTINUIDADE-INDEPENDENTE.md`;
+   `docs/STATUS.md`; `docs/DEPLOYMENT.md`; e este arquivo somente como referência de contrato.
+   A suíte verde não prova o produto: não marque etapa sem evidência do artefato e do estado externo correspondente.
+3. Estado real da nuvem (somente leitura; `G` = gcloud). Use o projeto, Job e bucket Suricata
+   confirmados por read-back; nunca copie valores do Bot pessoal nem snapshots antigos.
+4. Suíte: `python -m pytest -q suricata/tests` e `node --test suricata/tests/*.mjs suricata/whatsapp/tests/*.mjs`.
 5. Compare a realidade com o registro. Se divergirem, **a realidade vence**: corrija a tabela (com a
    evidência do passo 3/4) antes de continuar. Se o registro diz ✅ e a nuvem contradiz, marque 🔄 e
    refaça a verificação da etapa.
@@ -691,9 +681,10 @@ eventos ficam `pending` e saem sozinhos depois do novo QR, se ainda não tiverem
 
 ## S9 — Fechamento da documentação
 
-- `docs/PLANO-BOT-ACADEMICO.md`: §2 linha "WhatsApp (grupo da turma)" com o estado real; §5 com
-  F42–F46; §7 com D18–D25 já registradas (confira); WP-11 ✅ apontando para este plano.
-- `docs/ACADEMICO-BOT-CRON.md`: nova seção "Suricata" com agenda 24/7, custos medidos e comandos de log.
+- Documentação externa do repo acadêmico: não é requisito deste clone. O estado
+  Suricata é mantido em `docs/STATUS.md` e as decisões executáveis em
+  `docs/PLANO-CONTINUIDADE-INDEPENDENTE.md`.
+- `docs/ACADEMICO-BOT-CRON.md`: não copiar nem consultar; pertence ao Bot pessoal.
 - `suricata/README.md`: uma linha na tabela "Em uma tela" para o grupo.
 - Commit `docs(bot): suricata operando no grupo da turma`. Registro → S9 ✅.
 

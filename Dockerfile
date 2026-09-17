@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 FROM node:22-bookworm-slim
 ENV NODE_ENV=production PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
-RUN apt-get update && apt-get install --no-install-recommends -y python3 git openssh-client ca-certificates tzdata && rm -rf /var/lib/apt/lists/* && useradd --create-home --uid 10001 --shell /usr/sbin/nologin suricata
+RUN apt-get update && apt-get install --no-install-recommends -y python3 git ca-certificates tzdata && rm -rf /var/lib/apt/lists/* && useradd --create-home --uid 10001 --shell /usr/sbin/nologin suricata
 WORKDIR /app
 COPY suricata/whatsapp/package.json suricata/whatsapp/package-lock.json /app/suricata/whatsapp/
 RUN npm ci --omit=dev --ignore-scripts --prefix /app/suricata/whatsapp && npm cache clean --force
