@@ -6,12 +6,13 @@
 
 1. Produto, fronteiras e comandos offline: [`README.md`](README.md).
 2. Entrada, modos e configuração: [`ARCHITECTURE.md`](ARCHITECTURE.md).
-3. Pré-voo, parada e gates humanos: [`RUNBOOK.md`](RUNBOOK.md).
-4. Testes e limites da evidência: [`tests/README.md`](tests/README.md).
-5. WhatsApp/Node: [`whatsapp/README.md`](whatsapp/README.md).
-6. Índice geral, estado e deploy: [`../docs/README.md`](../docs/README.md), [`../docs/STATUS.md`](../docs/STATUS.md) e [`../docs/DEPLOYMENT.md`](../docs/DEPLOYMENT.md).
-7. Plano histórico e decisões datadas: [`../docs/PLANO-SURICATA-WHATSAPP.md`](../docs/PLANO-SURICATA-WHATSAPP.md).
-8. Isolamento declarativo: [`infra/README.md`](infra/README.md) e [`infra/isolamento.json`](infra/isolamento.json).
+3. Contratos que uma refatoração deve preservar: [`../docs/CONTRACTS.md`](../docs/CONTRACTS.md).
+4. Pré-voo, parada e gates humanos: [`RUNBOOK.md`](RUNBOOK.md).
+5. Testes e limites da evidência: [`tests/README.md`](tests/README.md).
+6. WhatsApp/Node: [`whatsapp/README.md`](whatsapp/README.md).
+7. Índice geral, estado e deploy: [`../docs/README.md`](../docs/README.md), [`../docs/STATUS.md`](../docs/STATUS.md) e [`../docs/DEPLOYMENT.md`](../docs/DEPLOYMENT.md).
+8. Plano histórico e decisões datadas: [`../docs/PLANO-SURICATA-WHATSAPP.md`](../docs/PLANO-SURICATA-WHATSAPP.md).
+9. Isolamento declarativo: [`infra/README.md`](infra/README.md) e [`infra/isolamento.json`](infra/isolamento.json).
 
 ## Distinções obrigatórias
 
