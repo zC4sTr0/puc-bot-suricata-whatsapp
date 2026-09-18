@@ -123,7 +123,7 @@ Data da evidência: **2026-09-17**.
 - Publicador: `deploy/publicar_agenda.py`, com destino único vindo de
   `SURICATA_ESTADO_URI`.
 - Plano integral de extração: `docs/PLANO-EXTRACAO-SURICATA.md`.
-- Inventário: `docs/INVENTARIO-EXTRACAO-SURICATA.md` ficou no repo acadêmico.
+- Inventário: o documento detalhado `INVENTARIO-EXTRACAO-SURICATA.md` ficou no repo acadêmico; este clone usa o índice e a árvore versionada atuais como fonte de inventário.
 
 ### 3.3 Gates já executados
 

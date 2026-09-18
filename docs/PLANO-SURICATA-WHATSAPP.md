@@ -5,6 +5,8 @@
 > §R (retomada), corrija o registro de progresso para o estado real e continue do primeiro passo
 > não concluído.
 >
+> **Documento histórico:** referências a caminhos do repo acadêmico, auditorias não versionadas e snapshots abaixo preservam a proveniência da execução original; não são comandos atuais. Para o estado executável, use `docs/PLANO-CONTINUIDADE-INDEPENDENTE.md`, `docs/STATUS.md`, `docs/DEPLOYMENT.md` e `suricata/RUNBOOK.md`.
+>
 > Referência histórica de contratos da Suricata. Não execute comandos deste
 > arquivo por cópia: a retomada e o deploy no repositório independente são
 > regidos por `PLANO-CONTINUIDADE-INDEPENDENTE.md`, `STATUS.md` e
@@ -45,7 +47,7 @@ data, evidência curta). Nunca marque ✅ sem a evidência pedida.
 | S6 | Imagem, Job, Scheduler, sombra | ✅ | digest `sha256:7afd7228…d134` | 2026-09-14 | Job `suricata-rodada`; sombra `concluida` antes de ligar entrega |
 | S7 | Linha de base e ativação | 🔄 | entrega ligada para **"teste bot"** | 2026-09-14 | 2 provas reais publicadas 13:55 detectadas e enviadas (atraso inflado pelos bugs corrigidos no mesmo dia) |
 | S8 | Vigilância | 🔄 | alertas Cloud Monitoring por e-mail: "Suricata: rodada falhando" (≥ 2 execuções com falha em 20 min) e "Suricata: rodada parada" (nenhuma execução em 30 min) | 2026-09-14 | falta aviso "sem visão" no grupo e aviso de sessão caída no Telegram (D24) |
-| S9 | Documentação | 🔄 | auditoria `docs/audits/suricata-auditoria-caminho-real-2026-09-14.md` | 2026-09-14 | — |
+| S9 | Documentação | 🔄 | auditoria histórica externa ao clone; estado atual em `docs/STATUS.md` | 2026-09-14 | — |
 
 **Estado real (2026-09-14 14:10):** a Suricata roda sozinha no Cloud Run a cada 10 min, 24/7,
 entregando no grupo **de teste**. O caminho de produção é `python -m suricata --mode rodada`
