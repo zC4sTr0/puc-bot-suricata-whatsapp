@@ -85,7 +85,7 @@ class CaminhoRealTests(unittest.TestCase):
 
     def test_producao_nao_depende_da_cli_gcloud_nem_de_lock_windows(self):
         """A imagem não tem ``gcloud``; o container é Linux e efêmero."""
-        for modulo in ("rodada.py", "storage/gcs.py", "publico.py", "grupos.py"):
+        for modulo in ("rodada.py", "storage/gcs.py", "publico.py"):
             fonte = (RAIZ / modulo).read_text(encoding="utf-8")
             self.assertNotIn("CreateMutexW", fonte, modulo)
             self.assertNotIn("storage.cas import SuricataSessionStorage", fonte, modulo)

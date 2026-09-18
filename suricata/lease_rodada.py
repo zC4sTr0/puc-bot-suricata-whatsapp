@@ -1,8 +1,7 @@
 """Lease da rodada ativa da Suricata.
 
-Este módulo é deliberadamente separado de ``suricata.lease``, que contém o
-lease legado com outro contrato de armazenamento. O contrato ativo usa CAS,
-o documento ``locks/rodada.lock`` e os campos ``dono``/``inicio``.
+O contrato ativo usa CAS, o documento ``locks/rodada.lock`` e os campos
+``dono``/``inicio``.
 """
 from __future__ import annotations
 

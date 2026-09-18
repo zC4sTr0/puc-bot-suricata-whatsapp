@@ -35,25 +35,15 @@ python -m suricata --mode shadow
 
 Esperado: uma linha JSON com `mode=shadow`, `status=ok`, `adapter=none`, código 0. Isso prova apenas que o roteador local respondeu. Não consulta Canvas, GCS ou WhatsApp.
 
-### Sombra funcional `sentinela`
-
-```bash
-python -m suricata --mode sentinela --config suricata/config.example.json
-```
-
-O arquivo é um exemplo com oferta placeholder `00000000`; ele não representa uma execução real válida. Para uma execução funcional, use cópia temporária com IDs públicos confirmados e token fornecido pelo ambiente, nunca no arquivo. O resultado esperado é relatório sanitizado; falha de Canvas deve permanecer falha, não “ausência confirmada”. Não configure entrega por esse caminho.
-
 ### Rodada funcional
 
 ```bash
 SURICATA_ENTREGA=desligada python -m suricata --mode rodada
 ```
 
-Use somente com estado e token de teste controlados. `desligada` é um bloqueio de entrega, não prova de que toda integração externa esteja ausente. Para simulação determinística, prefira os testes/fixtures de [`tests/README.md`](tests/README.md), com Canvas, relógio, memória e ponte falsos.
+Use somente com estado e token de teste controlados. `desligada` é um bloqueio de entrega, não prova de que toda integração externa esteja ausente. Para simulação determinística, prefira `--mode demo` ou os testes/fixtures de [`tests/README.md`](tests/README.md), com Canvas, relógio, memória e ponte falsos.
 
-### Modos com cautela
-
-`--mode grupos` pode consultar sessão/estado para inventário; não o trate como puramente offline. `--mode teste-envio` produz efeito externo e não deve ser usado neste pré-voo.
+Os modos `sentinela`, `grupos` e `teste-envio` foram removidos na simplificação de modos de 2026-09-18; procedimentos que os usavam estão no histórico do git.
 
 ## 3. Comandos read-only de nuvem
 

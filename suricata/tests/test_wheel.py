@@ -44,7 +44,7 @@ MINIMUM_PYTHON = (3, 11)
 _PACKAGING_HINT = (
     "O wheel NÃO contém: {missing}. Causa provável: pyproject.toml declara "
     '[tool.setuptools] packages = ["suricata"], o que exclui subpacotes '
-    "(legacy, whatsapp, tests, notifiers, storage, infra) e arquivos de dados "
+    "(whatsapp, tests, storage, infra) e arquivos de dados "
     "(.mjs/.json). Com isso o wheel instalado não é utilizável. A correção "
     "exige descoberta de pacotes (find:) + package-data no pyproject.toml."
 )

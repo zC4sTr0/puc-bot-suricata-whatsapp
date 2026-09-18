@@ -5,11 +5,10 @@ Este documento descreve interfaces observáveis que uma refatoração deve prese
 ## Entrada
 
 - `python -m suricata --mode shadow` é a probe local sem efeitos.
-- `python -m suricata --mode rodada` é o caminho funcional; configuração vem do ambiente.
-- `sentinela` exige `--config`; `grupos` é diagnóstico; `teste-envio` tem efeito externo.
-- `demo` roda a rodada offline com fixtures congeladas e entrega desligada; não exige variáveis.
+- `python -m suricata --mode demo` roda a rodada offline com fixtures congeladas e entrega desligada; não exige variáveis.
+- `python -m suricata --mode rodada` é o caminho funcional canônico; configuração vem do ambiente.
 - `--help`/`-h` imprime os modos e termina em zero; tem precedência sobre o parse.
-- Argumentos inválidos e configuração inválida terminam com código não-zero e erro sanitizado; as mensagens de erro são acionáveis (apontam `--help`, `config.example.json` ou diretório local como estado) e os valores exatos estão congelados em `suricata/tests/test_cli_contract.py` e `test_emit_schema.py`.
+- Argumentos inválidos e configuração inválida terminam com código não-zero e erro sanitizado; as mensagens de erro são acionáveis (apontam `--help` ou o ambiente) e os valores exatos estão congelados em `suricata/tests/test_cli_contract.py` e `test_emit_schema.py`.
 
 ## Fronteira Python → Node
 
@@ -23,8 +22,8 @@ Este documento descreve interfaces observáveis que uma refatoração deve prese
 - O caminho da rodada preserva `pending → in_flight → sent`; falha/timeout não confirma envio.
 - O corte é em `America/Sao_Paulo`: mensagens comuns não atravessam 21:00–06:59.
 - Lease, geração/CAS, memória e outbox são contratos de concorrência; adapters concretos não podem vazar para as regras puras.
-- Existem DOIS leases com contratos distintos: `suricata/lease_rodada.py` (ativo na rodada; payload ilegível é abandonado, nunca um lease preso) e `suricata/legacy/lease.py` (legado; payload ilegível é fail-closed com `RuntimeError`). Não unificar sem snapshot de paridade; ambos congelados por `test_lease_rodada.py` e `test_lease.py`.
-- `domain.EXCLUIDAS` e `coleta.EXCLUIDAS` têm o mesmo nome com conjuntos e propósitos diferentes (fronteira pública vs. filtro de coleta); não são duplicatas — mudar um não autoriza mudar o outro.
+- O lease da rodada é `suricata/lease_rodada.py`: payload ilegível é abandonado, nunca um lease preso. O lease legado foi removido com a família sentinela em 2026-09-18; o contrato vigente está congelado por `test_lease_rodada.py`.
+- `coleta.EXCLUIDAS` é o filtro de coleta; mudá-lo muda o que chega ao planejamento.
 - Coleta parcial não é ausência confirmada.
 
 ## Configuração e segredo

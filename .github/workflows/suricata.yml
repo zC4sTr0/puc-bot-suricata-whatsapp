@@ -23,7 +23,7 @@ jobs:
         with: {python-version: '3.12'}
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with: {node-version: '22', cache: npm, cache-dependency-path: suricata/whatsapp/package-lock.json}
-      - run: python -m pip install --disable-pip-version-check --no-input 'pytest==8.3.5'
+      - run: python -m pip install --disable-pip-version-check --no-input 'pytest==8.3.5' build
       - run: npm ci --prefix suricata/whatsapp --ignore-scripts --no-audit --no-fund
       - run: python -m pytest -q suricata/tests
       - run: python -m unittest discover -s suricata/tests

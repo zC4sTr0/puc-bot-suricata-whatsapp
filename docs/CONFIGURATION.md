@@ -11,4 +11,4 @@
 
 ## Regras
 
-O arquivo `suricata/config.example.json` é somente exemplo do modo `sentinela`. Segredos vêm do ambiente. Recursos GCP devem usar o namespace Suricata e permissões mínimas. Antes de uma alteração, faça read-back do recurso exato.
+Toda configuração funcional vem do ambiente do processo ou do Secret Manager; não existe arquivo de configuração de modo (o `config.example.json` do modo `sentinela` foi removido na simplificação de 2026-09-18, junto com o próprio modo). Recursos GCP devem usar o namespace Suricata e permissões mínimas. Antes de uma alteração, faça read-back do recurso exato.

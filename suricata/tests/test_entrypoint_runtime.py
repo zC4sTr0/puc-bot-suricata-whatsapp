@@ -1,92 +1,49 @@
+"""Cobertura do runtime dos modos restantes via entrypoint (sem sentinela).
+
+O caminho ``rodada`` é exercitado em processo com o ambiente controlado
+(nenhuma variável ``SURICATA_*``): sem ``SURICATA_ESTADO_URI`` a rodada
+falha em código 5 (armazenamento) antes de qualquer rede, sessão ou ponte.
+"""
 import contextlib
 import io
 import json
-import tempfile
+import os
 import unittest
-from pathlib import Path
+from unittest.mock import patch
 
 from suricata import entrypoint
-from suricata.adapter import PublicCollection, PublicResponse
-
-
-class FakeReadOnlyAdapter:
-    def __init__(self, planner=200, assignments=None):
-        self.planner = planner
-        self.assignments = assignments or {}
-        self.calls = []
-
-    def coletar(self, ofertas):
-        ofertas = tuple(ofertas)
-        self.calls.append(ofertas)
-        planner = PublicResponse(self.planner, ({"id": "planner"},) if self.planner == 200 else ())
-        responses = {
-            oferta: PublicResponse(200, tuple(self.assignments.get(oferta, ())))
-            for oferta in ofertas
-        }
-        return PublicCollection(planner, responses)
 
 
 class EntrypointRuntimeTests(unittest.TestCase):
-    def invoke(self, config, factory):
-        with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "config.json"
-            path.write_text(json.dumps(config), encoding="utf-8")
-            output = io.StringIO()
-            with contextlib.redirect_stdout(output):
-                code = entrypoint.main(("--mode", "sentinela", "--config", str(path)), client_factory=factory)
-            return code, json.loads(output.getvalue())
+    def _sem_ambiente_suricata(self):
+        ambiente = {
+            key: value
+            for key, value in os.environ.items()
+            if not key.upper().startswith("SURICATA_")
+        }
+        return patch.dict(os.environ, ambiente, clear=True)
 
-    def test_adapter_collection_mapeia_quiz_publico_sem_segredos(self):
-        adapter = FakeReadOnlyAdapter(assignments={"oferta-a": ({
-            "id": "assignment-7", "name": "Quiz relâmpago", "quiz_id": "quiz-8",
-            "unlock_at": "2026-09-14T12:00:00Z",
-        },)})
-        code, record = self.invoke({"ofertas": ["oferta-a"]}, lambda **_: adapter)
+    def test_rodada_sem_estado_uri_retorna_exit_5_do_runtime(self):
+        output = io.StringIO()
+        with self._sem_ambiente_suricata(), contextlib.redirect_stdout(output):
+            code = entrypoint.main(["--mode", "rodada"])
+        self.assertEqual(code, 5)
+        payload = json.loads(output.getvalue())
+        self.assertEqual(payload["estado"], "erro")
+        self.assertIn("SURICATA_ESTADO_URI", payload["erro"])
+
+    def test_rodada_dispatch_retorna_codigo_do_runtime(self):
+        with self._sem_ambiente_suricata():
+            with patch("suricata.rodada.main", return_value=7) as rodada_main:
+                self.assertEqual(entrypoint.main(["--mode", "rodada"]), 7)
+        rodada_main.assert_called_once_with()
+
+    def test_demo_dispatch_retorna_zero(self):
+        output = io.StringIO()
+        with self._sem_ambiente_suricata(), contextlib.redirect_stdout(output):
+            code = entrypoint.main(["--mode", "demo"])
         self.assertEqual(code, 0)
-        report = record["relatorio"]
-        self.assertEqual(report["coleta"]["assignments"], 1)
-        self.assertEqual(report["projetados"], 1)
-        self.assertEqual(report["decisoes"][0]["event_id"], "canvas:pucminas:course:oferta-a:assignment:assignment-7")
-        self.assertEqual(adapter.calls, [("oferta-a",)])
-        self.assertNotIn("token", json.dumps(record).casefold())
-
-    def test_planner_indisponivel_e_fail_closed(self):
-        adapter = FakeReadOnlyAdapter(planner=503, assignments={"A": ({"id": "vazamento"},)})
-        code, record = self.invoke({"ofertas": ["A"]}, lambda **_: adapter)
-        self.assertEqual(code, 0)
-        report = record["relatorio"]
-        self.assertEqual(report["estado"], "indisponivel")
-        self.assertEqual(report["coleta"]["assignments"], 0)
-        self.assertEqual(report["projetados"], 0)
-        self.assertEqual(report["avisos"], 0)
-
-    def test_state_writer_so_e_criado_com_path_explicito(self):
-        with tempfile.TemporaryDirectory() as directory:
-            state_path = Path(directory) / "estado"
-            adapter = FakeReadOnlyAdapter()
-            config = {"ofertas": ["A"], "estado": {"path": str(state_path)}}
-            path = Path(directory) / "config.json"
-            path.write_text(json.dumps(config), encoding="utf-8")
-            output = io.StringIO()
-            with contextlib.redirect_stdout(output):
-                code = entrypoint.main(("--mode", "sentinela", "--config", str(path)), client_factory=lambda **_: adapter)
-            self.assertEqual(code, 0)
-            self.assertTrue((state_path / "heartbeat.json").exists())
-
-    def test_cliente_recebe_somente_timeout_e_origin_sem_token(self):
-        received = []
-
-        class Client:
-            def __init__(self, **kwargs):
-                received.append(kwargs)
-
-            def assignments(self, _oferta):
-                raise AssertionError("planner deve bloquear o cliente sem adapter")
-
-        code, record = self.invoke({"ofertas": ["A"], "canvas": {"timeout": 4}}, Client)
-        self.assertEqual(code, 0)
-        self.assertEqual(received, [{"timeout": 4.0}])
-        self.assertEqual(record["relatorio"]["estado"], "parcial")
+        self.assertIn("modo demo", output.getvalue())
 
 
 if __name__ == "__main__":

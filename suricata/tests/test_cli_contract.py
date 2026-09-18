@@ -7,16 +7,14 @@ de saída e o JSON exato impresso em stdout (parse + asserção chave a chave).
 
 Exit 3 (``Canvas indisponível``) não é comparável offline: o allowlist de
 origem em ``suricata/canvas.py`` só aceita ``https://pucminas.instructure.com``
-(hostname idêntico ao ``ORIGIN``, HTTPS, porta 443/None). Um servidor local em
-127.0.0.1 nunca passa pela validação — origens não allowlisted resultam em
-exit 2 (``configuração inválida``) antes de qualquer rede — e exercitar o
-caminho de rede exigiria a origem externa real, proibida pelas regras do repo.
+(hostname idêntico ao ``ORIGIN``, HTTPS, porta 443/None) e exercitar o
+caminho de rede exigiria a origem externa real, proibida pelas regras do
+repo.
 """
 import json
 import os
 import subprocess
 import sys
-import tempfile
 import unittest
 from pathlib import Path
 
@@ -99,50 +97,37 @@ class ContratoCLITests(unittest.TestCase):
         self.assertEqual(payload["error"], "modo inválido (veja --help)")
 
     def test_argumentos_invalidos_exit_2(self):
-        # Flag desconhecida ou valor ausente é rejeitada antes do dispatch.
-        for argumentos in (("--flag", "x"), ("--mode",)):
+        # Flag desconhecida, valor ausente ou --config (removido) é rejeitada
+        # antes do dispatch.
+        for argumentos in (("--flag", "x"), ("--mode",), ("--mode", "shadow", "--config", "x")):
             with self.subTest(argumentos=argumentos):
                 result = _executar_cli(*argumentos)
                 self.assertEqual(result.returncode, 2, result.stderr)
                 payload = self._payload(result)
                 self.assertEqual(set(payload), {"status", "error"})
                 self.assertEqual(payload["status"], "error")
-                self.assertEqual(payload["error"], "argumentos inválidos (use --mode MODO e/ou --config ARQUIVO; veja --help)")
+                self.assertEqual(payload["error"], "argumentos inválidos (use --mode MODO; veja --help)")
 
     def test_help_exit_0_imprime_modos(self):
         # --help tem precedência sobre o parse e imprime texto humano (multiline).
         result = _executar_cli("--help")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stderr, "")
-        for modo in ("shadow", "demo", "sentinela", "rodada", "grupos", "teste-envio"):
+        for modo in ("shadow", "demo", "rodada"):
             self.assertIn(modo, result.stdout)
+        self.assertNotIn("sentinela", result.stdout)
+        self.assertNotIn("--config", result.stdout)
         self.assertIn(".env.example", result.stdout)
 
-    def test_sentinela_sem_config_exit_2(self):
-        result = _executar_cli("--mode", "sentinela")
-        self.assertEqual(result.returncode, 2, result.stderr)
-        self.assertEqual(result.stderr, "")
-        self.assertEqual(
-            self._linha_unica(result),
-            '{"mode":"sentinela","status":"error","error":"configuração ausente (use --config com um JSON como suricata/config.example.json)"}',
-        )
-        payload = self._payload(result)
-        self.assertEqual(set(payload), {"mode", "status", "error"})
-        self.assertEqual(payload["mode"], "sentinela")
-        self.assertEqual(payload["status"], "error")
-        self.assertEqual(payload["error"], "configuração ausente (use --config com um JSON como suricata/config.example.json)")
-
-    def test_sentinela_config_inexistente_exit_2(self):
-        with tempfile.TemporaryDirectory() as directory:
-            caminho = Path(directory) / "nao-existe.json"
-            result = _executar_cli("--mode", "sentinela", "--config", str(caminho))
-        self.assertEqual(result.returncode, 2, result.stderr)
-        self.assertEqual(result.stderr, "")
-        payload = self._payload(result)
-        self.assertEqual(set(payload), {"mode", "status", "error"})
-        self.assertEqual(payload["mode"], "sentinela")
-        self.assertEqual(payload["status"], "error")
-        self.assertEqual(payload["error"], "configuração inválida")
+    def test_modos_removidos_sao_invalidos_exit_2(self):
+        # sentinela/grupos/teste-envio saíram da matriz: modo inválido.
+        for modo in ("sentinela", "grupos", "teste-envio"):
+            with self.subTest(modo=modo):
+                result = _executar_cli("--mode", modo)
+                self.assertEqual(result.returncode, 2, result.stderr)
+                payload = self._payload(result)
+                self.assertEqual(set(payload), {"status", "error"})
+                self.assertEqual(payload["error"], "modo inválido (veja --help)")
 
     def test_demo_exit_0_saida_humana_multilinha(self):
         # Saída multilinha humana (mensagens planejadas + relatório + entrega):
