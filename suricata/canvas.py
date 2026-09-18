@@ -52,7 +52,6 @@ class PublicAssignment:
     unlock_at: str | None = None
     lock_at: str | None = None
     quiz_id: str | None = None
-    # F04/D13: classificam quiz e prova sem depender do título.
     submission_types: tuple[str, ...] = ()
     is_quiz_lti: bool = False
     html_url: str = ""

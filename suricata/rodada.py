@@ -46,9 +46,6 @@ from .runtime import run_from_environment
 MEMORIA = "grupo/memoria.json"
 RELATORIO = "grupo/ultima-rodada.json"
 
-# --------------------------------------------------------------------------
-# rodada
-
 
 
 
