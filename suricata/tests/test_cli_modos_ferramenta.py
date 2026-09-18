@@ -64,7 +64,7 @@ class GruposModoTests(unittest.TestCase):
         self.assertEqual(concluido.returncode, 5)
         self.assertEqual(concluido.stderr, b"")
         self.assertEqual(_registro_unico(concluido),
-                         {"sessao": "erro", "erro": "SURICATA_ESTADO_URI ausente"})
+                         {"sessao": "erro", "erro": "SURICATA_ESTADO_URI ausente (use um diretório local ou gs://...)"})
 
     def test_estado_local_sem_sessao_devolve_ausente_sem_iniciar_node(self):
         with tempfile.TemporaryDirectory() as estado:

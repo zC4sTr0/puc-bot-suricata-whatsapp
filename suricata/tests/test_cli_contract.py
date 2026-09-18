@@ -78,12 +78,12 @@ class ContratoCLITests(unittest.TestCase):
         self.assertEqual(result.stderr, "")
         self.assertEqual(
             self._linha_unica(result),
-            '{"status":"error","error":"modo ausente"}',
+            '{"status":"error","error":"modo ausente (veja --help)"}',
         )
         payload = self._payload(result)
         self.assertEqual(set(payload), {"status", "error"})
         self.assertEqual(payload["status"], "error")
-        self.assertEqual(payload["error"], "modo ausente")
+        self.assertEqual(payload["error"], "modo ausente (veja --help)")
 
     def test_modo_invalido_exit_2(self):
         result = _executar_cli("--mode", "foo")
@@ -91,12 +91,12 @@ class ContratoCLITests(unittest.TestCase):
         self.assertEqual(result.stderr, "")
         self.assertEqual(
             self._linha_unica(result),
-            '{"status":"error","error":"modo inválido"}',
+            '{"status":"error","error":"modo inválido (veja --help)"}',
         )
         payload = self._payload(result)
         self.assertEqual(set(payload), {"status", "error"})
         self.assertEqual(payload["status"], "error")
-        self.assertEqual(payload["error"], "modo inválido")
+        self.assertEqual(payload["error"], "modo inválido (veja --help)")
 
     def test_argumentos_invalidos_exit_2(self):
         # Flag desconhecida ou valor ausente é rejeitada antes do dispatch.
@@ -107,7 +107,16 @@ class ContratoCLITests(unittest.TestCase):
                 payload = self._payload(result)
                 self.assertEqual(set(payload), {"status", "error"})
                 self.assertEqual(payload["status"], "error")
-                self.assertEqual(payload["error"], "argumentos inválidos")
+                self.assertEqual(payload["error"], "argumentos inválidos (use --mode MODO e/ou --config ARQUIVO; veja --help)")
+
+    def test_help_exit_0_imprime_modos(self):
+        # --help tem precedência sobre o parse e imprime texto humano (multiline).
+        result = _executar_cli("--help")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stderr, "")
+        for modo in ("shadow", "demo", "sentinela", "rodada", "grupos", "teste-envio"):
+            self.assertIn(modo, result.stdout)
+        self.assertIn(".env.example", result.stdout)
 
     def test_sentinela_sem_config_exit_2(self):
         result = _executar_cli("--mode", "sentinela")
@@ -115,13 +124,13 @@ class ContratoCLITests(unittest.TestCase):
         self.assertEqual(result.stderr, "")
         self.assertEqual(
             self._linha_unica(result),
-            '{"mode":"sentinela","status":"error","error":"configuração ausente"}',
+            '{"mode":"sentinela","status":"error","error":"configuração ausente (use --config com um JSON como suricata/config.example.json)"}',
         )
         payload = self._payload(result)
         self.assertEqual(set(payload), {"mode", "status", "error"})
         self.assertEqual(payload["mode"], "sentinela")
         self.assertEqual(payload["status"], "error")
-        self.assertEqual(payload["error"], "configuração ausente")
+        self.assertEqual(payload["error"], "configuração ausente (use --config com um JSON como suricata/config.example.json)")
 
     def test_sentinela_config_inexistente_exit_2(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -154,12 +163,12 @@ class ContratoCLITests(unittest.TestCase):
         self.assertEqual(result.stderr, "")
         self.assertEqual(
             self._linha_unica(result),
-            '{"estado": "erro", "erro": "SURICATA_ESTADO_URI ausente"}',
+            '{"estado": "erro", "erro": "SURICATA_ESTADO_URI ausente (use um diret\\u00f3rio local ou gs://...)"}',
         )
         payload = self._payload(result)
         self.assertEqual(set(payload), {"estado", "erro"})
         self.assertEqual(payload["estado"], "erro")
-        self.assertEqual(payload["erro"], "SURICATA_ESTADO_URI ausente")
+        self.assertEqual(payload["erro"], "SURICATA_ESTADO_URI ausente (use um diretório local ou gs://...)")
 
 
 if __name__ == "__main__":

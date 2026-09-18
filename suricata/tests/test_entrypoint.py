@@ -53,13 +53,13 @@ class EntrypointTests(unittest.TestCase):
     def test_modo_invalido_falha_sem_detalhes(self):
         code, record, line = self.invoke("--mode", "modo-inexistente")
         self.assertEqual(code, 2)
-        self.assertEqual(record["error"], "modo inválido")
+        self.assertEqual(record["error"], "modo inválido (veja --help)")
         self.assertNotIn("modo-inexistente", line)
 
     def test_sentinela_exige_configuracao_e_ofertas(self):
         code, record, _ = self.invoke("--mode", "sentinela")
         self.assertEqual(code, 2)
-        self.assertEqual(record["error"], "configuração ausente")
+        self.assertEqual(record["error"], "configuração ausente (use --config com um JSON como suricata/config.example.json)")
         with tempfile.TemporaryDirectory() as directory:
             path = self.config_file(directory, {"ambiente": "teste"})
             code, record, _ = self.invoke("--mode", "sentinela", "--config", str(path))

@@ -19,7 +19,7 @@ from .storage.gcs import SessaoWhatsApp, construir_objetos
 def main() -> int:
     uri = os.environ.get("SURICATA_ESTADO_URI", "")
     if not uri:
-        print(json.dumps({"sessao": "erro", "erro": "SURICATA_ESTADO_URI ausente"}))
+        print(json.dumps({"sessao": "erro", "erro": "SURICATA_ESTADO_URI ausente (use um diretório local ou gs://...)"}))
         return 5
     sessao = SessaoWhatsApp(construir_objetos(uri))
     snapshot = sessao.read_auth()

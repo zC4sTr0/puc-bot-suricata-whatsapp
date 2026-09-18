@@ -30,7 +30,7 @@ def run_from_environment(
     """
     uri = os.environ.get("SURICATA_ESTADO_URI", "")
     if not uri:
-        print_fn(json.dumps({"estado": "erro", "erro": "SURICATA_ESTADO_URI ausente"}))
+        print_fn(json.dumps({"estado": "erro", "erro": "SURICATA_ESTADO_URI ausente (use um diretório local ou gs://...)"}))
         return 5
     if not os.environ.get("SURICATA_CANVAS_TOKEN"):
         print_fn(json.dumps({"estado": "erro", "erro": "SURICATA_CANVAS_TOKEN ausente"}))

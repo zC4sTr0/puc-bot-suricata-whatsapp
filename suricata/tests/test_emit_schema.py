@@ -71,14 +71,14 @@ class EmitSchemaTests(unittest.TestCase):
         self.assertEqual(codigo, 2)
         self.assertEqual(set(payload), {"status", "error"})
         self.assertEqual(payload["status"], "error")
-        self.assertEqual(payload["error"], "modo ausente")
+        self.assertEqual(payload["error"], "modo ausente (veja --help)")
 
     def test_erro_mode_invalido(self):
         codigo, payload, _ = self.invoke("--mode", "foo")
         self.assertEqual(codigo, 2)
         self.assertEqual(set(payload), {"status", "error"})
         self.assertEqual(payload["status"], "error")
-        self.assertEqual(payload["error"], "modo inválido")
+        self.assertEqual(payload["error"], "modo inválido (veja --help)")
 
     def test_erro_argumentos_invalidos(self):
         for argumentos in (("--flag", "x"), ("--mode",)):
@@ -87,7 +87,7 @@ class EmitSchemaTests(unittest.TestCase):
                 self.assertEqual(codigo, 2)
                 self.assertEqual(set(payload), {"status", "error"})
                 self.assertEqual(payload["status"], "error")
-                self.assertEqual(payload["error"], "argumentos inválidos")
+                self.assertEqual(payload["error"], "argumentos inválidos (use --mode MODO e/ou --config ARQUIVO; veja --help)")
 
     def test_erro_sentinela_sem_config(self):
         codigo, payload, _ = self.invoke("--mode", "sentinela")
@@ -95,7 +95,7 @@ class EmitSchemaTests(unittest.TestCase):
         self.assertEqual(set(payload), {"mode", "status", "error"})
         self.assertEqual(payload["mode"], "sentinela")
         self.assertEqual(payload["status"], "error")
-        self.assertEqual(payload["error"], "configuração ausente")
+        self.assertEqual(payload["error"], "configuração ausente (use --config com um JSON como suricata/config.example.json)")
 
     def test_erro_sentinela_config_invalida(self):
         # JSON ilegível no arquivo e JSON válido que falha na validação

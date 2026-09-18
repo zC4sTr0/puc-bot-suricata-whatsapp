@@ -15,6 +15,20 @@ from .estado import EstadoLocal
 # "demo" é a probe funcional offline (fixtures congeladas, sem Canvas/estado/entrega).
 _MODES = {"shadow", "sentinela", "rodada", "grupos", "teste-envio", "demo"}
 
+_AJUDA = """uso: python -m suricata --mode MODO [--config ARQUIVO]
+
+modos:
+  shadow        probe local sem efeitos (zero-config)
+  demo          rodada offline com fixtures congeladas; entrega desligada
+  sentinela     sombra funcional com --config (legado)
+  rodada        caminho canônico de produção (configuração via ambiente)
+  grupos        inventário read-only da sessão
+  teste-envio   efeito externo; proibido em validação
+
+variáveis de ambiente: veja .env.example e docs/CONFIGURATION.md
+matriz de validação local: veja CONTRIBUTING.md
+"""
+
 
 def _emit(record: Mapping[str, Any]) -> None:
     print(json.dumps(record, ensure_ascii=False, separators=(",", ":")))
@@ -27,21 +41,21 @@ def _parse_args(argv: Sequence[str]) -> tuple[str | None, str | None, str | None
     while i < len(argv):
         arg = argv[i]
         if arg not in {"--mode", "--config"} or i + 1 >= len(argv):
-            return None, None, "argumentos inválidos"
+            return None, None, "argumentos inválidos (use --mode MODO e/ou --config ARQUIVO; veja --help)"
         value = argv[i + 1]
         if arg == "--mode":
             if mode is not None:
-                return None, None, "argumentos inválidos"
+                return None, None, "argumentos inválidos (use --mode MODO e/ou --config ARQUIVO; veja --help)"
             mode = value
         else:
             if config is not None:
-                return None, None, "argumentos inválidos"
+                return None, None, "argumentos inválidos (use --mode MODO e/ou --config ARQUIVO; veja --help)"
             config = value
         i += 2
     if mode is None:
-        return None, None, "modo ausente"
+        return None, None, "modo ausente (veja --help)"
     if mode not in _MODES:
-        return None, None, "modo inválido"
+        return None, None, "modo inválido (veja --help)"
     return mode, config, None
 
 
@@ -147,7 +161,11 @@ def main(
     *,
     client_factory: Callable[..., CanvasClient] | None = None,
 ) -> int:
-    mode, config_path, error = _parse_args(list(sys.argv[1:] if argv is None else argv))
+    argumentos = list(sys.argv[1:] if argv is None else argv)
+    if {"--help", "-h"} & set(argumentos):
+        print(_AJUDA)
+        return 0
+    mode, config_path, error = _parse_args(argumentos)
     if error:
         _emit({"status": "error", "error": error})
         return 2
@@ -167,7 +185,7 @@ def main(
         _emit({"mode": "shadow", "status": "ok", "adapter": "none"})
         return 0
     if config_path is None:
-        _emit({"mode": "sentinela", "status": "error", "error": "configuração ausente"})
+        _emit({"mode": "sentinela", "status": "error", "error": "configuração ausente (use --config com um JSON como suricata/config.example.json)"})
         return 2
     config = _read_explicit_config(config_path)
     if config is None:
