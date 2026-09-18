@@ -16,6 +16,7 @@ import unicodedata
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from .horario import BRASILIA
+from .calendario import _pascoa, eh_dia_de_aula, feriados_nacionais
 HORA_AVISO_PROVA = 12  # véspera: aviso extra só com prova/quiz amanhã
 HORA_VESPERA = 18  # véspera: resumo do dia seguinte
 ANTECEDENCIA_LEMBRETE = timedelta(minutes=15)  # > intervalo de 10 min: alguma rodada cai antes
@@ -386,33 +387,8 @@ def texto_anuncio(curso: str, titulo: str, mensagem: str, url: str) -> str:
 # --------------------------------------------------------------------------
 # véspera: 18:00 do dia anterior a um dia de aula
 
-
-def _pascoa(ano: int) -> date:
-    """Algoritmo de Meeus/Jones/Butcher (calendário gregoriano)."""
-    a, b, c = ano % 19, ano // 100, ano % 100
-    d, e = b // 4, b % 4
-    f = (b + 8) // 25
-    g = (b - f + 1) // 3
-    h = (19 * a + b - d - g + 15) % 30
-    i, k = c // 4, c % 4
-    l = (32 + 2 * e + 2 * i - h - k) % 7
-    m = (a + 11 * h + 22 * l) // 451
-    mes = (h + l - 7 * m + 114) // 31
-    return date(ano, mes, (h + l - 7 * m + 114) % 31 + 1)
-
-
-def feriados_nacionais(ano: int) -> set[date]:
-    """Feriados nacionais por lei (Leis 662/1949, 6.802/1980, 10.607/2002, 14.759/2023).
-
-    Carnaval e Corpus Christi são ponto facultativo, não feriado nacional: não entram.
-    """
-    fixos = {(1, 1), (4, 21), (5, 1), (9, 7), (10, 12), (11, 2), (11, 15), (11, 20), (12, 25)}
-    return {date(ano, m, d) for m, d in fixos} | {_pascoa(ano) - timedelta(days=2)}  # Sexta-feira Santa
-
-
-def eh_dia_de_aula(d: date) -> bool:
-    return d.weekday() < 5 and d not in feriados_nacionais(d.year)
-
+# O calendário letivo (Páscoa, feriados, dia de aula) vive em ``calendario``;
+# os nomes históricos continuam importáveis daqui.
 
 def provas_de_amanha(atividades: list[Atividade], amanha: date, agora: datetime) -> list[Atividade]:
     return [a for a in atividades
