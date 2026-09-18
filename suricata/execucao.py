@@ -16,7 +16,7 @@ from typing import Any, Callable
 from . import agenda_manual
 from .canvas import CanvasClient
 from .coleta import Coleta, ColetaIndisponivel, coletar
-from .configuracao import Destino
+from .config import Destino
 from .lease_rodada import Lease
 from .message_id import message_id
 from .outbox import OutboxError
