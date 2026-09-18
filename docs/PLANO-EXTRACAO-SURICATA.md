@@ -152,8 +152,7 @@ Leia:
 - `suricata/tests/README.md`;
 - `suricata/whatsapp/README.md`;
 - `docs/PLANO-SURICATA-WHATSAPP.md`;
-- `docs/PLANTAO-SURICATA-STATUS.md`;
-- `docs/SURICATA-PRODUCAO.md`.
+- `docs/PLANTAO-SURICATA-STATUS.md` e `docs/SURICATA-PRODUCAO.md` eram documentos do plano de origem e não fazem parte deste clone; o estado atual está em `docs/STATUS.md` e a operação em `suricata/RUNBOOK.md`.
 
 Não leia o repositório inteiro. Abra outros arquivos somente quando um passo
 pedir.
