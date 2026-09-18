@@ -181,6 +181,73 @@ def entregar(fila: OutboxSincronizado, ponte: Any, grupo_jid: str, eventos: list
     return resumo
 
 
+def _carregar_memoria(objetos: Any, memoria_nome: str,
+                      relatorio: Relatorio) -> tuple[Any, dict] | None:
+    """Lê a memória persistida; devolve ``(objeto, memória)`` ou ``None`` se inválida.
+
+    Memória corrompida marca o relatório e não deixa a rodada avançar (fail-closed).
+    """
+    obj = objetos.ler(memoria_nome)
+    try:
+        memoria = json.loads(obj.dados) if obj.dados else {}
+    except (TypeError, UnicodeDecodeError, json.JSONDecodeError):
+        relatorio.estado = "memoria_invalida"
+        relatorio.erro = "memória persistida inválida; rodada não avançada"
+        return None
+    if not isinstance(memoria, dict):
+        relatorio.estado = "memoria_invalida"
+        relatorio.erro = "memória persistida deve ser um objeto JSON; rodada não avançada"
+        return None
+    return obj, memoria
+
+
+def _planejar_rodada(atividades: list, memoria: dict, momento: datetime, coleta: Any,
+                     extras: list, relatorio: Relatorio,
+                     entrega_ligada: bool) -> tuple[list[Evento], dict, dict]:
+    """Transação em memória: nenhuma marca chega ao estado persistido antes do outbox."""
+    memoria_planejada = deepcopy(memoria)
+    eventos, relatorio.linha_de_base = planejar(atividades, memoria_planejada, momento, coleta.anuncios, extras)
+    relatorio.eventos = [{"tipo": e.tipo, "event_id": e.event_id, "texto": e.texto} for e in eventos]
+    memoria_comprometida = deepcopy(memoria)
+    if relatorio.linha_de_base:
+        # A linha de base é inicialização, não consumo de novidade.
+        memoria_comprometida["linha_de_base_em"] = memoria_planejada["linha_de_base_em"]
+        if entrega_ligada:
+            memoria_comprometida = memoria_planejada
+    return eventos, memoria_planejada, memoria_comprometida
+
+
+def _executar_entrega(objetos: Any, ponte: Any, grupo_jid: str | None, outbox_nome: str,
+                      eventos: list[Evento], atividades: list, agora: Callable[[], datetime],
+                      momento: datetime, relatorio: Relatorio,
+                      memoria_comprometida: dict, memoria_planejada: dict) -> dict:
+    """Executa a entrega com outbox temporário e consolida a memória dos eventos duráveis."""
+    if not grupo_jid or ponte is None:
+        raise StorageError("entrega ligada sem SURICATA_GRUPO_JID")
+    with tempfile.TemporaryDirectory(prefix="suricata-outbox-") as pasta:
+        fila = OutboxSincronizado(objetos, Path(pasta), outbox_nome)
+        fila.podar(momento)
+        relatorio.entrega = entregar(fila, ponte, grupo_jid, eventos, agora, atividades)
+        # Só depois de o registro existir no outbox a memória pode
+        # considerar a novidade vista de forma irreversível.
+        duraveis = {r["event_id"] for r in fila.outbox.pendentes()}
+        duraveis |= {r["event_id"] for r in _todos(fila)
+                     if r.get("estado") in {"in_flight", "sent"}}
+        comprometer_memoria(memoria_comprometida, memoria_planejada,
+                            eventos, duraveis, relatorio.entrega, momento)
+    return memoria_comprometida
+
+
+def _publicar_relatorio(objetos: Any, relatorio_nome: str, relatorio: Relatorio) -> None:
+    """Publica o relatório por CAS; falha de armazenamento não mascara o resultado."""
+    try:
+        atual = objetos.ler(relatorio_nome)
+        objetos.gravar(relatorio_nome, json.dumps(relatorio.json(), ensure_ascii=False, indent=1).encode(),
+                       generation=atual.generation)
+    except (StorageError, CASConflict):
+        pass
+
+
 def executar(*, objetos: Any, canvas: CanvasClient, entrega_ligada: bool, grupo_jid: str | None,
              ponte: Any | None, agora: Callable[[], datetime] = lambda: datetime.now(timezone.utc),
              coleta_pronta: Coleta | None = None, destino_prefixo: str = "grupo",
@@ -217,49 +284,21 @@ def executar(*, objetos: Any, canvas: CanvasClient, entrega_ligada: bool, grupo_
             "anuncios_determinaveis": coleta.anuncios is not None,
         }
 
-        obj = objetos.ler(memoria_nome)
-        try:
-            memoria = json.loads(obj.dados) if obj.dados else {}
-        except (TypeError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-            relatorio.estado = "memoria_invalida"
-            relatorio.erro = "memória persistida inválida; rodada não avançada"
+        carregado = _carregar_memoria(objetos, memoria_nome, relatorio)
+        if carregado is None:
             codigo = 5
             return codigo, relatorio.json()
-        if not isinstance(memoria, dict):
-            relatorio.estado = "memoria_invalida"
-            relatorio.erro = "memória persistida deve ser um objeto JSON; rodada não avançada"
-            codigo = 5
-            return codigo, relatorio.json()
+        obj, memoria = carregado
         manual, erro_agenda = agenda_manual.carregar(objetos)
         extras = agenda_manual.complementar(atividades, manual)
         relatorio.agenda_manual = {"itens": len(manual), "complementares": len(extras), "erro": erro_agenda}
-        # Planejamento é uma transação em memória: nenhuma marca de anúncio,
-        # item ou lembrete chega ao estado persistido antes do outbox.
-        memoria_planejada = deepcopy(memoria)
-        eventos, relatorio.linha_de_base = planejar(atividades, memoria_planejada, momento, coleta.anuncios, extras)
-        relatorio.eventos = [{"tipo": e.tipo, "event_id": e.event_id, "texto": e.texto} for e in eventos]
-        memoria_comprometida = deepcopy(memoria)
-        if relatorio.linha_de_base:
-            # A linha de base é inicialização, não consumo de novidade.
-            memoria_comprometida["linha_de_base_em"] = memoria_planejada["linha_de_base_em"]
-            if entrega_ligada:
-                memoria_comprometida = memoria_planejada
+        eventos, memoria_planejada, memoria_comprometida = _planejar_rodada(
+            atividades, memoria, momento, coleta, extras, relatorio, entrega_ligada)
 
         if entrega_ligada:
-            if not grupo_jid or ponte is None:
-                raise StorageError("entrega ligada sem SURICATA_GRUPO_JID")
-            with tempfile.TemporaryDirectory(prefix="suricata-outbox-") as pasta:
-                fila = OutboxSincronizado(objetos, Path(pasta), outbox_nome)
-                fila.podar(momento)
-                relatorio.entrega = entregar(fila, ponte, grupo_jid, eventos, agora, atividades)
-                # Só depois de o registro existir no outbox a memória pode
-                # considerar a novidade vista de forma irreversível.
-                duraveis = {r["event_id"] for r in fila.outbox.pendentes()}
-                duraveis |= {r["event_id"] for r in _todos(fila)
-                             if r.get("estado") in {"in_flight", "sent"}}
-                comprometer_memoria(memoria_comprometida, memoria_planejada,
-                                    eventos, duraveis, relatorio.entrega, momento)
-            memoria = memoria_comprometida
+            memoria_comprometida = _executar_entrega(
+                objetos, ponte, grupo_jid, outbox_nome, eventos, atividades,
+                agora, momento, relatorio, memoria_comprometida, memoria_planejada)
             if relatorio.entrega.get("sessao") not in (None, "ok"):
                 codigo = 6
         memoria = memoria_comprometida
@@ -273,12 +312,7 @@ def executar(*, objetos: Any, canvas: CanvasClient, entrega_ligada: bool, grupo_
         codigo = 5
         return codigo, relatorio.json()
     finally:
-        try:
-            atual = objetos.ler(relatorio_nome)
-            objetos.gravar(relatorio_nome, json.dumps(relatorio.json(), ensure_ascii=False, indent=1).encode(),
-                           generation=atual.generation)
-        except (StorageError, CASConflict):
-            pass
+        _publicar_relatorio(objetos, relatorio_nome, relatorio)
         if gerenciar_lease:
             try:
                 lease.liberar()
