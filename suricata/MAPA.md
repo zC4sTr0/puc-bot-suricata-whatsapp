@@ -20,6 +20,7 @@ suricata/
 ├── sentinela.py                coleta/projeção/decisão em sombra
 ├── planejamento.py             planejador puro da rodada, chamado pela fachada
 ├── calendario.py               Páscoa, feriados nacionais e dia de aula
+├── classificacao.py            normalização, entidade Atividade e tipos (quiz/prova/tarefa)
 ├── application.py              caso de uso da sombra com writers injetáveis
 ├── domain.py                   entidade e política pública de eventos
 ├── publico.py                  horários, tipos, elegibilidade e textos
