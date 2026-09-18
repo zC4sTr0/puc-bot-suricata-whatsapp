@@ -16,6 +16,8 @@ from . import agenda_manual
 from .canvas import CanvasClient
 from .coleta import Coleta, ColetaIndisponivel, coletar
 from .config import Destino
+from .corte_rodada import (_autorizacao_corte, _autorizados_persistidos, _corte_21h,
+                           _evento_disponivel, _janela_manha)
 from .lease_rodada import Lease
 from .memoria_rodada import comprometer_memoria
 from .message_id import message_id
@@ -40,75 +42,12 @@ def _todos(fila: OutboxSincronizado) -> list[dict[str, Any]]:
     return json.loads(fila.caminho.read_text(encoding="utf-8")) if fila.caminho.exists() else []
 
 
-
-
 def _agora_vivo(agora: datetime | Callable[[], datetime]) -> datetime:
     return agora() if callable(agora) else agora
 
 
-def _corte_21h(agora: datetime) -> bool:
-    local = agora.astimezone(BRASILIA)
-    return (local.hour, local.minute, local.second, local.microsecond) >= (21, 0, 0, 0)
-
-
-def _janela_manha(agora: datetime) -> bool:
-    """A exceção só pode ser reivindicada entre 07:00 e 07:00:59 BRT."""
-    local = agora.astimezone(BRASILIA)
-    return local.hour == 7 and local.minute == 0
-
-
-def _autorizacao_corte(evento: Evento, agora: datetime) -> dict[str, Any] | None:
-    atividade = evento.atividade
-    if not _pode_aguardar_07h(evento, agora):
-        return None
-    return {
-        "chave": atividade.chave,
-        "tipo": atividade.tipo,
-        "titulo": atividade.titulo,
-        "fonte": atividade.fonte,
-        "unlock_at": atividade.unlock_at.isoformat(),
-        "fecha": atividade.fecha.isoformat(),
-        "descoberto_em": agora.isoformat(),
-    }
-
-
-def _evento_disponivel(registro: dict[str, Any], agora: datetime) -> bool:
-    """Não reivindica novidade antes da janela BRT persistida no outbox."""
-    disponivel = registro.get("disponivel_em")
-    if not disponivel:
-        return True
-    try:
-        return datetime.fromisoformat(disponivel) <= agora
-    except (TypeError, ValueError):
-        # Estado persistido inválido nunca autoriza um envio antecipado.
-        return False
-
-
-def _autorizados_persistidos(fila: OutboxSincronizado, atividades: list[Atividade], agora: datetime) -> set[str]:
-    atuais = {a.chave: a for a in atividades}
-    autorizados: set[str] = set()
-    for registro in fila.outbox.pendentes():
-        corte = registro.get("corte_21h")
-        if not isinstance(corte, dict):
-            continue
-        chave = corte.get("chave")
-        if not isinstance(chave, str):
-            continue
-        atividade = atuais.get(chave)
-        if atividade is None:
-            continue
-        try:
-            descoberta = datetime.fromisoformat(corte["descoberto_em"])
-            esperado = Evento.de_atividade("novo", atividade, agora)
-            if (_autorizacao_corte(esperado, descoberta) == corte
-                    and _janela_manha(agora)):
-                autorizados.add(registro["event_id"])
-        except (KeyError, TypeError, ValueError):
-            # Estado persistido não é evidência. Corrupção fica sem
-            # autorização e será descartada pelo corte, sem abortar a rodada.
-            continue
-    return autorizados
-
+# Predicados do corte das 21h vivem em ``corte_rodada``; os nomes históricos
+# continuam importáveis daqui (fachada de compatibilidade de ``rodada``).
 
 def entregar(fila: OutboxSincronizado, ponte: Any, grupo_jid: str, eventos: list[Evento],
              agora: datetime | Callable[[], datetime], atividades: list[Atividade] | None = None) -> dict[str, Any]:
