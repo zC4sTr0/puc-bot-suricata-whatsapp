@@ -50,6 +50,59 @@ def _agora_vivo(agora: datetime | Callable[[], datetime]) -> datetime:
 # Predicados do corte das 21h vivem em ``corte_rodada``; os nomes históricos
 # continuam importáveis daqui (fachada de compatibilidade de ``rodada``).
 
+
+def _registrar_eventos(fila: OutboxSincronizado, outbox: Any, grupo_jid: str,
+                       eventos: list[Evento], momento: datetime) -> set[str]:
+    """Registra os eventos da rodada no outbox e devolve os IDs novos nesta leva."""
+    eventos_atuais: set[str] = set()
+    for evento in eventos:
+        existentes = {registro["event_id"] for registro in _todos(fila)}
+        registro = {"event_id": evento.event_id, "message_id": message_id(grupo_jid, evento.event_id),
+                    "texto": evento.texto}
+        if evento.disponivel_em:
+            registro["disponivel_em"] = evento.disponivel_em
+        autorizacao = _autorizacao_corte(evento, momento)
+        if autorizacao is not None:
+            registro["corte_21h"] = autorizacao
+        if evento.expira_em:
+            registro["expira_em"] = evento.expira_em
+        try:
+            outbox.adicionar(registro, agora=momento)
+        except OutboxError:
+            # Mesmo event_id já enfileirado com texto de uma versão anterior (ex.: deploy que mudou
+            # o estilo das mensagens): o registro existente vale; nunca travar a rodada por isso.
+            if evento.event_id not in {r["event_id"] for r in _todos(fila)}:
+                raise
+        if evento.event_id not in existentes:
+            eventos_atuais.add(evento.event_id)
+    return eventos_atuais
+
+
+def _reivindicar_pendentes(outbox: Any, atual: datetime) -> list[dict[str, Any]]:
+    """Reivindica pendentes disponíveis; só ``in_flight`` segue para a ponte."""
+    claims = [outbox.reivindicar(p["event_id"], agora=atual)
+              for p in outbox.pendentes() if _evento_disponivel(p, atual)]
+    return [c for c in claims if c["estado"] == "in_flight"]
+
+
+def _reconciliar_ack(outbox: Any, envios: list[dict[str, Any]],
+                     resposta: Any, resumo: dict[str, Any]) -> None:
+    """Confirma ``sent`` somente com ACK válido; qualquer dúvida volta a ``pending``."""
+    resumo["sessao"] = resposta.get("sessao") if isinstance(resposta, dict) else "erro"
+    if isinstance(resposta, dict) and (resposta.get("erro") or resposta.get("detalhe")):
+        resumo["erro"] = str(resposta.get("detalhe") or resposta.get("erro"))[:400]
+    itens = {r.get("event_id"): r for r in (resposta.get("resultados") or [])} if isinstance(resposta, dict) else {}
+    for envio in envios:
+        item = itens.get(envio["event_id"]) or {}
+        ack = (resumo["sessao"] == "ok" and item.get("message_id") == envio["message_id"]
+               and item.get("ack") is True and type(item.get("status")) is int and item["status"] >= 2)
+        for claim in envio["claims"]:  # um lote confirma todos os eventos que carrega
+            outbox.aplicar_resultado(claim["event_id"], attempt_id=claim["attempt_id"],
+                                     message_id=claim["message_id"], ack=ack,
+                                     status=item.get("status") if ack else None)
+            resumo["sent" if ack else "sem_ack"] += 1
+
+
 def entregar(fila: OutboxSincronizado, ponte: Any, grupo_jid: str, eventos: list[Evento],
              agora: datetime | Callable[[], datetime], atividades: list[Atividade] | None = None) -> dict[str, Any]:
     outbox = fila.outbox
@@ -76,26 +129,7 @@ def entregar(fila: OutboxSincronizado, ponte: Any, grupo_jid: str, eventos: list
         fila.publicar()
         return {"silencio": True, "aguardando": len(outbox.pendentes()), "expirados": corte["expirados"],
                 "pendentes_enviados": 0, "sent": 0, "sem_ack": 0, "sessao": None}
-    for evento in eventos:
-        existentes = {registro["event_id"] for registro in _todos(fila)}
-        registro = {"event_id": evento.event_id, "message_id": message_id(grupo_jid, evento.event_id),
-                    "texto": evento.texto}
-        if evento.disponivel_em:
-            registro["disponivel_em"] = evento.disponivel_em
-        autorizacao = _autorizacao_corte(evento, momento)
-        if autorizacao is not None:
-            registro["corte_21h"] = autorizacao
-        if evento.expira_em:
-            registro["expira_em"] = evento.expira_em
-        try:
-            outbox.adicionar(registro, agora=momento)
-        except OutboxError:
-            # Mesmo event_id já enfileirado com texto de uma versão anterior (ex.: deploy que mudou
-            # o estilo das mensagens): o registro existente vale; nunca travar a rodada por isso.
-            if evento.event_id not in {r["event_id"] for r in _todos(fila)}:
-                raise
-        if evento.event_id not in existentes:
-            eventos_atuais.add(evento.event_id)
+    eventos_atuais = _registrar_eventos(fila, outbox, grupo_jid, eventos, momento)
     outbox.recuperar_interrompidos(agora=momento)
     atual = _agora_vivo(agora)
     local_atual = atual.astimezone(BRASILIA)
@@ -121,9 +155,7 @@ def entregar(fila: OutboxSincronizado, ponte: Any, grupo_jid: str, eventos: list
         fila.publicar()
         return {"silencio": True, "aguardando": len(outbox.pendentes()), "expirados": expirados_count,
                 "pendentes_enviados": 0, "sent": 0, "sem_ack": 0, "sessao": None}
-    claims = [outbox.reivindicar(p["event_id"], agora=atual)
-              for p in outbox.pendentes() if _evento_disponivel(p, atual)]
-    claims = [c for c in claims if c["estado"] == "in_flight"]
+    claims = _reivindicar_pendentes(outbox, atual)
     fila.publicar()  # in_flight durável ANTES do efeito externo
     resumo = {"pendentes_enviados": len(claims), "sent": 0, "sem_ack": 0, "expirados": expirados_count,
               "sessao": None}
@@ -144,19 +176,7 @@ def entregar(fila: OutboxSincronizado, ponte: Any, grupo_jid: str, eventos: list
                                                  for e in envios])
     except Exception as exc:  # noqa: BLE001 - nada vira sent sem ACK
         resposta = {"sessao": "erro", "resultados": [], "erro": f"{type(exc).__name__}: {exc}"[:400]}
-    resumo["sessao"] = resposta.get("sessao") if isinstance(resposta, dict) else "erro"
-    if isinstance(resposta, dict) and (resposta.get("erro") or resposta.get("detalhe")):
-        resumo["erro"] = str(resposta.get("detalhe") or resposta.get("erro"))[:400]
-    itens = {r.get("event_id"): r for r in (resposta.get("resultados") or [])} if isinstance(resposta, dict) else {}
-    for envio in envios:
-        item = itens.get(envio["event_id"]) or {}
-        ack = (resumo["sessao"] == "ok" and item.get("message_id") == envio["message_id"]
-               and item.get("ack") is True and type(item.get("status")) is int and item["status"] >= 2)
-        for claim in envio["claims"]:  # um lote confirma todos os eventos que carrega
-            outbox.aplicar_resultado(claim["event_id"], attempt_id=claim["attempt_id"],
-                                     message_id=claim["message_id"], ack=ack,
-                                     status=item.get("status") if ack else None)
-            resumo["sent" if ack else "sem_ack"] += 1
+    _reconciliar_ack(outbox, envios, resposta, resumo)
     fila.publicar()
     return resumo
 
