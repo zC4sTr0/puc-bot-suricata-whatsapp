@@ -2,6 +2,12 @@
 
 Última verificação: **2026-09-17**, read-back GitHub/GCP e execução controlada do Job.
 
+## Evidência mais recente — refatoração `5ed8313`
+
+Em **2026-09-18**, a `main` foi atualizada pelo merge squash do PR `#7` (`5ed8313eab7b96dc3168408570a5b1078cadbbbb`). O build Cloud Build `6d73fced-fe0e-4ecd-bc8a-c6efc558e4ff` terminou com `SUCCESS` e publicou a imagem por digest `sha256:f67059b591ab39021ecbcff6ffb4e85df46f5e964dddb10c922f26454c121925`.
+
+O canário existente `suricata-canario-prod` foi atualizado para esse digest e lido de volta na geração `3`, mantendo `--mode rodada`, `maxRetries=0`, timeout `300s`, service account Suricata, estado separado e entrega desligada. A execução `suricata-canario-prod-6qbwd` terminou com `succeededCount=1` entre `17:26:01Z` e `17:26:15Z`. O Job produtivo não foi alterado e continua exigindo novo read-back antes de qualquer decisão; esta evidência não prova entrega WhatsApp.
+
 Código local e GitHub: **verificados** — PR `#1` foi aprovado por `zc4str0-revisor-bot` (identidade distinta do autor), com CI verde no SHA `561aa0b0656a83a37a94cd1be3bab33d92f6e199`, e merge squash confirmado no commit `30c5b2ff310a49a5cd57acd659676a0973cdeee6` da `main`. A árvore local permanece sem alterações de código.
 
 Build independente: **concluído** — Cloud Build `1e200017-3da4-4c6e-8302-12f478b2e636`, commit de origem `203f0a3`, imagem `southamerica-east1-docker.pkg.dev/suricata-college-20260913/suricata/suricata`, digest `sha256:6071de09eb357e35f091173407760aabda091b5eb8f0f3e2c533dae9caa32f98`. O Artifact Registry confirmou o digest. A árvore de entrada da imagem permaneceu idêntica entre `203f0a3` e a `main` promovida.
