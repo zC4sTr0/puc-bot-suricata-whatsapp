@@ -6,6 +6,7 @@ import suricata.rodada as rodada
 import suricata.execucao as execucao
 from suricata.corte_rodada import (corte_21h, evento_disponivel, janela_manha,
                                    _corte_21h, _evento_disponivel, _janela_manha)
+from suricata.horario import BRASILIA
 
 
 class CorteCompatibilityTests(unittest.TestCase):
@@ -29,9 +30,11 @@ class CorteCompatibilityTests(unittest.TestCase):
         # 21:00:00.000000 BRT = 00:00:00 UTC do dia seguinte.
         exato = datetime(2026, 9, 16, 0, 0, 0, 0, tzinfo=utc)
         self.assertTrue(corte_21h(exato))
-        # 20:59 BRT de um dia sem offset: naive recebe fuso de Brasília.
-        self.assertFalse(corte_21h(datetime(2026, 9, 15, 20, 59)))
-        self.assertTrue(corte_21h(datetime(2026, 9, 15, 21, 0)))
+        # Limites em BRT com fuso EXPLÍCITO: datetime naive é interpretado no
+        # fuso do host por astimezone(), e o teste não pode depender do host
+        # (CI roda em UTC; hosts BRT passariam por acidente).
+        self.assertFalse(corte_21h(datetime(2026, 9, 15, 20, 59, tzinfo=BRASILIA)))
+        self.assertTrue(corte_21h(datetime(2026, 9, 15, 21, 0, tzinfo=BRASILIA)))
 
     def test_janela_manha_somente_0700(self):
         utc = timezone.utc
