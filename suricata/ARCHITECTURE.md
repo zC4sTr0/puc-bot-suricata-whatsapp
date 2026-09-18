@@ -85,6 +85,7 @@ Há nomes divergentes entre o plano histórico e o inventário local. O plano me
 ## 6. Limites de manutenção
 
 1. Não remover `sentinela`, `application`, `domain`, `grupo`, `delivery`, `estado` ou `storage/cas` por parecerem legados: os testes ainda os cobrem e a equivalência não foi provada.
+   - Os legados em quarentena (`delivery`, `notifiers/whatsapp`, `lease`, `grupo`) vivem em `suricata/legacy/`, atrás de facades de compatibilidade nas origens; a regra de não-remoção permanece.
 2. Não transformar `shadow` em alias funcional de `sentinela`; são contratos diferentes.
 3. Não trocar configuração de ambiente por JSON sem alterar e testar explicitamente o contrato.
 4. Não ligar entrega, parear sessão, executar `teste-envio`, atualizar Job/Scheduler, publicar imagem ou fazer deploy como parte de validação local.
