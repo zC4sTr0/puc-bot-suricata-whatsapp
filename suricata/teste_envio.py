@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 
 from .bridge import WhatsAppBridge
 from .message_id import message_id
-from .rodada import Lease
+from .lease_rodada import Lease
 from .storage.gcs import SessaoWhatsApp, construir_objetos
 
 TEXTO = ("🦦 Suricata conectada pela nuvem.\n"
