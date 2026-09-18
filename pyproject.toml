@@ -21,8 +21,14 @@ classifiers = [
 [project.urls]
 Repository = "https://github.com/zC4sTr0/suricata-whatsapp"
 
-[tool.setuptools]
-packages = ["suricata"]
+[tool.setuptools.packages.find]
+include = ["suricata", "suricata.*"]
+namespaces = true
+
+[tool.setuptools.package-data]
+"suricata" = ["config.example.json"]
+"suricata.whatsapp" = ["*.mjs", "package.json", "package-lock.json"]
+"suricata.tests.fixtures" = ["*.mjs", "*.json"]
 
 [project.scripts]
 suricata = "suricata.entrypoint:main"
