@@ -52,7 +52,13 @@ class ContainerLayoutTests(unittest.TestCase):
 
     def test_empacotamento_proprio_existe_e_instala_lockfile_do_whatsapp(self):
         instructions = _docker_instructions(self.dockerfile)
-        self.assertIn(("FROM", "node:22-bookworm-slim"), instructions)
+        from_instructions = _instruction_values(self.dockerfile, "FROM")
+        self.assertEqual(len(from_instructions), 1)
+        # Base sempre digest-pinned (reprodutibilidade do build).
+        self.assertTrue(
+            from_instructions[0].startswith("node:22-bookworm-slim@sha256:"),
+            f"FROM não é digest-pinned: {from_instructions[0]!r}",
+        )
         self.assertIn(
             ("COPY", "whatsapp/package.json whatsapp/package-lock.json ./suricata/whatsapp/"),
             instructions,
