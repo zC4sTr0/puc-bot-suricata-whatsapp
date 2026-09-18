@@ -7,6 +7,7 @@ Esta pasta separa documentação operacional, contratos, histórico e estado ver
 - [`../README.md`](../README.md) — visão do produto, modos e comandos locais sem efeitos.
 - [`../AGENTS.md`](../AGENTS.md) — limites operacionais, segurança e validação obrigatória.
 - [`STATUS.md`](STATUS.md) — estado verificado mais recente; snapshots históricos são identificados no próprio texto.
+- [`CONTRACTS.md`](CONTRACTS.md) — contratos que uma refatoração deve preservar.
 
 ## Operar sem publicar
 
@@ -33,3 +34,12 @@ Esta pasta separa documentação operacional, contratos, histórico e estado ver
 ## Regra de leitura
 
 `STATUS.md` descreve o que foi verificado. Planos e documentos históricos explicam decisões anteriores, mas não substituem read-back do GitHub, Cloud Run, Scheduler, Artifact Registry ou estado operacional. Nenhuma página deste diretório contém sessão, QR, token, JID real ou payload de produção.
+
+### Taxonomia de evidência
+
+- **Verificado localmente:** reproduzido neste checkout por comando/teste.
+- **Verificado por read-back:** lido diretamente do recurso externo na data indicada.
+- **Snapshot histórico:** fato válido apenas para a data/commit registrado.
+- **Não verificado:** hipótese ou estado que exige nova leitura antes de qualquer ação.
+
+Quando fontes divergirem, prevalece o read-back mais recente; sem read-back, não se afirma equivalência entre código, imagem e produção.

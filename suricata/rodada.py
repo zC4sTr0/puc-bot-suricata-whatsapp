@@ -25,10 +25,7 @@ Uma rodada que não coletou **nunca** sai com 0.
 """
 from __future__ import annotations
 
-import json
-import os
 import sys
-from datetime import datetime, timezone
 
 from . import agenda_manual
 from .canvas import CanvasClient
@@ -42,6 +39,7 @@ from .publico import Atividade, texto_vespera
 from .execucao import (MAX_LOTE, _agora_vivo, _autorizacao_corte, _autorizados_persistidos,
                        _corte_21h, _janela_manha, _todos, agrupar_envios, entregar,
                        executar, executar_destinos, Relatorio)
+from .runtime import run_from_environment
 
 MEMORIA = "grupo/memoria.json"
 RELATORIO = "grupo/ultima-rodada.json"
@@ -56,34 +54,17 @@ RELATORIO = "grupo/ultima-rodada.json"
 def main(argv: list[str] | None = None) -> int:
     """Configuração só por ambiente (Cloud Run): nada de segredo em argv."""
     from .storage.gcs import SessaoWhatsApp, construir_objetos
+    from .bridge import WhatsAppBridge
 
-    uri = os.environ.get("SURICATA_ESTADO_URI", "")
-    if not uri:
-        print(json.dumps({"estado": "erro", "erro": "SURICATA_ESTADO_URI ausente"}))
-        return 5
-    if not os.environ.get("SURICATA_CANVAS_TOKEN"):
-        print(json.dumps({"estado": "erro", "erro": "SURICATA_CANVAS_TOKEN ausente"}))
-        return 3
-    objetos = construir_objetos(uri)
-    entrega = os.environ.get("SURICATA_ENTREGA", "desligada") == "ligada"
-    ponte = None
-    if entrega:
-        from .bridge import WhatsAppBridge
-        ponte = WhatsAppBridge(SessaoWhatsApp(objetos))
-    try:
-        destinos = destinos_do_ambiente()
-    except ValueError as exc:
-        print(json.dumps({"estado": "erro", "erro": str(exc)}, ensure_ascii=False))
-        return 5
-    if len(destinos) == 1:
-        codigo, relatorio = executar(objetos=objetos, canvas=CanvasClient(), entrega_ligada=entrega,
-                                     grupo_jid=destinos[0].jid, ponte=ponte)
-        print(json.dumps({**relatorio, "codigo": codigo}, ensure_ascii=False))
-        return codigo
-    codigo, relatorios = executar_destinos(objetos=objetos, canvas=CanvasClient(), entrega_ligada=entrega,
-                                            ponte=ponte, destinos=destinos)
-    print(json.dumps({"relatorios": relatorios, "codigo": codigo}, ensure_ascii=False))
-    return codigo
+    return run_from_environment(
+        canvas_factory=CanvasClient,
+        destinations_factory=destinos_do_ambiente,
+        objects_factory=construir_objetos,
+        session_factory=SessaoWhatsApp,
+        bridge_factory=WhatsAppBridge,
+        single_runner=executar,
+        multi_runner=executar_destinos,
+    )
 
 
 if __name__ == "__main__":

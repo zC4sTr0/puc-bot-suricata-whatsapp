@@ -1,6 +1,6 @@
 # Mapa humano da árvore Suricata
 
-> **Escopo e proveniência:** fotografia local da branch `refactor/suricata-safe`, lida em 2026-09-17. Este mapa descreve o código e os cinco documentos pedidos; não é prova do estado atual da nuvem. Caminhos deste arquivo foram conferidos no disco, excluindo `__pycache__/` e `node_modules/`. Onde a relação de chamada é inferida por imports, `main()` ou testes, isso está marcado como **hipótese estática**.
+> **Escopo e proveniência:** fotografia histórica da árvore lida em 2026-09-17. Este mapa descreve o código e os documentos da revisão daquela data; não é prova do estado atual da nuvem nem substitui o branch/commit atual. Caminhos deste arquivo foram conferidos no disco, excluindo `__pycache__/` e `node_modules/`. Onde a relação de chamada é inferida por imports, `main()` ou testes, isso está marcado como **hipótese estática**.
 
 ## 1. Leitura em uma frase
 
