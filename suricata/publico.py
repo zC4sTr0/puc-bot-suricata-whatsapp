@@ -15,9 +15,7 @@ import re
 import unicodedata
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
-from zoneinfo import ZoneInfo
-
-BRASILIA = ZoneInfo("America/Sao_Paulo")
+from .horario import BRASILIA
 HORA_AVISO_PROVA = 12  # véspera: aviso extra só com prova/quiz amanhã
 HORA_VESPERA = 18  # véspera: resumo do dia seguinte
 ANTECEDENCIA_LEMBRETE = timedelta(minutes=15)  # > intervalo de 10 min: alguma rodada cai antes
