@@ -16,6 +16,8 @@ Observação: **passou** — execução controlada `suricata-rodada-t2nsm` compl
 
 Scheduler: **verificado** — existe exatamente um Scheduler Suricata, `suricata-rodada-10min`, `ENABLED`, `*/10 * * * *`, timezone `America/Sao_Paulo`, apontando para o Job de produção.
 
+Verificação adicional em **2026-09-18**: o Job canário `suricata-canario-prod` foi lido de volta antes da execução e confirmou imagem por digest `sha256:6071de09eb357e35f091173407760aabda091b5eb8f0f3e2c533dae9caa32f98`, `--mode rodada`, `SURICATA_ENTREGA=desligada`, ausência de `SURICATA_GRUPO_JID`/`SURICATA_DESTINOS_JSON`, `maxRetries=0` e timeout de 300s. A execução `suricata-canario-prod-b6tsb` terminou com `succeededCount=1`; a leitura sanitizada de 3 entradas de log encontrou somente `INFO`, sem termos `sent`, `ack`, `delivery`, `logged_out` ou `error`. Isso valida o caminho real do Job sem validar entrega WhatsApp.
+
 Repositório acadêmico: **intocado** — a limpeza permanece bloqueada até os gates finais de proveniência, rollback e validação completa.
 
 Segredos: **não lidos nem expostos** — somente nomes/metadados necessários foram consultados.
