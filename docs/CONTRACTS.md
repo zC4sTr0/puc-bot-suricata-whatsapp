@@ -23,6 +23,8 @@ Este documento descreve interfaces observáveis que uma refatoração deve prese
 - O caminho da rodada preserva `pending → in_flight → sent`; falha/timeout não confirma envio.
 - O corte é em `America/Sao_Paulo`: mensagens comuns não atravessam 21:00–06:59.
 - Lease, geração/CAS, memória e outbox são contratos de concorrência; adapters concretos não podem vazar para as regras puras.
+- Existem DOIS leases com contratos distintos: `suricata/lease_rodada.py` (ativo na rodada; payload ilegível é abandonado, nunca um lease preso) e `suricata/legacy/lease.py` (legado; payload ilegível é fail-closed com `RuntimeError`). Não unificar sem snapshot de paridade; ambos congelados por `test_lease_rodada.py` e `test_lease.py`.
+- `domain.EXCLUIDAS` e `coleta.EXCLUIDAS` têm o mesmo nome com conjuntos e propósitos diferentes (fronteira pública vs. filtro de coleta); não são duplicatas — mudar um não autoriza mudar o outro.
 - Coleta parcial não é ausência confirmada.
 
 ## Configuração e segredo
