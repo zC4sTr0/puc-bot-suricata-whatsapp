@@ -6,7 +6,7 @@ repo, ambiente controlado sem nenhuma variável ``SURICATA_*``) e fixa o código
 de saída e o JSON exato impresso em stdout (parse + asserção chave a chave).
 
 Exit 3 (``Canvas indisponível``) não é comparável offline: o allowlist de
-origem em ``suricata/canvas.py`` só aceita ``https://pucminas.instructure.com``
+origem em ``suricata/integracao/canvas.py`` só aceita ``https://pucminas.instructure.com``
 (hostname idêntico ao ``ORIGIN``, HTTPS, porta 443/None) e exercitar o
 caminho de rede exigiria a origem externa real, proibida pelas regras do
 repo.

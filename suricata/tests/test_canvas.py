@@ -1,6 +1,6 @@
 import unittest
 
-from suricata.canvas import (
+from suricata.integracao.canvas import (
     CanvasClient,
     CanvasResponseKind,
     PublicAnnouncement,

@@ -4,8 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from .canvas import CanvasClient, CanvasResponseKind
-from .publico import Atividade, atividade_de
+from ..integracao.canvas import CanvasClient, CanvasResponseKind
+from ..dominio.publico import Atividade, atividade_de
 
 EXCLUIDAS = frozenset({"104959"})  # D20: Coordenação; Mentoria coberta
 

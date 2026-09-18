@@ -16,7 +16,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterator
 
-from .storage.locking import LockError, lock_arquivo
+from .locking import LockError, lock_arquivo
 
 
 class OutboxError(RuntimeError):

@@ -30,7 +30,7 @@ Nomes de Job e Scheduler são evidência operacional somente quando acompanhados
 |---|---|---|
 | argumentos e modos | `suricata/entrypoint.py` | implementação local, não nuvem |
 | empacotamento | `suricata/Dockerfile` | não prova build/deploy |
-| configuração funcional | `suricata/config.py`, `suricata/rodada.py` | ambiente efetivo precisa de read-back |
+| configuração funcional | `suricata/rodada/config.py`, `suricata/rodada/__init__.py` | ambiente efetivo precisa de read-back |
 | isolamento | `suricata/infra/isolamento.json` | fotografia datada, não estado atual |
 | decisão e sequência do produto | `docs/PLANO-SURICATA-WHATSAPP.md` | contém histórico; fatos antigos devem ser datados |
 | prova local | `suricata/tests/README.md` e testes | não prova serviços externos |

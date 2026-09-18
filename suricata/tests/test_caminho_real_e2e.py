@@ -20,7 +20,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest import mock
 
-import suricata.canvas as canvas
+import suricata.integracao.canvas as canvas
 from suricata.__main__ import main
 
 RAIZ = Path(__file__).resolve().parents[1]
@@ -77,7 +77,7 @@ class CaminhoRealTests(unittest.TestCase):
 
     def test_horario_do_aviso_em_brasilia(self):
         """Medido no caminho antigo: prazo 23:59 de Brasília virou 'Fecha: 16/09 02:59' (UTC)."""
-        from suricata.publico import Atividade, texto_novo
+        from suricata.dominio.publico import Atividade, texto_novo
 
         a = Atividade("292184", "Computabilidade", "1", "Quiz", "quiz", None, None,
                       datetime(2026, 9, 16, 2, 59, 59, tzinfo=timezone.utc), None, "")
@@ -85,7 +85,7 @@ class CaminhoRealTests(unittest.TestCase):
 
     def test_producao_nao_depende_da_cli_gcloud_nem_de_lock_windows(self):
         """A imagem não tem ``gcloud``; o container é Linux e efêmero."""
-        for modulo in ("rodada.py", "storage/gcs.py", "publico.py"):
+        for modulo in ("rodada/__init__.py", "storage/gcs.py", "dominio/publico.py"):
             fonte = (RAIZ / modulo).read_text(encoding="utf-8")
             self.assertNotIn("CreateMutexW", fonte, modulo)
             self.assertNotIn("storage.cas import SuricataSessionStorage", fonte, modulo)

@@ -5,7 +5,7 @@ import re
 import unittest
 from datetime import datetime
 
-from suricata.publico import (BRASILIA, Atividade, montar_vespera, observar, texto_aviso_prova, texto_lembrete,
+from suricata.dominio.publico import (BRASILIA, Atividade, montar_vespera, observar, texto_aviso_prova, texto_lembrete,
                               texto_mudou, texto_novo)
 
 

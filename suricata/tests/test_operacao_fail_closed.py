@@ -7,8 +7,8 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from suricata.canvas import CanvasClient
-from suricata.publico import BRASILIA
+from suricata.integracao.canvas import CanvasClient
+from suricata.dominio.publico import BRASILIA
 from suricata.rodada import Coleta, Evento, Destino, destinos_do_ambiente, executar, entregar, OutboxSincronizado
 from suricata.storage.gcs import ObjetosLocais
 from suricata.tests.test_rodada import CanvasFalso, JID

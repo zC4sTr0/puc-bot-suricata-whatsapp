@@ -11,7 +11,7 @@ import uuid
 from datetime import datetime, timedelta
 from typing import Any, Callable
 
-from .storage.cas import CASConflict
+from .cas import CASConflict
 
 
 LEASE = "locks/rodada.lock"

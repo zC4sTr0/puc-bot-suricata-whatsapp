@@ -12,7 +12,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 
-from .horario import BRASILIA
+from ..dominio.horario import BRASILIA
 
 
 _JID_GRUPO = re.compile(r"[0-9]+(?:-[0-9]+)?@g\.us")

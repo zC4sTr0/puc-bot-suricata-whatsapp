@@ -13,43 +13,47 @@ O caminho funcional de produção é `python -m suricata --mode rodada`: Python 
 ```text
 suricata/
 ├── __main__.py                 entrada `python -m suricata`
-├── entrypoint.py               roteador CLI e validação de argumentos
-├── Dockerfile                  imagem Python + dependências Node/lockfile
-├── canvas.py                   cliente HTTP Canvas e normalização de respostas
-├── coleta.py                   coleta de produção por cursos/assignments/anúncios
+├── entrypoint.py               roteador CLI e validação de argumentos (3 modos)
 ├── demo.py                     rodada offline com fixtures congeladas
-├── config.py                   borda de configuração: destinos e janela BRT por ambiente
-├── runtime.py                  composition root da rodada (ambiente → adapters)
-├── planejamento.py             planejador puro da rodada, chamado pela fachada
-├── calendario.py               Páscoa, feriados nacionais e dia de aula
-├── classificacao.py            normalização, entidade Atividade e tipos (quiz/prova/tarefa)
-├── publico.py                  horários, tipos, elegibilidade e textos
-├── agenda_manual.py            complementos anotados manualmente
-├── corte_rodada.py             predicados do corte 21h e autorização 07h
-├── memoria_rodada.py           compromisso de memória pós-outbox
-├── lotes.py                    agrupamento de envios (F42, até 5 por mensagem)
-├── relatorio.py                relatório sanitizado da rodada
-├── horario.py                  relógio/timezone canônico (BRASILIA)
-├── rodada.py                   composição canônica e fachada histórica
-├── execucao.py                 outbox, corte, entrega e destinos
-├── outbox.py                   máquina de estados durável
-├── persistencia_rodada.py      outbox temporário publicado por CAS
-├── lease_rodada.py             lease ativo `locks/rodada.lock`
-├── bridge.py                   Python → subprocesso Node
-├── message_id.py               identidade determinística de mensagem
-├── storage/cas.py              CAS legado de `whatsapp/auth.json` via gcloud
-├── storage/gcs.py              objetos GCS/locais e CAS ativo
-├── whatsapp/
+├── Dockerfile                  imagem Python + dependências Node/lockfile
+├── rodada/                     orquestração da rodada (caso de uso)
+│   ├── __init__.py             composição canônica e fachada histórica
+│   ├── execucao.py             outbox, corte, entrega e destinos
+│   ├── runtime.py              composition root (ambiente → adapters)
+│   ├── coleta.py               coleta de produção por cursos/assignments/anúncios
+│   ├── agenda_manual.py        complementos anotados manualmente
+│   └── config.py               borda de configuração: destinos e janela BRT
+├── dominio/                    regras puras, sem I/O
+│   ├── planejamento.py         planejador puro da rodada
+│   ├── calendario.py           Páscoa, feriados nacionais e dia de aula
+│   ├── classificacao.py        normalização, entidade Atividade e tipos
+│   ├── publico.py              horários, tipos, elegibilidade e textos
+│   ├── corte_rodada.py         predicados do corte 21h e autorização 07h
+│   ├── memoria_rodada.py       compromisso de memória pós-outbox
+│   ├── lotes.py                agrupamento de envios (F42, até 5 por mensagem)
+│   ├── relatorio.py            relatório sanitizado da rodada
+│   ├── horario.py              relógio/timezone canônico (BRASILIA)
+│   └── message_id.py           identidade determinística de mensagem
+├── integracao/                 adaptadores de efeitos externos
+│   ├── canvas.py               cliente HTTP Canvas e normalização de respostas
+│   └── bridge.py               Python → subprocesso Node
+├── storage/                    persistência e concorrência
+│   ├── outbox.py               máquina de estados durável
+│   ├── persistencia_rodada.py  outbox temporário publicado por CAS
+│   ├── lease_rodada.py         lease ativo `locks/rodada.lock`
+│   ├── cas.py                  CAS de `whatsapp/auth.json` via gcloud
+│   ├── gcs.py                  facade: objetos GCS/locais e CAS ativo
+│   ├── token.py / objetos_gcs.py / objetos_locais.py / sessao.py / _comum.py
+│   └── locking.py              lock de arquivo multi-processo
+├── whatsapp/                   ponte Node (Baileys)
 │   ├── auth-dir.mjs            impede auth dentro do repositório
-│   ├── sessao.mjs               abre/fecha Baileys e classifica logout/timeout
-│   ├── enviar.mjs               lote stdin → mensagens → ACK stdout
-│   ├── grupos.mjs               lista grupos, sem publicar
-│   ├── verificar.mjs            verifica sessão/grupos
-│   ├── parear.mjs               pareamento controlado por código
-│   ├── parear_terminal.mjs      pareamento terminal legado
-│   ├── teste_idempotencia.mjs   experimento local/real de reenvio
-│   └── tests/*.mjs              testes do pacote
-└── tests/*.py, tests/*.mjs      contratos offline e testes adversariais
+│   ├── sessao.mjs              abre/fecha Baileys e classifica logout/timeout
+│   ├── enviar.mjs              lote stdin → mensagens → ACK stdout
+│   ├── verificar.mjs           verificação de sessão/grupos (operação humana)
+│   ├── parear.mjs / parear_terminal.mjs  pareamento controlado (operação humana)
+│   └── teste_idempotencia.mjs  utilitário de medição offline
+├── infra/                      inventário declarativo de isolamento
+└── tests/                      suíte (pytest, unittest e node --test)
 ```
 
 ## 3. Arquivos Python de produção: o que são, quem chama, o que chamam

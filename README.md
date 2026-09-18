@@ -71,7 +71,7 @@ Para onboarding humano, leia nesta ordem: `AGENTS.md` → [`docs/STATUS.md`](doc
 
 ## 6. Mensagens, Canvas, estado e Node
 
-Mensagens são planejadas em `suricata/publico.py`/`planejamento.py` e orquestradas em `suricata/rodada.py`. Canvas é consultado por `suricata/canvas.py` e `coleta.py`, sempre com dados públicos. Estado, lease e outbox ficam em `suricata/storage/`, `outbox.py`, `persistencia_rodada.py` e `lease_rodada.py`. A ponte está em `suricata/bridge.py`; o Node está em `suricata/whatsapp/`.
+Mensagens são planejadas em `suricata/dominio/publico.py`/`planejamento.py` e orquestradas em `suricata/rodada/__init__.py`. Canvas é consultado por `suricata/integracao/canvas.py` e `coleta.py`, sempre com dados públicos. Estado, lease e outbox ficam em `suricata/storage/`, `outbox.py`, `persistencia_rodada.py` e `lease_rodada.py`. A ponte está em `suricata/integracao/bridge.py`; o Node está em `suricata/whatsapp/`.
 
 ## 7. Configuração sem segredo
 

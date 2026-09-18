@@ -11,8 +11,8 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Callable
 
-from .message_id import message_id
-from .storage.cas import AuthSnapshot, CASConflict, SuricataSessionStorage, StorageError
+from ..dominio.message_id import message_id
+from ..storage.cas import AuthSnapshot, CASConflict, SuricataSessionStorage, StorageError
 
 
 class BridgeError(RuntimeError):

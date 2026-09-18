@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from suricata.outbox import Outbox, OutboxError
+from suricata.storage.outbox import Outbox, OutboxError
 
 
 class OutboxTests(unittest.TestCase):

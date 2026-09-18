@@ -1,7 +1,7 @@
 import unittest
 
-from suricata import execucao
-from suricata.relatorio import Relatorio
+from suricata.rodada import execucao
+from suricata.dominio.relatorio import Relatorio
 
 
 class RelatorioCompatibilityTests(unittest.TestCase):

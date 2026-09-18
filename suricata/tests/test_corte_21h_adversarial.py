@@ -11,8 +11,8 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from suricata.message_id import message_id
-from suricata.outbox import Outbox
+from suricata.dominio.message_id import message_id
+from suricata.storage.outbox import Outbox
 from suricata.rodada import OUTBOX, OutboxSincronizado, entregar
 from suricata.storage.gcs import ObjetosLocais
 from suricata.tests.test_rodada import JID, PonteFalsa
@@ -31,7 +31,7 @@ class Corte21hAdversarialTests(unittest.TestCase):
 
     @staticmethod
     def brt(dia: int, hora: int, minuto: int = 0, segundo: int = 0) -> datetime:
-        from suricata.publico import BRASILIA
+        from suricata.dominio.publico import BRASILIA
 
         return datetime(2026, 9, dia, hora, minuto, segundo, tzinfo=BRASILIA)
 

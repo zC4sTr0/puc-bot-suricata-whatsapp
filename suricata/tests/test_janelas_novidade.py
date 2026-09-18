@@ -27,7 +27,7 @@ class JanelasNovidadeTests(unittest.TestCase):
 
     @staticmethod
     def brt(dia: int, hora: int, minuto: int = 0) -> datetime:
-        from suricata.publico import BRASILIA
+        from suricata.dominio.publico import BRASILIA
 
         return datetime(2026, 9, dia, hora, minuto, tzinfo=BRASILIA)
 
@@ -112,8 +112,8 @@ class JanelasNovidadeTests(unittest.TestCase):
         self.assertEqual(self.novidade()["estado"], "sent")
 
     def test_evento_do_mesmo_dia_entre_18_e_2059_e_imediato(self):
-        from suricata.planejamento import janela_novidade
-        from suricata.publico import Atividade
+        from suricata.dominio.planejamento import janela_novidade
+        from suricata.dominio.publico import Atividade
 
         abre = self.brt(16, 18, 10)
         atividade = Atividade("292185", "Fundamentos", "Quiz", "1435384", "quiz", abre,

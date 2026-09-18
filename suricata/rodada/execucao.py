@@ -13,21 +13,21 @@ from pathlib import Path
 from typing import Any, Callable
 
 from . import agenda_manual
-from .canvas import CanvasClient
+from ..integracao.canvas import CanvasClient
 from .coleta import Coleta, ColetaIndisponivel, coletar
 from .config import Destino
-from .corte_rodada import (_autorizacao_corte, _autorizados_persistidos, _corte_21h,
+from ..dominio.corte_rodada import (_autorizacao_corte, _autorizados_persistidos, _corte_21h,
                            _evento_disponivel, _janela_manha)
-from .lotes import MAX_LOTE, agrupar_envios
-from .lease_rodada import Lease
-from .memoria_rodada import comprometer_memoria
-from .message_id import message_id
-from .outbox import OutboxError
-from .persistencia_rodada import OutboxSincronizado
-from .planejamento import Evento, _limite_manha, _pode_aguardar_07h, planejar
-from .publico import BRASILIA, Atividade, em_silencio, texto_lote
-from .relatorio import Relatorio
-from .storage.cas import CASConflict, StorageError
+from ..dominio.lotes import MAX_LOTE, agrupar_envios
+from ..storage.lease_rodada import Lease
+from ..dominio.memoria_rodada import comprometer_memoria
+from ..dominio.message_id import message_id
+from ..storage.outbox import OutboxError
+from ..storage.persistencia_rodada import OutboxSincronizado
+from ..dominio.planejamento import Evento, _limite_manha, _pode_aguardar_07h, planejar
+from ..dominio.publico import BRASILIA, Atividade, em_silencio, texto_lote
+from ..dominio.relatorio import Relatorio
+from ..storage.cas import CASConflict, StorageError
 
 
 

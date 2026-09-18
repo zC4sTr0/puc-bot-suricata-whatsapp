@@ -1,7 +1,7 @@
 import unittest
 
-from suricata.message_id import message_id
-from suricata.bridge import BridgeError, WhatsAppBridge
+from suricata.dominio.message_id import message_id
+from suricata.integracao.bridge import BridgeError, WhatsAppBridge
 
 GROUP = "120363000000000000@g.us"
 

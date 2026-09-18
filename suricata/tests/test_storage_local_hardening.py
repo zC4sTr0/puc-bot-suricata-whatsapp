@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from suricata.agenda_manual import complementar
+from suricata.rodada.agenda_manual import complementar
 from suricata.storage.gcs import ObjetosLocais
 
 
