@@ -18,6 +18,7 @@ from .coleta import Coleta, ColetaIndisponivel, coletar
 from .config import Destino
 from .corte_rodada import (_autorizacao_corte, _autorizados_persistidos, _corte_21h,
                            _evento_disponivel, _janela_manha)
+from .lotes import MAX_LOTE, agrupar_envios
 from .lease_rodada import Lease
 from .memoria_rodada import comprometer_memoria
 from .message_id import message_id
@@ -160,29 +161,6 @@ def entregar(fila: OutboxSincronizado, ponte: Any, grupo_jid: str, eventos: list
     return resumo
 
 
-MAX_LOTE = 5
-
-
-def agrupar_envios(claims: list[dict[str, Any]], grupo_jid: str) -> list[dict[str, Any]]:
-    """Publicações pendentes da mesma leva viram uma mensagem (até 5 por mensagem).
-
-    O ``event_id`` do lote deriva dos eventos que carrega: o reenvio do mesmo conjunto
-    reusa o mesmo ``message_id`` e o WhatsApp não duplica (F42).
-    """
-    novos = sorted((c for c in claims if c["event_id"].startswith("grupo:novo:")), key=lambda c: c["event_id"])
-    envios = [{**c, "claims": [c]} for c in claims if not c["event_id"].startswith("grupo:novo:")]
-    if len(novos) < 2:
-        return [{**c, "claims": [c]} for c in novos] + envios
-    lotes = []
-    for inicio in range(0, len(novos), MAX_LOTE):
-        parte = novos[inicio:inicio + MAX_LOTE]
-        if len(parte) == 1:
-            lotes.append({**parte[0], "claims": parte})
-            continue
-        ident = "grupo:lote:" + hashlib.sha256("|".join(c["event_id"] for c in parte).encode()).hexdigest()[:16]
-        lotes.append({"event_id": ident, "message_id": message_id(grupo_jid, ident),
-                      "texto": texto_lote([c["texto"] for c in parte]), "claims": parte})
-    return lotes + envios
 def executar(*, objetos: Any, canvas: CanvasClient, entrega_ligada: bool, grupo_jid: str | None,
              ponte: Any | None, agora: Callable[[], datetime] = lambda: datetime.now(timezone.utc),
              coleta_pronta: Coleta | None = None, destino_prefixo: str = "grupo",
