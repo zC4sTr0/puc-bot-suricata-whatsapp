@@ -34,6 +34,8 @@ O alvo documentado é o projeto GCP Suricata, região `southamerica-east1`, Clou
 
 O índice de documentação está em [`docs/README.md`](docs/README.md); ele separa produto, operação, segurança, deploy, continuidade e histórico.
 
+Para onboarding humano, leia nesta ordem: `AGENTS.md` → [`docs/STATUS.md`](docs/STATUS.md) → [`docs/CONTRACTS.md`](docs/CONTRACTS.md) → [`suricata/README.md`](suricata/README.md) → [`suricata/ARCHITECTURE.md`](suricata/ARCHITECTURE.md) → [`suricata/RUNBOOK.md`](suricata/RUNBOOK.md) → [`suricata/tests/README.md`](suricata/tests/README.md). Planos históricos não substituem read-back.
+
 ## 6. Mensagens, Canvas, estado e Node
 
 Mensagens são planejadas em `suricata/publico.py`/`planejamento.py` e orquestradas em `suricata/rodada.py`. Canvas é consultado por `suricata/canvas.py` e `coleta.py`, sempre com dados públicos. Estado, lease e outbox ficam em `suricata/storage/`, `estado.py`, `outbox.py` e `persistencia_rodada.py`. A ponte está em `suricata/bridge.py`; o Node está em `suricata/whatsapp/`.
