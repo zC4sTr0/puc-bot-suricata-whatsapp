@@ -4,6 +4,7 @@ Esta pasta separa documentação operacional, contratos, histórico e estado ver
 
 ## Comece aqui
 
+- [`TRILHA-ESTUDANTE.md`](TRILHA-ESTUDANTE.md) — trilha do estudante: quatro níveis, de testes verdes a uma rodada local sem GCP.
 - [`../README.md`](../README.md) — visão do produto, modos e comandos locais sem efeitos.
 - [`../AGENTS.md`](../AGENTS.md) — limites operacionais, segurança e validação obrigatória.
 - [`STATUS.md`](STATUS.md) — estado verificado mais recente; snapshots históricos são identificados no próprio texto.
@@ -21,14 +22,20 @@ Esta pasta separa documentação operacional, contratos, histórico e estado ver
 - [`PRODUCT.md`](PRODUCT.md) — comportamento público e limites do bot.
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — fluxo Python → estado/outbox → Node/ACK.
 - [`../suricata/MAPA.md`](../suricata/MAPA.md) — mapa detalhado de módulos e testes.
+- [`../suricata/tests/README.md`](../suricata/tests/README.md) — o que cada runner de teste prova e como rodar os testes `.mjs` da ponte.
 - [`../suricata/DOCUMENTATION.md`](../suricata/DOCUMENTATION.md) — índice interno do runtime.
 
 ## Deploy e continuidade
 
 - [`DEPLOYMENT.md`](DEPLOYMENT.md) — build, canário sem entrega, corte e rollback.
-- [`PLANO-CONTINUIDADE-INDEPENDENTE.md`](PLANO-CONTINUIDADE-INDEPENDENTE.md) — procedimento executável de retomada e gates.
-- [`PLANO-EXTRACAO-SURICATA.md`](PLANO-EXTRACAO-SURICATA.md) — histórico da extração para o repositório próprio.
-- [`PLANO-SURICATA-WHATSAPP.md`](PLANO-SURICATA-WHATSAPP.md) — plano histórico de contratos e decisões; não é autorização automática para executar comandos.
+
+Os três documentos abaixo são planos históricos: arquivo de decisões,
+opcionais, e não autorizam comandos automaticamente. Não são leitura
+obrigatória de onboarding.
+
+- [`PLANO-CONTINUIDADE-INDEPENDENTE.md`](PLANO-CONTINUIDADE-INDEPENDENTE.md) — procedimento executável de retomada e gates (434 linhas).
+- [`PLANO-EXTRACAO-SURICATA.md`](PLANO-EXTRACAO-SURICATA.md) — histórico da extração para o repositório próprio (681 linhas).
+- [`PLANO-SURICATA-WHATSAPP.md`](PLANO-SURICATA-WHATSAPP.md) — plano histórico de contratos e decisões (711 linhas); não é autorização automática para executar comandos.
 - [`MIGRATION.md`](MIGRATION.md) — decisões e compatibilidade de migração.
 
 ## Regra de leitura
