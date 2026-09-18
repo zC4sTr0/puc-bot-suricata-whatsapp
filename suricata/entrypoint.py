@@ -12,7 +12,8 @@ from .canvas import CanvasClient, _normalize_origin
 from .estado import EstadoLocal
 
 # "rodada" é o caminho de produção (Cloud Run); "sentinela" é o caminho legado de sombra.
-_MODES = {"shadow", "sentinela", "rodada", "grupos", "teste-envio"}
+# "demo" é a probe funcional offline (fixtures congeladas, sem Canvas/estado/entrega).
+_MODES = {"shadow", "sentinela", "rodada", "grupos", "teste-envio", "demo"}
 
 
 def _emit(record: Mapping[str, Any]) -> None:
@@ -150,6 +151,9 @@ def main(
     if error:
         _emit({"status": "error", "error": error})
         return 2
+    if mode == "demo":
+        from .demo import main as demo_main
+        return demo_main()
     if mode == "rodada":
         from .rodada import main as rodada_main
         return rodada_main()

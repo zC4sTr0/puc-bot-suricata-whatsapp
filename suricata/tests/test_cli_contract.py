@@ -135,6 +135,16 @@ class ContratoCLITests(unittest.TestCase):
         self.assertEqual(payload["status"], "error")
         self.assertEqual(payload["error"], "configuração inválida")
 
+    def test_demo_exit_0_saida_humana_multilinha(self):
+        # Saída multilinha humana (mensagens planejadas + relatório + entrega):
+        # nada de JSON de linha única — parse só o que é determinístico.
+        result = _executar_cli("--mode", "demo")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stderr, "")
+        self.assertIn("modo demo", result.stdout)
+        self.assertIn("quiz hoje no Canvas", result.stdout)
+        self.assertIn("entrega: desligada", result.stdout)
+
     def test_rodada_sem_env_exit_5(self):
         # Sem SURICATA_ESTADO_URI a rodada falha em código 5 (armazenamento)
         # com payload {"estado": "erro", "erro": ...} — caminho runtime.py,
