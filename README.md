@@ -1,8 +1,37 @@
 # Suricata College — WhatsApp
 
+[![CI](https://github.com/zC4sTr0/suricata-whatsapp/actions/workflows/suricata.yml/badge.svg)](https://github.com/zC4sTr0/suricata-whatsapp/actions/workflows/suricata.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
+
 ## 1. O que faz
 
 A Suricata consulta atividades públicas do Canvas, identifica novidades coletivas e prepara avisos simples para o grupo autorizado da turma. O fluxo é Python → outbox/estado → ponte Node/Baileys → WhatsApp, com ACK antes de marcar uma mensagem como enviada.
+
+## Quickstart
+
+Std lib pura: zero `pip install`. Do clone ao primeiro aviso:
+
+```bash
+python -m suricata --mode shadow   # probe zero-config
+python -m suricata --mode demo     # avisos planejados offline com fixtures, entrega desligada
+python -m pytest -q                # suíte completa
+```
+
+Os testes `.mjs` (ponte Node/Baileys) exigem Node 20+ e a dependência instalada
+uma vez por clone:
+
+```bash
+npm ci --prefix suricata/whatsapp --ignore-scripts
+```
+
+Ou deixe um comando fazer tudo: `python scripts/bootstrap.py` verifica Python/Node,
+instala a dependência Node e roda compileall, pytest e shadow.
+
+Para evoluir daqui, siga a [trilha do estudante](docs/TRILHA-ESTUDANTE.md) —
+quatro níveis, de testes verdes até uma rodada local com estado em diretório.
+Regras de contribuição em [CONTRIBUTING.md](CONTRIBUTING.md); as variáveis
+`SURICATA_*` estão documentadas com comentários em [.env.example](.env.example).
 
 ## 2. O que nunca faz
 

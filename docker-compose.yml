@@ -1,0 +1,7 @@
+# Compose local de estudo: sobe o runtime em modo demo (offline, fixtures congeladas).
+# Nunca sobe com entrega ligada: sem volumes de sessão, sem network extra, sem credenciais.
+services:
+  suricata:
+    build: .
+    command: ["--mode", "demo"]
+    restart: "no"

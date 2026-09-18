@@ -54,7 +54,7 @@ O `test_caminho_real_e2e.py` é E2E do caminho Python, não um E2E com processo 
 Validam lease, rodada, janela de Brasília, corte noturno, revalidação e simulação sem efeitos.
 
 - `test_lease.py` — aquisição, expiração, payload inválido e falha fechada da store.
-- `test_rodada.py` — coleta, decisão, reenvio, expiração, lease e transições da rodada.
+- `test_rodada.py` — coleta, decisão, reenvio, expiração, lease e transições da rodada. Os doubles/fakes compartilhados (`JID`, `AGORA`, `iso`, `CanvasFalso`, `PonteFalsa`, `quiz`) vivem em `_fakes.py` e são re-exportados por `test_rodada.py` para compatibilidade dos importadores.
 - `test_corte_21h.py` — regras normais do corte das 21:00 e exceção das 07:00.
 - `test_corte_21h_adversarial.py` — relógio atravessando o corte, revalidação entre claim e ponte e estados forjados.
 - `test_operacao_fail_closed.py` — simulação, coleta parcial, memória/outbox inválidos e bloqueios de segurança.

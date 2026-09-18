@@ -16,7 +16,7 @@ python -m suricata --mode shadow
 
 Para acompanhar o caminho Python sem efeitos externos, leia os testes offline em `tests/README.md`. O comando de produção é diferente: `python -m suricata --mode rodada` consulta o ambiente configurado e pode enviar mensagens.
 
-### Os cinco modos
+### Os seis modos
 
 | Modo | O que faz | Envia? |
 |---|---|---:|
@@ -25,6 +25,7 @@ Para acompanhar o caminho Python sem efeitos externos, leia os testes offline em
 | `rodada` | Caminho canônico: Canvas → planejamento → outbox → ponte WhatsApp. | Condicionado ao ambiente |
 | `grupos` | Inventaria grupos da sessão; não publica mensagens. | Não |
 | `teste-envio` | Exercício explícito de envio/idempotência. | Sim |
+| `demo` | Probe funcional offline com fixtures congeladas, sem Canvas/estado/entrega. | Não |
 
 ### Onde está cada coisa?
 

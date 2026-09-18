@@ -2,6 +2,14 @@
 
 Última verificação: **2026-09-17**, read-back GitHub/GCP e execução controlada do Job.
 
+## Modernização open-source plug-and-play — evidência local (2026-09-18)
+
+O branch `refactor/clean-architecture-domain-seams` recebeu a onda de modernização de estudante (`5191a05..fbe82da`, 9 commits): guards de contrato novos (lease ativo da rodada, contrato CLI por subprocesso, schema do `_emit`, modos `grupos`/`teste-envio` fail-closed, E2E da ponte Node incondicional com stub versionado), correção de regressão real (`teste-envio` quebrado por `ImportError` desde `dd89264`), modo `--mode demo` offline zero-config, mensagens fail-closed acionáveis com `--help`, LICENSE MIT, packaging (`[build-system]`, classifiers, instalação do pacote verificada), CONTRIBUTING, `.env.example`, trilha do estudante de 4 níveis, quickstart com badges e `scripts/bootstrap.py`.
+
+**Segunda onda** (`be9cc00..680ed02`, 4 commits): decomposição do `storage/gcs.py` em backends próprios com facade identica (`assertIs`); quarentena dos legados em `suricata/legacy/` atrás de facades; **correção de defeito real de empacotamento** (`packages = ["suricata"]` excluía todos os subpacotes e dados de runtime do wheel — o guard `test_wheel.py` nasceu vermelho e fechou verde com find de subpacotes + package-data); pin de digest da imagem base `node:22-bookworm-slim@sha256:83f487e0...` nos dois Dockerfiles + `docker-compose.yml` (serviço `--mode demo`, sem sessão, entrega nunca ligada); fronteiras de leases e `EXCLUIDAS` documentadas em CONTRACTS.
+
+**Verificado localmente nesta data** (execução real, não auto-relato): pytest `399 passed, 92 subtests`; unittest `397 OK`; `node --test` `39/39`; `compileall`, `shadow` e `demo` exit 0 (demo determinístico byte a byte); wheel construído, inspecionado, instalado e executado de cwd neutro; guards de storage/legacy/wheel/container verdes em seleção focada (33 passed). **Não verificado:** CI no GitHub deste HEAD (push em andamento), build de imagem local (Docker ausente no host — pin e compose validados estaticamente/YAML), `docker compose config`, e qualquer estado de nuvem — os fatos de produção abaixo permanecem a referência mais recente por read-back. Nota: 3 arquivos de lint do agente concorrente (`canvas.py`, `rodada.py`, `locking.py`) permanecem não-commitados na árvore local por ownership.
+
 ## Evidência mais recente — refatoração `5ed8313`
 
 Em **2026-09-18**, a `main` foi atualizada pelo merge squash do PR `#7` (`5ed8313eab7b96dc3168408570a5b1078cadbbbb`). O build Cloud Build `6d73fced-fe0e-4ecd-bc8a-c6efc558e4ff` terminou com `SUCCESS` e publicou a imagem por digest `sha256:f67059b591ab39021ecbcff6ffb4e85df46f5e964dddb10c922f26454c121925`.

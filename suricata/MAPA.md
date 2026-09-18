@@ -19,12 +19,19 @@ suricata/
 ├── coleta.py                   coleta de produção por cursos/assignments/anúncios
 ├── sentinela.py                coleta/projeção/decisão em sombra
 ├── planejamento.py             planejador puro da rodada, chamado pela fachada
+├── calendario.py               Páscoa, feriados nacionais e dia de aula
+├── classificacao.py            normalização, entidade Atividade e tipos (quiz/prova/tarefa)
 ├── application.py              caso de uso da sombra com writers injetáveis
 ├── domain.py                   entidade e política pública de eventos
 ├── publico.py                  horários, tipos, elegibilidade e textos
 ├── grupo.py                    política/textos da audiência pública
 ├── agenda_manual.py            complementos anotados manualmente
 ├── configuracao.py             destinos e janela BRT por ambiente
+├── corte_rodada.py             predicados do corte 21h e autorização 07h
+├── memoria_rodada.py           compromisso de memória pós-outbox
+├── lotes.py                    agrupamento de envios (F42, até 5 por mensagem)
+├── relatorio.py                relatório sanitizado da rodada
+├── horario.py                  relógio/timezone canônico (BRASILIA)
 ├── rodada.py                   composição canônica e fachada histórica
 ├── execucao.py                 outbox, corte, entrega e destinos
 ├── outbox.py                   máquina de estados durável
@@ -71,7 +78,10 @@ suricata/
 | `agenda_manual.py` | Lê agenda JSON de objetos de estado e transforma itens válidos em atividades complementares. | `rodada.py`; testes de audiência/hardening. | `Objetos*.ler`, `publico.Atividade`, `dia/dia_provavel`; rejeita números não finitos/negativos. |
 | `configuracao.py` | Interpreta `SURICATA_GRUPO_JID` e destinos JSON/lista, validando JIDs, prefixos e janela BRT. | `rodada.main`/`executar_destinos`; testes de multidestino/configuração. | `Destino.elegivel`, `datetime` em `America/Sao_Paulo`, validação de ambiente. |
 | `rodada.py` | Compõe o runtime e mantém a fachada de imports históricos; o fluxo detalhado está nos módulos especializados. | `entrypoint.py`; testes de rodada/E2E. | `execucao`, `coleta`, `planejamento`, `agenda_manual`, Canvas, storage e ponte. |
-| `execucao.py` | Executa a rodada: lease → coleta pronta → memória/planejamento → outbox → corte → ponte → relatório. | `rodada.py`; testes de rodada, entrega, corte e caminho real. | `coleta`, `planejamento`, `agenda_manual`, `OutboxSincronizado`, `lease_rodada.Lease`, storage, `message_id` e bridge. |
+| `execucao.py` | Executa a rodada: lease → coleta pronta → memória/planejamento → outbox → corte → ponte → relatório. | `rodada.py`; testes de rodada, entrega, corte e caminho real. | `coleta`, `planejamento`, `agenda_manual`, `corte_rodada`, `memoria_rodada`, `lotes`, `OutboxSincronizado`, `lease_rodada.Lease`, storage, `message_id` e bridge. |
+| `corte_rodada.py` | Predicados puros do corte 21h, janela matinal e autorização 07h (estado inválido nunca autoriza). | `execucao.py` (reexport), `rodada.py`; testes de compatibilidade/corte. | `planejamento._pode_aguardar_07h`, `horario.BRASILIA`; sem I/O. |
+| `memoria_rodada.py` | Consolida na memória apenas eventos duráveis no outbox; falha de ponte não consome novidade. | `execucao.executar`; testes de compatibilidade. | `horario.BRASILIA`, `planejamento.Evento`; transformação pura. |
+| `lotes.py` | Agrupa claims de novidades da mesma leva em uma mensagem (até 5; id determinístico F42). | `execucao.entregar` (reexport em `rodada`); testes de compatibilidade. | `message_id`, `publico.texto_lote`; função pura. |
 | `outbox.py` | Máquina durável `pending → in_flight → sent` ou `pending → expirado`, com lock, fencing, retry idempotente e corte atômico. | `rodada.py`, `delivery.py`, `notifiers/whatsapp.py`; testes de outbox/concurrency. | `storage.locking.lock_arquivo`, JSON temporário/fsync/replace; só ACK válido permite `sent`. |
 | `persistencia_rodada.py` | Carrega `grupo/outbox.json` para arquivo temporário, poda terminais antigos e publica por geração CAS. | `rodada.py`; testes de rodada/outbox/storage. | `Outbox`, `objetos.ler/gravar`, retenção de 30 dias. |
 | `lease_rodada.py` | Serializa a rodada ativa no objeto `locks/rodada.lock`, abandonando leases antigos por CAS. | `rodada.py`, `teste_envio.py`; testes de lease/caminho real. | `objetos.ler/gravar/apagar`, `CASConflict`; `SURICATA_LEASE_MINUTOS` (padrão 6). |
