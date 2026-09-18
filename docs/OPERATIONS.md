@@ -7,4 +7,4 @@
 5. Sessão caída exige o gate de pareamento humano; não copiar QR/auth para o Git.
 6. Job parado exige verificar Scheduler, execução e relatório sanitizado.
 
-Não executar `teste-envio`, não ligar entrega e não criar recursos duplicados como diagnóstico.
+Não use efeito externo como diagnóstico: a validação local é `shadow`/`demo`/testes; nunca ligue entrega nem crie recursos duplicados.

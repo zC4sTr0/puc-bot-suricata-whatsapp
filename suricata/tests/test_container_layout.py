@@ -153,7 +153,7 @@ class ContainerLayoutTests(unittest.TestCase):
             package.mkdir(parents=True)
             for source in ROOT.glob("*.py"):
                 shutil.copy2(source, package / source.name)
-            for source_dir in ("notifiers", "storage", "legacy"):
+            for source_dir in ("rodada", "dominio", "integracao", "storage"):
                 shutil.copytree(ROOT / source_dir, package / source_dir)
 
             result = subprocess.run(

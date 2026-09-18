@@ -5,7 +5,7 @@ import os
 import unittest
 from unittest import mock
 
-from suricata.runtime import run_from_environment
+from suricata.rodada.runtime import run_from_environment
 
 
 class RuntimeCompositionTests(unittest.TestCase):

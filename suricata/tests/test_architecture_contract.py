@@ -17,7 +17,7 @@ def test_runtime_entrypoint_and_packaging_contract_are_explicit():
 
 
 def test_clean_architecture_contract_keeps_node_as_named_transport_boundary():
-    bridge = (ROOT / "suricata" / "bridge.py").read_text(encoding="utf-8")
+    bridge = (ROOT / "suricata" / "integracao" / "bridge.py").read_text(encoding="utf-8")
     node_entrypoint = ROOT / "suricata" / "whatsapp" / "enviar.mjs"
 
     assert '"enviar.mjs"' in bridge

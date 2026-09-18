@@ -1,8 +1,8 @@
 import unittest
 
-import suricata.execucao as execucao
+import suricata.rodada.execucao as execucao
 import suricata.rodada as rodada
-from suricata.lotes import MAX_LOTE, agrupar_envios
+from suricata.dominio.lotes import MAX_LOTE, agrupar_envios
 
 
 def _claim(event_id, texto="t"):

@@ -1,4 +1,4 @@
-"""Caracterização do lease ATIVO da rodada (``suricata.lease_rodada``).
+"""Caracterização do lease ATIVO da rodada (``suricata.storage.lease_rodada``).
 
 Congela o contrato de ``locks/rodada.lock``: CAS por geração, TTL de
 ``LEASE_MINUTOS`` (padrão 6, lido do ambiente no import), relógio do servidor
@@ -15,8 +15,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import patch
 
-import suricata.lease_rodada as lease_rodada
-from suricata.lease_rodada import LEASE, LEASE_MINUTOS, Lease, _campo_json
+import suricata.storage.lease_rodada as lease_rodada
+from suricata.storage.lease_rodada import LEASE, LEASE_MINUTOS, Lease, _campo_json
 from suricata.storage.cas import CASConflict, StorageError
 from suricata.storage.gcs import Objeto, ObjetosLocais
 

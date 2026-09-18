@@ -17,9 +17,10 @@
 ## Distinções obrigatórias
 
 - **Probe `shadow`:** default do Docker; emite saúde local e termina sem Canvas, estado ou entrega.
-- **`sentinela`:** modo funcional de sombra; exige `--config`, consulta/planeja e pode persistir estado local, mas não é o caminho canônico de produção.
+- **`demo`:** rodada offline com fixtures congeladas e entrega desligada; para estudo, sem variáveis.
 - **`rodada`:** caminho funcional canônico; configuração por ambiente e efeitos condicionados por entrega, estado, sessão, ACK e janela BRT.
-- **`teste-envio`:** efeito externo; não pertence à validação offline.
+
+Os modos `sentinela`, `grupos` e `teste-envio` foram removidos na simplificação de modos de 2026-09-18; o histórico vive no git.
 
 Nomes de Job e Scheduler são evidência operacional somente quando acompanhados de data e read-back. O plano e o inventário local divergem; consulte [`RUNBOOK.md`](RUNBOOK.md) antes de usar qualquer nome.
 
@@ -29,8 +30,7 @@ Nomes de Job e Scheduler são evidência operacional somente quando acompanhados
 |---|---|---|
 | argumentos e modos | `suricata/entrypoint.py` | implementação local, não nuvem |
 | empacotamento | `suricata/Dockerfile` | não prova build/deploy |
-| configuração funcional | `suricata/rodada.py`, `suricata/grupos.py`, `suricata/teste_envio.py` | ambiente efetivo precisa de read-back |
-| exemplo do modo sentinela | `suricata/config.example.json` | placeholder, não configuração de produção |
+| configuração funcional | `suricata/rodada/config.py`, `suricata/rodada/__init__.py` | ambiente efetivo precisa de read-back |
 | isolamento | `suricata/infra/isolamento.json` | fotografia datada, não estado atual |
 | decisão e sequência do produto | `docs/PLANO-SURICATA-WHATSAPP.md` | contém histórico; fatos antigos devem ser datados |
 | prova local | `suricata/tests/README.md` e testes | não prova serviços externos |

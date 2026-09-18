@@ -1,7 +1,7 @@
 import re
 import unittest
 
-from suricata.message_id import message_id
+from suricata.dominio.message_id import message_id
 
 
 class MessageIdTests(unittest.TestCase):

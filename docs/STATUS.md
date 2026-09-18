@@ -4,6 +4,12 @@
 
 ## Modernização open-source plug-and-play — evidência local (2026-09-18)
 
+### Simplificação de modos (2026-09-18, decisão do titular)
+
+CLI reduzido a `shadow`/`demo`/`rodada`; família sentinela (`sentinela`, `application`, `domain`, `adapter`, `estado`, `legacy`, `notifiers`, `delivery`, lease legado, `grupos`, `teste-envio`) removida; detalhes e provas no PR subsequente.
+
+### Ondas anteriores
+
 O branch `refactor/clean-architecture-domain-seams` recebeu a onda de modernização de estudante (`5191a05..fbe82da`, 9 commits): guards de contrato novos (lease ativo da rodada, contrato CLI por subprocesso, schema do `_emit`, modos `grupos`/`teste-envio` fail-closed, E2E da ponte Node incondicional com stub versionado), correção de regressão real (`teste-envio` quebrado por `ImportError` desde `dd89264`), modo `--mode demo` offline zero-config, mensagens fail-closed acionáveis com `--help`, LICENSE MIT, packaging (`[build-system]`, classifiers, instalação do pacote verificada), CONTRIBUTING, `.env.example`, trilha do estudante de 4 níveis, quickstart com badges e `scripts/bootstrap.py`.
 
 **Segunda onda** (`be9cc00..680ed02`, 4 commits): decomposição do `storage/gcs.py` em backends próprios com facade identica (`assertIs`); quarentena dos legados em `suricata/legacy/` atrás de facades; **correção de defeito real de empacotamento** (`packages = ["suricata"]` excluía todos os subpacotes e dados de runtime do wheel — o guard `test_wheel.py` nasceu vermelho e fechou verde com find de subpacotes + package-data); pin de digest da imagem base `node:22-bookworm-slim@sha256:83f487e0...` nos dois Dockerfiles + `docker-compose.yml` (serviço `--mode demo`, sem sessão, entrega nunca ligada); fronteiras de leases e `EXCLUIDAS` documentadas em CONTRACTS.

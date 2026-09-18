@@ -65,7 +65,7 @@ def lock_arquivo(
             kernel32.ReleaseMutex.argtypes = [ctypes.c_void_p]
             kernel32.CloseHandle.argtypes = [ctypes.c_void_p]
             handle = kernel32.CreateMutexW(None, 0, name)
-        except Exception as exc:  # noqa: BLE001 - erro sanitizado
+        except Exception as exc:
             raise LockError(f"não foi possível criar mutex do {recurso}") from exc
         if not handle:
             raise LockError(f"não foi possível criar mutex do {recurso}")

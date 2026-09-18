@@ -23,13 +23,10 @@ No Git Bash, os curingas `*.mjs` são expandidos pelo shell. Em outro shell, pas
 
 Validam normalização, elegibilidade, datas, descrições, observações, IDs determinísticos e a regra de não expor dados pessoais ou instruções indevidas.
 
-- `test_domain.py` — entidades, tipos, datas, elegibilidade e fronteira pública.
-- `test_adapter.py` — adaptação do Canvas, allowlist e comportamento fail-closed.
 - `test_multidestino.py` — configuração, janela BRT e isolamento por destino.
 - `test_message_id.py` — `message_id` determinístico e colisões.
 - `test_discricao.py` — classificação temporal de provas, recados e surpresas.
 - `test_observacoes.py` — observações de calendário e limite de conteúdo.
-- `test_grupo.py` — agrupamento, diário e texto público determinístico.
 - `test_audiencia_mentoria.py` — coleta da atividade de mentoria.
 
 Use esta fatia quando alterar regras de negócio, campos públicos, texto gerado, datas ou identidade de evento. As asserções devem observar o contrato externo, não nomes de funções ou a implementação interna.
@@ -39,21 +36,16 @@ Use esta fatia quando alterar regras de negócio, campos públicos, texto gerado
 Validam a fronteira com o Canvas sem fazer requisições reais e a seleção segura dos modos de execução.
 
 - `test_canvas.py` — origem, token, payload, status e sanitização.
-- `test_entrypoint.py` — CLI, modos `shadow`/`sentinela`, configuração e erros sanitizados.
-- `test_entrypoint_runtime.py` — montagem do runtime, cliente e writer.
-- `test_application_shadow.py` — rodada em sombra, respostas parciais/indisponíveis e ausência de efeitos.
-- `test_application_integration.py` — ordem entre persistência, deduplicação, notificação e entrega injetada.
+- `test_entrypoint.py` — CLI, modos `shadow`/`demo`/`rodada` e erros sanitizados.
 - `test_caminho_real_e2e.py` — caminho de produção Python via `main(["--mode", "rodada"])`, com Canvas falsificado, entrega desligada e diretório temporário.
 
 O `test_caminho_real_e2e.py` é E2E do caminho Python, não um E2E com processo Node/WhatsApp real.
 
-`test_sentinela.py` — compatibilidade da sentinela, adapter público e caminhos `legacy` mediante opt-in explícito; a existência desses testes não prova que o caminho legado continue sendo usado em produção.
 
 ### 3. Orquestração, horários e simulação
 
 Validam lease, rodada, janela de Brasília, corte noturno, revalidação e simulação sem efeitos.
 
-- `test_lease.py` — aquisição, expiração, payload inválido e falha fechada da store.
 - `test_rodada.py` — coleta, decisão, reenvio, expiração, lease e transições da rodada. Os doubles/fakes compartilhados (`JID`, `AGORA`, `iso`, `CanvasFalso`, `PonteFalsa`, `quiz`) vivem em `_fakes.py` e são re-exportados por `test_rodada.py` para compatibilidade dos importadores.
 - `test_corte_21h.py` — regras normais do corte das 21:00 e exceção das 07:00.
 - `test_corte_21h_adversarial.py` — relógio atravessando o corte, revalidação entre claim e ponte e estados forjados.
@@ -68,8 +60,6 @@ Validam persistência, idempotência, fencing, ACK, crash recovery, expiração,
 
 - `test_outbox.py` — transições, `pending`, `in_flight`, `sent`, fencing e expiração.
 - `test_outbox_concurrency.py` — múltiplos processos, locks, cache obsoleto e crashes.
-- `test_delivery.py` — entrega, ACK, timeout, duplicata e `message_id`.
-- `test_estado.py` — deduplicação, memória append-only, heartbeat e escritas atômicas.
 - `test_storage.py` — adapter de storage, precondição de geração e ambiente mínimo.
 - `test_storage_adversarial_worker.py` — escritores concorrentes, conflito de geração e payload misto.
 - `test_storage_cas_revalidation.py` — revalidação de geração, JSON inválido e valores não finitos.
@@ -84,10 +74,8 @@ Validam fronteiras entre componentes, empacotamento e ausência de dependências
 - `test_bridge.py` — runner/ponte, sessão, timeout, ACK e sanitização.
 - `test_bridge_integration.py` — rodada → outbox → `FakeBridge` → ACK; o Node real não é iniciado.
 - `test_bridge_node_e2e.py` — fronteira offline com stub Node local, quando presente no checkout.
-- `test_notifier_whatsapp.py` — notificador, ACK, sessão e preservação de `pending`.
 - `test_isolamento.py` — manifesto, prefixos e ausência de Telegram.
 - `test_container_layout.py` — contexto de empacotamento, lockfile e exclusão de sessão, bancos e segredos.
-- `test_application_integration.py` — integração de persistência, dedupe, heartbeat e entrega.
 
 Esses testes demonstram contratos locais e simulados. Ainda não demonstram build Docker real, Cloud Job, IAM, Canvas ao vivo ou WhatsApp real.
 

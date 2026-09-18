@@ -26,8 +26,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Mapping
 
-from .canvas import CanvasClient
-from .execucao import executar
+from .integracao.canvas import CanvasClient
+from .rodada.execucao import executar
 from .storage.gcs import ObjetosLocais
 
 _FIXTURE = Path(__file__).resolve().parent / "tests" / "fixtures" / "canvas_demo.json"

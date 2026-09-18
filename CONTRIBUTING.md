@@ -68,8 +68,8 @@ Trabalhe em branch e não reescreva histórico compartilhado.
 - **`SURICATA_ENTREGA` fica desligada por padrão.** O valor exato `ligada`
   só entra em produção com autorização. Qualquer outro valor entrega
   desligada.
-- **Teste-envio é proibido.** Não existe "só um teste de envio real". Use o
-  modo sombra.
+- **Nunca envie mensagem real na validação local.** Não existe "só um teste de
+  envio real"; a validação offline é `shadow`, `demo` e a suíte de testes.
 
 O runtime deve falhar fechado quando faltarem configuração, estado, lease, ACK
 ou autorização explícita de entrega. Não "conserte" esse comportamento.

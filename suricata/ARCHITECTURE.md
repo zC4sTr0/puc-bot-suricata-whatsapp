@@ -5,7 +5,7 @@
 ## 1. Entrada e contrato do container
 
 ```text
-python -m suricata [--mode MODO] [--config ARQUIVO]
+python -m suricata [--mode MODO]
   __main__.py → entrypoint.main()
 ```
 
@@ -16,29 +16,23 @@ ENTRYPOINT ["python3", "-m", "suricata"]
 CMD ["--mode", "shadow"]
 ```
 
-`ENTRYPOINT` fixa o módulo Python; `CMD` é apenas o argumento padrão e pode ser substituído pelo runtime. O container não recebe automaticamente o arquivo de configuração.
+`ENTRYPOINT` fixa o módulo Python; `CMD` é apenas o argumento padrão e pode ser substituído pelo runtime. O container não recebe automaticamente nenhum arquivo de configuração.
 
 ### Modos observados no `entrypoint.py`
 
+O CLI tem três modos, definidos na simplificação de 2026-09-18 (`sentinela`, `grupos` e `teste-envio` foram removidos; o histórico vive no git):
+
 | Modo | Entrada de configuração | Efeito efetivo conhecido | Uso conservador |
 |---|---|---|---|
-| `shadow` | nenhum arquivo; argumentos padrão do container | emite `{"mode":"shadow","status":"ok","adapter":"none"}` e termina; não consulta Canvas, não grava estado e não envia | probe de empacotamento/saúde |
-| `sentinela` | exige `--config ARQUIVO`; token fica em `SURICATA_CANVAS_TOKEN` | valida JSON, cria cliente Canvas e chama `application.executar_sombra`; é uma sombra **funcional**, com coleta/planejamento e estado local opcional, sem entrega de produção | compatibilidade e simulação funcional; não chamar de probe `shadow` |
+| `shadow` | nenhuma; argumentos padrão do container | emite `{"mode":"shadow","status":"ok","adapter":"none"}` e termina; não consulta Canvas, não grava estado e não envia | probe de empacotamento/saúde; usada pelo CI e pelo Docker |
+| `demo` | nenhuma; fixtures congeladas | roda a rodada offline com entrega desligada; planeja avisos e imprime relatório, sem Canvas, estado ou ponte | estudo e verificação local do planejamento |
 | `rodada` | ambiente; `rodada.main()` | caminho funcional canônico: coleta, planejamento, estado/outbox e entrega condicionada por `SURICATA_ENTREGA` e pelo corte | produção, somente com pré-voo e autorização de deploy/execução |
-| `grupos` | ambiente, incluindo `SURICATA_ESTADO_URI` | consulta a sessão/estado para inventariar grupos; não é envio, mas pode tocar GCS/WhatsApp | diagnóstico read-only, com escopo explícito |
-| `teste-envio` | ambiente, incluindo estado e JID | envia mensagem de teste; é efeito externo | proibido no pré-voo; somente gate humano explícito |
 
 Argumentos ausentes, inválidos ou configuração inválida falham com código não-zero. Exceções externas são sanitizadas; não se deve interpretar `status: ok` de `shadow` como prova de Canvas, GCS ou WhatsApp saudáveis.
 
-## 2. Configuração por fonte e por efeito
+## 2. Configuração: vem do ambiente
 
-### `sentinela`: arquivo explícito
-
-`--config` aceita JSON público com `ofertas` não vazio, `canvas.origin` allowlisted, `canvas.timeout` positivo e `estado.path` ou `state_path` opcional. Chaves de segredo (`token`, `access_token`, `authorization`, `secret`) são rejeitadas. O exemplo é [`config.example.json`](config.example.json).
-
-O arquivo seleciona ofertas e parâmetros de consulta; o token continua sendo obtido internamente pelo cliente a partir de `SURICATA_CANVAS_TOKEN`. O relatório é emitido em stdout sanitizado. O modo é sombra funcional: não equivale ao pipeline `rodada` nem prova que um Job de produção o utiliza.
-
-### `rodada`, `grupos` e `teste-envio`: ambiente
+Não existe mais arquivo de configuração de modo. Toda configuração funcional vem do ambiente do processo (ou do Secret Manager, que materializa o ambiente no Job); o módulo `config.py` valida e materializa os destinos.
 
 Variáveis observadas no código:
 
@@ -47,12 +41,12 @@ Variáveis observadas no código:
 | `SURICATA_CANVAS_TOKEN` | credencial Canvas | obrigatória para `rodada`; nunca imprimir, versionar ou passar por argv |
 | `SURICATA_ESTADO_URI` | backend de estado/sessão | ausente bloqueia caminhos que precisam de estado |
 | `SURICATA_ENTREGA` | liga entrega quando exatamente `ligada` | qualquer outro valor resulta em entrega desligada no caminho da rodada |
-| `SURICATA_GRUPO_JID` | destino legado | habilita o destino configurado; exige JID confirmado |
+| `SURICATA_GRUPO_JID` | destino da rodada | habilita o destino configurado; exige JID confirmado |
 | `SURICATA_DESTINOS_JSON` / `SURICATA_DESTINOS` | destinos adicionais | JSON/lista validada; memória e outbox ficam namespaced por destino |
 | `SURICATA_LEASE_MINUTOS` | lease da rodada | padrão observado: `6`; valor inválido deve falhar fechado |
 | `SURICATA_WA_AUTH_DIR` | diretório de auth usado pela ponte Node | segredo operacional; nunca apontar para caminho versionado ou registrar conteúdo |
 
-A fonte canônica dos valores de ambiente de uma execução é o ambiente do processo/Job, não `config.example.json`. O documento [`infra/isolamento.json`](infra/isolamento.json) é inventário declarativo e não injeta configuração no runtime.
+A fonte canônica dos valores de ambiente de uma execução é o ambiente do processo/Job. O documento [`infra/isolamento.json`](infra/isolamento.json) é inventário declarativo e não injeta configuração no runtime.
 
 ## 3. Caminho canônico `rodada`
 
@@ -84,12 +78,13 @@ Há nomes divergentes entre o plano histórico e o inventário local. O plano me
 
 ## 6. Limites de manutenção
 
-1. Não remover `sentinela`, `application`, `domain`, `grupo`, `delivery`, `estado` ou `storage/cas` por parecerem legados: os testes ainda os cobrem e a equivalência não foi provada.
-   - Os legados em quarentena (`delivery`, `notifiers/whatsapp`, `lease`, `grupo`) vivem em `suricata/legacy/`, atrás de facades de compatibilidade nas origens; a regra de não-remoção permanece.
-2. Não transformar `shadow` em alias funcional de `sentinela`; são contratos diferentes.
-3. Não trocar configuração de ambiente por JSON sem alterar e testar explicitamente o contrato.
-4. Não ligar entrega, parear sessão, executar `teste-envio`, atualizar Job/Scheduler, publicar imagem ou fazer deploy como parte de validação local.
-5. Teste offline verde prova apenas o contrato local. Não prova IAM, build limpo, digest implantado, Cloud Run, Canvas ao vivo, sessão ou WhatsApp.
+1. A família legada (`sentinela`, `application`, `domain`, `adapter`, `estado`, `grupo`, `delivery`, `lease` legado, `notifiers/`, `legacy/`) foi **removida por decisão do titular em 2026-09-18**, na simplificação que reduziu o CLI a `shadow`/`demo`/`rodada`. O histórico completo — código e testes — vive no git; não reintroduza esses módulos nem fachadas de compatibilidade com eles.
+2. Não transformar `shadow` em alias funcional de `demo` ou `rodada`: `shadow` é probe sem coleta, `demo` é rodada offline com fixtures, `rodada` é o caminho canônico com efeitos condicionados. São três contratos diferentes.
+3. Não trocar configuração de ambiente por arquivo JSON: a configuração vem do ambiente do processo.
+4. Não ligar entrega, parear sessão, atualizar Job/Scheduler, publicar imagem ou fazer deploy como parte de validação local.
+5. Fail-closed permanece regra: falta de configuração, estado, lease ou ACK deve falhar a execução, nunca degradar para "sucesso".
+6. CAS e outbox são contratos de concorrência; qualquer mudança neles exige prova de equivalência antes.
+7. Teste offline verde prova apenas o contrato local. Não prova IAM, build limpo, digest implantado, Cloud Run, Canvas ao vivo, sessão ou WhatsApp.
 
 ## 7. Verificação local
 

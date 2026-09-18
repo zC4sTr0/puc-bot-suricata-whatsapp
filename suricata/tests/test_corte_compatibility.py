@@ -3,10 +3,10 @@ from datetime import datetime, timezone
 from types import SimpleNamespace
 
 import suricata.rodada as rodada
-import suricata.execucao as execucao
-from suricata.corte_rodada import (corte_21h, evento_disponivel, janela_manha,
+import suricata.rodada.execucao as execucao
+from suricata.dominio.corte_rodada import (corte_21h, evento_disponivel, janela_manha,
                                    _corte_21h, _evento_disponivel, _janela_manha)
-from suricata.horario import BRASILIA
+from suricata.dominio.horario import BRASILIA
 
 
 class CorteCompatibilityTests(unittest.TestCase):
@@ -59,7 +59,7 @@ class CorteCompatibilityTests(unittest.TestCase):
             self.assertFalse(evento_disponivel({"disponivel_em": invalido}, agora))
 
     def test_autorizacao_corte_exige_pode_aguardar_07h(self):
-        from suricata.publico import BRASILIA
+        from suricata.dominio.publico import BRASILIA
         # Descoberta às 20:00 BRT → dia da manhã é o dia seguinte (16/09):
         # a exceção exige quiz/avaliação com unlock e fecha no mesmo dia.
         atividade = SimpleNamespace(

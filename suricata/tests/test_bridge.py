@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from suricata.bridge import BridgeError, WhatsAppBridge
+from suricata.integracao.bridge import BridgeError, WhatsAppBridge
 from suricata.storage.cas import AuthSnapshot
 
 

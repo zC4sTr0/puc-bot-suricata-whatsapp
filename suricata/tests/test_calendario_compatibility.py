@@ -1,9 +1,9 @@
 import unittest
 from datetime import date
 
-import suricata.publico as publico
-from suricata.calendario import _pascoa, eh_dia_de_aula, feriados_nacionais
-from suricata.planejamento import planejar_vespera
+import suricata.dominio.publico as publico
+from suricata.dominio.calendario import _pascoa, eh_dia_de_aula, feriados_nacionais
+from suricata.dominio.planejamento import planejar_vespera
 
 
 class CalendarioCompatibilityTests(unittest.TestCase):
@@ -52,7 +52,7 @@ class CalendarioCompatibilityTests(unittest.TestCase):
 
 def _sem_timezone(ano, mes, dia):
     from datetime import datetime, time
-    from suricata.horario import BRASILIA
+    from suricata.dominio.horario import BRASILIA
     return datetime(ano, mes, dia, 18, 0, tzinfo=BRASILIA)
 
 

@@ -12,7 +12,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from suricata.publico import BRASILIA, Atividade, anuncio_de_agora, decidir, montar_vespera, precisa_lembrete
+from suricata.dominio.publico import BRASILIA, Atividade, anuncio_de_agora, decidir, montar_vespera, precisa_lembrete
 from suricata.rodada import OUTBOX, executar, planejar_aviso_prova, planejar_vespera
 from suricata.storage.gcs import ObjetosLocais
 from suricata.tests.test_rodada import JID, CanvasFalso, PonteFalsa, iso
@@ -151,7 +151,7 @@ if __name__ == "__main__":
 
 class TextoDaMadrugadaTests(unittest.TestCase):
     def test_prova_de_amanha_publicada_23h30_sai_as_7h_dizendo_hoje(self):
-        from suricata.publico import texto_novo
+        from suricata.dominio.publico import texto_novo
 
         prova = atividade("Prova 1", "avaliacao", brt(16), brt(16, 23, 59))
         self.assertEqual(decidir(prova, brt(15, 23, 30)), "alertar")

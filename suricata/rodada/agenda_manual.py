@@ -18,7 +18,7 @@ import math
 from datetime import date, datetime, time
 from typing import Any
 
-from .publico import BRASILIA, Atividade, dia, dia_provavel
+from ..dominio.publico import BRASILIA, Atividade, dia, dia_provavel
 
 NOME = "agenda/manual.json"
 TIPOS = {"avaliacao", "quiz", "tarefa"}

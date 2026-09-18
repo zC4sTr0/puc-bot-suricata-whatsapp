@@ -75,13 +75,14 @@ O bot só anuncia informação coletiva útil ao grupo autorizado. Não envia no
 faltas, atrasos, entregas individuais ou comandos acadêmicos. Não recebe
 comandos do WhatsApp.
 
-Modos existentes:
+Modos existentes (após a simplificação de 2026-09-18):
 
 - `shadow`: probe sem Canvas, estado ou entrega;
-- `sentinela`: compatibilidade funcional com configuração explícita;
-- `rodada`: caminho canônico de produção;
-- `grupos`: inventário read-only da sessão;
-- `teste-envio`: efeito externo; nunca usar como teste automático.
+- `demo`: rodada offline com fixtures congeladas, entrega desligada;
+- `rodada`: caminho canônico de produção.
+
+Os modos `sentinela`, `grupos` e `teste-envio` foram removidos nessa
+simplificação; o histórico vive no git.
 
 ### 2.3 Decisões de segurança
 

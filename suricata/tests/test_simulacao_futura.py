@@ -7,7 +7,7 @@ import unittest
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from suricata.publico import Atividade, BRASILIA
+from suricata.dominio.publico import Atividade, BRASILIA
 from suricata.rodada import Coleta, executar, planejar, planejar_vespera
 from suricata.storage.gcs import ObjetosLocais
 

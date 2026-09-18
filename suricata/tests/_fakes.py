@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from suricata.canvas import CanvasClient
+from suricata.integracao.canvas import CanvasClient
 
 JID = "120363000000000000-1700000000@g.us"
 AGORA = datetime(2026, 9, 14, 12, 0, tzinfo=timezone.utc)  # 09:00 em Brasília

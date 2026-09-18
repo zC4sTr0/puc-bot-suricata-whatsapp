@@ -4,14 +4,18 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from .coleta import Anuncio
-from .persistencia_rodada import RETENCAO
+from ..storage.persistencia_rodada import RETENCAO
 from .publico import (BRASILIA, Atividade, anuncio_de_agora, anuncio_relevante, decidir, eh_dia_de_aula,
                       expira_em, HORA_AVISO_PROVA, HORA_VESPERA, SILENCIO, dias_relevantes, montar_vespera,
                       provas_de_amanha, quando_importa, precisa_lembrete, texto_anuncio, texto_aviso_prova,
                       texto_lembrete, texto_mudou, texto_novo)
+
+if TYPE_CHECKING:
+    # Anuncio vive em rodada.coleta; import direto criaria ciclo
+    # (rodada/__init__ importa planejamento). Uso só em anotações.
+    from ..rodada.coleta import Anuncio
 
 
 @dataclass

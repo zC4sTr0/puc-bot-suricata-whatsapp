@@ -2,10 +2,10 @@ import unittest
 from datetime import datetime, timezone
 from types import SimpleNamespace
 
-import suricata.publico as publico
-from suricata.classificacao import (Atividade, atividade_de, classificar_tipo,
+import suricata.dominio.publico as publico
+from suricata.dominio.classificacao import (Atividade, atividade_de, classificar_tipo,
                                     data, nome_curto, resumo_estudo)
-from suricata.coleta import atividade_de as atividade_de_coleta
+from suricata.rodada.coleta import atividade_de as atividade_de_coleta
 
 
 def _assignment(**kwargs):

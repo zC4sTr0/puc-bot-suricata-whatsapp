@@ -26,7 +26,6 @@ include = ["suricata", "suricata.*"]
 namespaces = true
 
 [tool.setuptools.package-data]
-"suricata" = ["config.example.json"]
 "suricata.whatsapp" = ["*.mjs", "package.json", "package-lock.json"]
 "suricata.tests.fixtures" = ["*.mjs", "*.json"]
 

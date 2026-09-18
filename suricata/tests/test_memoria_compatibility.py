@@ -2,13 +2,13 @@ import unittest
 from datetime import datetime, timezone
 from types import SimpleNamespace
 
-from suricata.execucao import comprometer_memoria
-from suricata.memoria_rodada import comprometer_memoria as direto
+from suricata.rodada.execucao import comprometer_memoria
+from suricata.dominio.memoria_rodada import comprometer_memoria as direto
 
 
 def _atividade(chave="lista-1", fecha="2026-09-16T03:00:00+00:00",
                unlock="2026-09-15T12:00:00+00:00"):
-    from suricata.publico import BRASILIA
+    from suricata.dominio.publico import BRASILIA
     return SimpleNamespace(
         chave=chave,
         fecha=datetime.fromisoformat(fecha).astimezone(BRASILIA),

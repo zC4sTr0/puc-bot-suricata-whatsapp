@@ -16,16 +16,15 @@ python -m suricata --mode shadow
 
 Para acompanhar o caminho Python sem efeitos externos, leia os testes offline em `tests/README.md`. O comando de produção é diferente: `python -m suricata --mode rodada` consulta o ambiente configurado e pode enviar mensagens.
 
-### Os seis modos
+### Os três modos
+
+O CLI foi reduzido a três modos na simplificação de 2026-09-18 (`sentinela`, `grupos` e `teste-envio` foram removidos; o histórico vive no git):
 
 | Modo | O que faz | Envia? |
 |---|---|---:|
-| `shadow` | Probe local do container; emite JSON e termina. | Não |
-| `sentinela` | Caminho funcional de sombra, com `--config` explícito. | Não por padrão |
+| `shadow` | Probe local do container; emite JSON e termina. Zero-config, usada pelo CI e pelo Docker. | Não |
+| `demo` | Rodada offline com fixtures congeladas, sem Canvas/estado/entrega; para estudante. | Não |
 | `rodada` | Caminho canônico: Canvas → planejamento → outbox → ponte WhatsApp. | Condicionado ao ambiente |
-| `grupos` | Inventaria grupos da sessão; não publica mensagens. | Não |
-| `teste-envio` | Exercício explícito de envio/idempotência. | Sim |
-| `demo` | Probe funcional offline com fixtures congeladas, sem Canvas/estado/entrega. | Não |
 
 ### Onde está cada coisa?
 
@@ -35,7 +34,7 @@ Para acompanhar o caminho Python sem efeitos externos, leia os testes offline em
 | Onde fica o Docker? | `Dockerfile` desta pasta. |
 | Onde fica o código WhatsApp/Node? | `whatsapp/`; a ponte Python é `bridge.py`. |
 | Onde ficam os testes? | `tests/` (Python e contratos Node) e `whatsapp/tests/` (testes do pacote Node). |
-| Onde fica a configuração? | `config.example.json` para `sentinela`; ambiente para `rodada`, `grupos` e `teste-envio`; detalhes em `ARCHITECTURE.md`. |
+| Onde fica a configuração? | Ambiente do processo (`config.py` valida os `SURICATA_*`); detalhes em `ARCHITECTURE.md`. |
 | Onde está o corte das 21h? | `rodada.py`, com testes em `tests/test_corte_21h*.py`. |
 | Onde estão outbox e ACK? | `outbox.py`, `persistencia_rodada.py`, `bridge.py` e `whatsapp/enviar.mjs`. |
 | Por onde começa? | `__main__.py` → `entrypoint.py`. |
@@ -84,14 +83,11 @@ ENTRYPOINT ["python3", "-m", "suricata"]
 CMD ["--mode", "shadow"]
 ```
 
-Portanto, sem sobrescrever o comando, o container executa a **probe `shadow`**, que só emite um registro local de saúde. O caminho funcional de produção precisa ser selecionado explicitamente com `--mode rodada`; o `CMD` não o seleciona sozinho.
-
-O arquivo de exemplo [`config.example.json`](config.example.json) é para o modo `sentinela`, com `--config` explícito. Ele contém apenas placeholder público; não coloque token, sessão, JID real ou dados pessoais nele.
+Portanto, sem sobrescrever o comando, o container executa a **probe `shadow`**, que só emite um registro local de saúde. O caminho funcional de produção precisa ser selecionado explicitamente com `--mode rodada`; o `CMD` não o seleciona sozinho. Para o caminho funcional offline, use `--mode demo`.
 
 ## Configuração e isolamento
 
-- `rodada`, `grupos` e `teste-envio` leem configuração do ambiente; não usam `config.example.json` automaticamente.
-- `sentinela` exige `--config ARQUIVO`; o arquivo fornece ofertas, origem/timeout do Canvas e estado local opcional. O token nunca é aceito no JSON e é resolvido pelo cliente via `SURICATA_CANVAS_TOKEN`.
+- Todos os modos funcionais leem configuração do ambiente; não existe arquivo de configuração de modo.
 - O runtime funcional usa, entre outras, `SURICATA_ESTADO_URI`, `SURICATA_CANVAS_TOKEN`, `SURICATA_ENTREGA`, `SURICATA_GRUPO_JID`, `SURICATA_DESTINOS_JSON` (ou `SURICATA_DESTINOS`) e `SURICATA_LEASE_MINUTOS`. Consulte [`ARCHITECTURE.md`](ARCHITECTURE.md) para efeitos por modo.
 - Projeto GCP, bucket, Artifact Registry, service account, secrets, Jobs e Schedulers devem ter namespace Suricata; os recursos do Bot Telegram continuam fora da fronteira.
 - O registro [`infra/isolamento.json`](infra/isolamento.json) preserva um snapshot histórico, datado de 2026-09-16, de um Job `suricata-rodada` e um Scheduler `suricata-rodada-10min` registrados como ativos. Isso não prova estado atual nem correspondência entre imagem implantada e código local.
@@ -99,4 +95,4 @@ O arquivo de exemplo [`config.example.json`](config.example.json) é para o modo
 
 ## Não confundir
 
-`shadow` é uma probe sem coleta e sem efeito funcional. `sentinela` é o caminho funcional antigo de sombra, que exige configuração explícita e consulta/planeja por `application.executar_sombra()`. `rodada` é o caminho funcional canônico atual e pode entregar somente quando o ambiente e as regras de corte autorizam. Nenhum nome de Job ou Scheduler torna um modo seguro por si só.
+`shadow` é uma probe sem coleta e sem efeito funcional. `demo` é a rodada offline com fixtures congeladas — planeja avisos, mas nunca toca Canvas, estado ou entrega. `rodada` é o caminho funcional canônico e pode entregar somente quando o ambiente e as regras de corte autorizam. Nenhum nome de Job ou Scheduler torna um modo seguro por si só.

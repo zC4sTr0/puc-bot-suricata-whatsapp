@@ -9,11 +9,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from suricata.outbox import Outbox, OutboxError
+from suricata.storage.outbox import Outbox, OutboxError
 
 
 def _hold_lock(path, ready):
-    from suricata.outbox import _lock_arquivo
+    from suricata.storage.outbox import _lock_arquivo
 
     with _lock_arquivo(Path(path), timeout=5):
         ready.set()
@@ -48,7 +48,7 @@ class OutboxConcurrencyTests(unittest.TestCase):
 
     def test_quarenta_processos_independentes_em_vinte_rodadas_preservam_todos_os_eventos(self):
         worker = (
-            "from suricata.outbox import Outbox; "
+            "from suricata.storage.outbox import Outbox; "
             "from datetime import datetime, timedelta; "
             "import sys; "
             "path, event_id, now = sys.argv[1:4]; "

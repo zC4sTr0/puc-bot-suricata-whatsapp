@@ -9,8 +9,8 @@ incondicional: a fixture vive no repositório.
 import unittest
 from pathlib import Path
 
-from suricata.bridge import BridgeError, WhatsAppBridge
-from suricata.message_id import message_id
+from suricata.integracao.bridge import BridgeError, WhatsAppBridge
+from suricata.dominio.message_id import message_id
 from suricata.storage.cas import AuthSnapshot
 
 

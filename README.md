@@ -47,15 +47,19 @@ python -m unittest discover -s suricata/tests
 node --test suricata/tests/*.mjs suricata/whatsapp/tests/*.mjs
 ```
 
-`shadow` é uma probe local. Para o caminho funcional sem entrega, use fixtures e `SURICATA_ENTREGA=desligada`; nunca use JID ou sessão real.
+`shadow` é uma probe local. Para o caminho funcional sem entrega, use `--mode demo` (offline, fixtures congeladas) ou a rodada com `SURICATA_ENTREGA=desligada`; nunca use JID ou sessão real.
 
 ## 4. Modos
 
-- `shadow`: probe sem Canvas, estado ou entrega.
-- `sentinela`: compatibilidade funcional com `--config` explícito.
-- `rodada`: caminho canônico Canvas → planejamento → outbox → ponte.
-- `grupos`: inventário read-only da sessão.
-- `teste-envio`: efeito externo; proibido em validação.
+O CLI tem três modos, e só três:
+
+| Modo | O que faz | Envia? |
+|---|---|---:|
+| `shadow` | probe local sem Canvas, estado ou entrega; zero-config, usada pelo CI e pelo Docker. | Não |
+| `demo` | rodada offline com fixtures congeladas, entrega desligada; para estudante. | Não |
+| `rodada` | caminho canônico Canvas → planejamento → outbox → ponte; config por ambiente. | Condicionado ao ambiente |
+
+Os modos `sentinela`, `grupos` e `teste-envio` foram removidos na simplificação de modos de 2026-09-18; o histórico vive no git.
 
 ## 5. Produção
 
@@ -67,11 +71,11 @@ Para onboarding humano, leia nesta ordem: `AGENTS.md` → [`docs/STATUS.md`](doc
 
 ## 6. Mensagens, Canvas, estado e Node
 
-Mensagens são planejadas em `suricata/publico.py`/`planejamento.py` e orquestradas em `suricata/rodada.py`. Canvas é consultado por `suricata/canvas.py` e `coleta.py`, sempre com dados públicos. Estado, lease e outbox ficam em `suricata/storage/`, `estado.py`, `outbox.py` e `persistencia_rodada.py`. A ponte está em `suricata/bridge.py`; o Node está em `suricata/whatsapp/`.
+Mensagens são planejadas em `suricata/dominio/publico.py`/`planejamento.py` e orquestradas em `suricata/rodada/__init__.py`. Canvas é consultado por `suricata/integracao/canvas.py` e `coleta.py`, sempre com dados públicos. Estado, lease e outbox ficam em `suricata/storage/`, `outbox.py`, `persistencia_rodada.py` e `lease_rodada.py`. A ponte está em `suricata/integracao/bridge.py`; o Node está em `suricata/whatsapp/`.
 
 ## 7. Configuração sem segredo
 
-Use variáveis de ambiente ou Secret Manager: `SURICATA_CANVAS_TOKEN`, `SURICATA_ESTADO_URI`, `SURICATA_ENTREGA`, `SURICATA_GRUPO_JID`, `SURICATA_DESTINOS_JSON`, `SURICATA_LEASE_MINUTOS` e `SURICATA_WA_AUTH_DIR`. Nunca coloque valores reais em JSON, YAML, logs ou argumentos.
+Use variáveis de ambiente ou Secret Manager: `SURICATA_CANVAS_TOKEN`, `SURICATA_ESTADO_URI`, `SURICATA_ENTREGA`, `SURICATA_GRUPO_JID` (destino da rodada; continua válido), `SURICATA_DESTINOS_JSON`, `SURICATA_LEASE_MINUTOS` e `SURICATA_WA_AUTH_DIR`. Nunca coloque valores reais em JSON, YAML, logs ou argumentos.
 
 ## 8. Testar, implantar e verificar
 
