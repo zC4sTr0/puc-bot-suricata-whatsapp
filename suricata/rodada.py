@@ -36,8 +36,10 @@ from .persistencia_rodada import OUTBOX, OutboxSincronizado
 from .planejamento import (_LISTA_URGENTE, Evento, _chaves, _limite_manha, _pode_aguardar_07h,
                            planejar, planejar_aviso_prova, planejar_vespera)
 from .publico import Atividade, texto_vespera
-from .execucao import (MAX_LOTE, _agora_vivo, _autorizacao_corte, _autorizados_persistidos,
-                       _corte_21h, _janela_manha, _todos, agrupar_envios, entregar,
+from .corte_rodada import (_autorizacao_corte, _autorizados_persistidos, _corte_21h,
+                           _evento_disponivel, _janela_manha)
+from .lotes import MAX_LOTE, agrupar_envios
+from .execucao import (_agora_vivo, _todos, entregar,
                        executar, executar_destinos, Relatorio)
 from .runtime import run_from_environment
 
