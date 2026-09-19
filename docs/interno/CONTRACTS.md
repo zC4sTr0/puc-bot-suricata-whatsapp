@@ -25,6 +25,7 @@ Este documento descreve interfaces observáveis que uma refatoração deve prese
 - O lease da rodada é `suricata/storage/lease_rodada.py`: payload ilegível é abandonado, nunca um lease preso. O lease legado foi removido com a família sentinela em 2026-09-18; o contrato vigente está congelado por `test_lease_rodada.py`.
 - `coleta.EXCLUIDAS` é o filtro de coleta; mudá-lo muda o que chega ao planejamento.
 - Coleta parcial não é ausência confirmada.
+- **Dead-letter (aditivo):** falhas da rodada (coleta parcial, envio sem ACK) deixam rastro em `falhas/falhas.jsonl` no estado — linhas `{momento, event_id?, etapa, erro_curto}`, sanitizadas (sem payload, token, JID ou texto de mensagem). Escrever a dead-letter é fail-safe: erro de escrita nunca derruba a rodada nem muda exit code.
 
 ## Configuração e segredo
 

@@ -43,3 +43,5 @@ jobs:
       - run: python -m suricata --mode shadow
       - name: Build container without publishing
         run: docker build --pull --tag suricata-ci:${{ github.sha }} .
+      - name: E2E de imagem (demo offline dentro do container)
+        run: docker run --rm suricata-ci:${{ github.sha }} --mode demo
