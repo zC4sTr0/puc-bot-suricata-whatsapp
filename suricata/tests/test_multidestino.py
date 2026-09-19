@@ -66,7 +66,7 @@ class MultiDestinoTests(unittest.TestCase):
             executar_destinos(objetos=objetos, canvas=canvas.cliente(), entrega_ligada=False,
                               ponte=None, destinos=destinos, agora=lambda: base)
             abre = base + timedelta(hours=3)
-            canvas.assignments["292184"] = [quiz(7, abre=abre, fecha=abre + timedelta(minutes=15))]
+            canvas.assignments["100001"] = [quiz(7, abre=abre, fecha=abre + timedelta(minutes=15))]
             ponte = PonteFalsa()
             codigo, relatorios = executar_destinos(
                 objetos=objetos, canvas=canvas.cliente(), entrega_ligada=True,

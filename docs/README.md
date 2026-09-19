@@ -14,8 +14,7 @@ O PUC Bot da Suricata é independente e não oficial da PUC Minas. Esta document
 - [`arquitetura.md`](arquitetura.md) — funcionamento interno, armazenamento e fronteiras técnicas.
 - [`deploy-gcp.md`](deploy-gcp.md) — referência de deploy no Google Cloud para operadores autorizados; não é necessário para executar o demo.
 - [`cloud.md`](cloud.md) — explicação humana da camada cloud, separando demo/local, operação autorizada, canário, rollback, custos e limites.
-- [`interno/`](interno/) — contratos e operação técnica. Esses documentos não autorizam acesso a ambientes, grupos ou credenciais.
-- [`historico/`](historico/) — planos e decisões anteriores; são contexto histórico, não instruções atuais. Os documentos `individual-bot-*` são rascunhos não implementados sobre a possível evolução individual.
+- [`troubleshooting.md`](troubleshooting.md) — problemas locais, configuração, ponte WhatsApp e limites de cloud.
 
 ## Limites de leitura
 

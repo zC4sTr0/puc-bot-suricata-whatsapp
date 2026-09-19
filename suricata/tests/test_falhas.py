@@ -32,7 +32,7 @@ class FalhasPurasTests(unittest.TestCase):
         return [json.loads(linha) for linha in bruto.splitlines() if linha.strip()]
 
     def test_registra_linha_sanitizada_com_campos_allowlist(self):
-        ok = registrar_falhas(self.objetos, [{"etapa": "entrega", "event_id": "grupo:novo:292184:1",
+        ok = registrar_falhas(self.objetos, [{"etapa": "entrega", "event_id": "grupo:novo:100001:1",
                                               "erro": "sessao=timeout", "texto": "MENSAGEM SECRETA",
                                               "message_id": "3EB0ABC", "grupo_jid": "1203@g.us"}], AGORA)
         self.assertTrue(ok)
@@ -96,11 +96,11 @@ class FalhasNaRodadaTests(unittest.TestCase):
 
         canvas = canvas or CanvasFalso()
         canvas.status_assignments = status_assignments
-        canvas.assignments["292184"] = [{
+        canvas.assignments["100001"] = [{
             "id": 9001, "name": "Quiz relâmpago", "points_possible": 3, "quiz_id": 555, "due_at": None,
             "unlock_at": "2026-09-14T13:00:00Z", "lock_at": "2026-09-14T13:30:00Z",
             "submission_types": ["online_quiz"],
-            "html_url": "https://pucminas.instructure.com/courses/292184/assignments/9001",
+            "html_url": "https://canvas.example.test/courses/100001/assignments/9001",
         }]
         objetos = objetos or self.objetos
         memoria = {"linha_de_base_em": RODADA_AGORA.isoformat()}
@@ -123,7 +123,7 @@ class FalhasNaRodadaTests(unittest.TestCase):
         linha = linhas[0]
         self.assertEqual(set(linha), {"momento", "event_id", "etapa", "erro_curto"})
         self.assertEqual(linha["etapa"], "entrega")
-        self.assertEqual(linha["event_id"], "grupo:novo:292184:9001")
+        self.assertEqual(linha["event_id"], "grupo:novo:100001:9001")
         bruto = json.dumps(linha, ensure_ascii=False)
         self.assertNotIn("@g.us", bruto)
         self.assertNotIn("segredo9", bruto)
@@ -140,9 +140,9 @@ class FalhasNaRodadaTests(unittest.TestCase):
         from suricata.tests._fakes import CanvasFalso, PonteFalsa
 
         class CanvasParcial(CanvasFalso):
-            # 289837 falha; o resto coleta normal → coleta PARCIAL (exit 0).
+            # 100002 falha; o resto coleta normal → coleta PARCIAL (exit 0).
             def transporte(self, method, url, headers, timeout):
-                if "/courses/289837/" in url:
+                if "/courses/100002/" in url:
                     return 500, {}, []
                 return super().transporte(method, url, headers, timeout)
 
@@ -151,7 +151,7 @@ class FalhasNaRodadaTests(unittest.TestCase):
         self.assertEqual(relatorio["estado"], "parcial")
         linhas = self._linhas()
         self.assertEqual([linha["etapa"] for linha in linhas], ["coleta"])
-        self.assertIn("289837", linhas[0]["erro_curto"])
+        self.assertIn("100002", linhas[0]["erro_curto"])
         self.assertEqual(len(linhas), 1)
 
     def test_erro_de_escrita_da_dead_letter_nao_afeta_a_rodada(self):

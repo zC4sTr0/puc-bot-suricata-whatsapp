@@ -150,13 +150,14 @@ class OperacaoFailClosedTests(unittest.TestCase):
             self.assertEqual(resumo["pendentes_enviados"], 0)
             self.assertEqual(ponte.chamadas, 0)
 
-    def test_contrato_documenta_diario_07h_ausente_no_caminho_atual_e_no_deploy(self):
-        plano = Path(__file__).resolve().parents[2] / "docs" / "historico" / "PLANO-SURICATA-WHATSAPP.md"
-        texto = plano.read_text(encoding="utf-8")
-        self.assertIn("diário das 07:00", texto)
-        self.assertIn("pendência", texto.lower())
-        self.assertIn("não há novo deploy", texto.lower())
-        self.assertIn("SURICATA_DESTINOS_JSON", texto)
+    def test_contrato_documenta_janela_diaria_e_configuracao_atual(self):
+        raiz = Path(__file__).resolve().parents[2]
+        guia = (raiz / "docs" / "guia.md").read_text(encoding="utf-8")
+        configuracao = (raiz / "docs" / "configuracao.md").read_text(encoding="utf-8")
+        deploy = (raiz / "docs" / "deploy-gcp.md").read_text(encoding="utf-8")
+        self.assertIn("07:00", guia)
+        self.assertIn("SURICATA_DESTINOS_JSON", configuracao)
+        self.assertIn("canário", deploy.lower())
 
 
 if __name__ == "__main__":

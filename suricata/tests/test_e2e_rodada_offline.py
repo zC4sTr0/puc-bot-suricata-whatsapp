@@ -98,15 +98,15 @@ class E2ERodadaOfflineTests(unittest.TestCase):
                 "unlock_at": _iso(AGORA + timedelta(hours=1)),
                 "lock_at": _iso(AGORA + timedelta(hours=1, minutes=30)),
                 "submission_types": ["online_quiz"],
-                "html_url": f"https://pucminas.instructure.com/courses/292184/assignments/{ident}"}
+                "html_url": f"https://canvas.example.test/courses/100001/assignments/{ident}"}
 
     def _transporte(self, method, url, headers, timeout):
         if "/announcements" in url:
             return 200, {}, []
         if "/assignments" in url:
             curso = url.split("/courses/")[1].split("/")[0]
-            return 200, {}, self.itens if curso == "292184" else []
-        return 200, {}, [{"id": 292184, "name": "Computabilidade"}]
+            return 200, {}, self.itens if curso == "100001" else []
+        return 200, {}, [{"id": 100001, "name": "Computabilidade"}]
 
     def _rodada(self, *, entrega: bool = True) -> tuple[int, dict]:
         ambiente = {"SURICATA_ESTADO_URI": str(self.estado), "SURICATA_CANVAS_TOKEN": "falso",
@@ -160,7 +160,7 @@ class E2ERodadaOfflineTests(unittest.TestCase):
         # O subprocesso Node REAL rodou: o stub marcou a sessão persistida.
         self.assertTrue(self._creds().get("stub_used") is True)
         lote = self.lotes[0]
-        self.assertEqual(lote[0]["event_id"], "grupo:novo:292184:9001")
+        self.assertEqual(lote[0]["event_id"], "grupo:novo:100001:9001")
 
     def test_b_reexecucao_idempotente_nao_reenvia_memoria_consumida(self):
         self._rodada()

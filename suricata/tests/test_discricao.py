@@ -31,7 +31,7 @@ def brt(dia, h=0, m=0, mes=9):
 
 def atividade(titulo, tipo, abre=None, fecha=None, chave="1"):
     # Matéria comum (a pesada tem regras próprias em MateriaPesadaTests).
-    return Atividade("292185", "Fundamentos", chave, titulo, tipo, abre, None, fecha, 25.0, "")
+    return Atividade("100004", "Fundamentos", chave, titulo, tipo, abre, None, fecha, 25.0, "")
 
 
 class PublicacaoSoSeForSurpresaTests(unittest.TestCase):
@@ -81,7 +81,7 @@ class VesperaDiscretaTests(unittest.TestCase):
         self.assertIsNotNone(planejar_aviso_prova([prova], memoria, brt(15, 12)))
         self.assertIsNone(planejar_vespera([prova], memoria, brt(15, 18)))  # só tinha a prova: silêncio
         nova = atividade("Quiz", "quiz", brt(16, 10, 10), brt(16, 10, 25), chave="q")
-        memoria2 = {"avisos_prova": {"2026-09-16": ["292185:p1"]}}
+        memoria2 = {"avisos_prova": {"2026-09-16": ["100004:p1"]}}
         texto = planejar_vespera([prova, nova], memoria2, brt(15, 18)).texto
         self.assertIn("Quiz", texto)
         self.assertNotIn("Prova 1", texto)
@@ -126,8 +126,8 @@ class MadrugadaELoteTests(unittest.TestCase):
             itens.append({"id": 100 + i, "name": f"Quiz {i}", "points_possible": 3, "quiz_id": 900 + i,
                           "unlock_at": iso(abre.astimezone(timezone.utc)),
                           "lock_at": iso((abre + timedelta(minutes=15)).astimezone(timezone.utc)), "due_at": None,
-                          "html_url": f"https://pucminas.instructure.com/courses/292184/assignments/{100 + i}"})
-        self.canvas.assignments["292184"] = itens
+                          "html_url": f"https://canvas.example.test/courses/100001/assignments/{100 + i}"})
+        self.canvas.assignments["100001"] = itens
         _, rel = self.rodar(brt(15, 3), ponte)
         self.assertEqual((len(rel["eventos"]), ponte.lotes), (3, []))  # decidido, mas nada sai às 3h
         self.assertTrue(rel["entrega"]["silencio"])
@@ -142,7 +142,7 @@ class MadrugadaELoteTests(unittest.TestCase):
         ponte = PonteFalsa()
         self.rodar(brt(15, 1), ponte)
         abre = brt(15, 7, 10)
-        self.canvas.assignments["292184"] = [{"id": 5, "name": "Quiz cedo", "points_possible": 3, "quiz_id": 5,
+        self.canvas.assignments["100001"] = [{"id": 5, "name": "Quiz cedo", "points_possible": 3, "quiz_id": 5,
                                               "unlock_at": iso(abre.astimezone(timezone.utc)),
                                               "lock_at": iso((abre + timedelta(minutes=15)).astimezone(timezone.utc)),
                                               "due_at": None, "html_url": ""}]

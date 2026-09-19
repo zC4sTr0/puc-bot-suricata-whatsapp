@@ -17,7 +17,7 @@ modos:
   demo          rodada offline com fixtures congeladas; entrega desligada
   rodada        caminho canônico de produção (configuração via ambiente)
 
-variáveis de ambiente: veja .env.example e docs/CONFIGURATION.md
+variáveis de ambiente: veja .env.example e docs/configuracao.md
 matriz de validação local: veja CONTRIBUTING.md
 """
 

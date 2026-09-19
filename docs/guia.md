@@ -67,7 +67,7 @@ node --test suricata/tests/*.mjs suricata/whatsapp/tests/*.mjs
 python -m suricata --mode demo
 ```
 
-A demo usa dados sintéticos congelados e um relógio fixo. A **saída esperada** contém mensagens que seriam planejadas e um relatório, mas não faz chamadas ao Canvas, não grava estado persistente e não envia WhatsApp. Se o `npm ci` falhar, a dependência Git do Baileys precisa de rede; consulte [`interno/TROUBLESHOOTING.md`](interno/TROUBLESHOOTING.md).
+A demo usa dados sintéticos congelados e um relógio fixo. A **saída esperada** contém mensagens que seriam planejadas e um relatório, mas não faz chamadas ao Canvas, não grava estado persistente e não envia WhatsApp. Se o `npm ci` falhar, a dependência Git do Baileys precisa de rede; consulte [`troubleshooting.md`](troubleshooting.md).
 
 ### 3. Exercitar estado local, ainda sem entrega
 
@@ -93,7 +93,7 @@ Qualquer falha mantém o caminho fechado. Token, JID e sessão não devem entrar
 node suricata/whatsapp/parear.mjs --auth-dir <diretório-fora-do-repo>
 ```
 
-O procedimento completo está em [`suricata/whatsapp/README.md`](../suricata/whatsapp/README.md) e no runbook [`interno/RUNBOOK.md`](interno/RUNBOOK.md). Não copie identificadores reais de turma para exemplos ou documentação.
+O procedimento completo está em [`../suricata/whatsapp/README.md`](../suricata/whatsapp/README.md). Não copie identificadores reais de turma para exemplos ou documentação.
 
 ## Como registrar uma agenda manual
 
@@ -137,4 +137,4 @@ O publicador faz verificação de concorrência e leitura de volta. Publicar nov
 - Testes offline e fixtures não provam Canvas ao vivo, IAM, imagem implantada, sessão ou entrega.
 - Ausência de dado não significa ausência de atividade: consulte o Canvas quando a coleta estiver parcial.
 
-Para entender a implementação, leia [`arquitetura.md`](arquitetura.md). Para nuvem, leia [`deploy-gcp.md`](deploy-gcp.md). Para troubleshooting, [`interno/TROUBLESHOOTING.md`](interno/TROUBLESHOOTING.md).
+Para entender a implementação, leia [`arquitetura.md`](arquitetura.md). Para nuvem, leia [`deploy-gcp.md`](deploy-gcp.md). Para troubleshooting, [`troubleshooting.md`](troubleshooting.md).

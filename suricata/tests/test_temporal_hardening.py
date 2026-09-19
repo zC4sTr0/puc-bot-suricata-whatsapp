@@ -34,7 +34,7 @@ class TemporalHardeningTests(unittest.TestCase):
 
         abre = datetime(2026, 9, dia, 10, 0, tzinfo=BRASILIA)
         fecha = abre + timedelta(minutes=15)
-        return Atividade("292184", "Computabilidade", chave, "Quiz", "quiz", abre,
+        return Atividade("100001", "Computabilidade", chave, "Quiz", "quiz", abre,
                          None, fecha, 3.0, "https://example.test/quiz")
 
     def test_fronteiras_de_corte_e_excecao_matinal_preservam_segundos(self):
@@ -76,7 +76,7 @@ class TemporalHardeningTests(unittest.TestCase):
             objetos = ObjetosLocais(Path(tmp))
             executar(objetos=objetos, canvas=canvas.cliente(), entrega_ligada=False,
                      grupo_jid=JID, ponte=None, agora=lambda: self.brt(9))
-            canvas.assignments["292184"] = [
+            canvas.assignments["100001"] = [
                 quiz(7, abre=self.brt(15), fecha=self.brt(15, 15))
             ]
             codigo, relatorio = executar(
@@ -94,7 +94,7 @@ class TemporalHardeningTests(unittest.TestCase):
             base = self.brt(6, 50)
             executar_destinos(objetos=objetos, canvas=canvas.cliente(), entrega_ligada=False,
                               ponte=None, destinos=destinos, agora=lambda: base)
-            canvas.assignments["292184"] = [
+            canvas.assignments["100001"] = [
                 quiz(8, abre=self.brt(17, 10), fecha=self.brt(17, 10, 15))
             ]
             ponte = PonteFalsa()
@@ -102,11 +102,11 @@ class TemporalHardeningTests(unittest.TestCase):
                 objetos=objetos, canvas=canvas.cliente(), entrega_ligada=True,
                 ponte=ponte, destinos=destinos, agora=lambda: self.brt(7))
             self.assertEqual((codigo, len(relatorios), len(ponte.lotes)), (0, 2, 2))
-            self.assertEqual({lote[0]["event_id"] for lote in ponte.lotes}, {"grupo:novo:292184:8"})
+            self.assertEqual({lote[0]["event_id"] for lote in ponte.lotes}, {"grupo:novo:100001:8"})
             self.assertEqual([r["destino"] for r in relatorios], ["grupo", "trabalho"])
             for prefixo in ("grupo", "destinos/trabalho"):
                 registros = json.loads(objetos.ler(f"{prefixo}/outbox.json").dados)
-                self.assertEqual([r["event_id"] for r in registros], ["grupo:novo:292184:8"])
+                self.assertEqual([r["event_id"] for r in registros], ["grupo:novo:100001:8"])
 
     def test_pendente_overnight_nao_duplica_texto_ao_atravessar_2100_e_070001(self):
         canvas = CanvasFalso()
@@ -115,7 +115,7 @@ class TemporalHardeningTests(unittest.TestCase):
             base = self.brt(20, 59, 59)
             executar(objetos=objetos, canvas=canvas.cliente(), entrega_ligada=False,
                      grupo_jid=JID, ponte=None, agora=lambda: base)
-            canvas.assignments["292184"] = [
+            canvas.assignments["100001"] = [
                 quiz(9, abre=self.brt(17, 10), fecha=self.brt(17, 10, 15))
             ]
             ponte = PonteFalsa()
@@ -127,7 +127,7 @@ class TemporalHardeningTests(unittest.TestCase):
             executar(objetos=objetos, canvas=canvas.cliente(), entrega_ligada=True,
                      grupo_jid=JID, ponte=ponte, agora=lambda: self.brt(7, minuto=1))
             eventos = [item for lote in ponte.lotes for item in lote]
-            self.assertEqual([item["event_id"] for item in eventos], ["grupo:novo:292184:9"])
+            self.assertEqual([item["event_id"] for item in eventos], ["grupo:novo:100001:9"])
             self.assertEqual(len({item["texto"] for item in eventos}), 1)
             registros = json.loads(objetos.ler(OUTBOX).dados)
             self.assertEqual([r["estado"] for r in registros], ["sent"])

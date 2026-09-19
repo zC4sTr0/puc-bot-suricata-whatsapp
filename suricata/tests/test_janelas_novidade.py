@@ -19,8 +19,8 @@ class JanelasNovidadeTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.objetos = ObjetosLocais(Path(self.tmp.name))
         self.canvas = CanvasFalso()
-        self.canvas.cursos.append({"id": 292185, "name": "Fundamentos de Ciência de Dados e Inteligência Artificial"})
-        self.canvas.assignments["292185"] = []
+        self.canvas.cursos.append({"id": 100004, "name": "Fundamentos de Ciência de Dados e Inteligência Artificial"})
+        self.canvas.assignments["100004"] = []
 
     def tearDown(self) -> None:
         self.tmp.cleanup()
@@ -40,7 +40,7 @@ class JanelasNovidadeTests(unittest.TestCase):
             "unlock_at": unlock.isoformat(),
             "lock_at": lock.isoformat(),
             "due_at": None,
-            "html_url": f"https://pucminas.instructure.com/courses/292185/assignments/{identificador}",
+            "html_url": f"https://canvas.example.test/courses/100004/assignments/{identificador}",
         }
 
     def rodar(self, agora: datetime, ponte: PonteFalsa | None = None) -> tuple[int, dict]:
@@ -58,17 +58,17 @@ class JanelasNovidadeTests(unittest.TestCase):
         return json.loads(dados) if dados else []
 
     def novidade(self) -> dict | None:
-        return next((registro for registro in self.outbox() if ":novo:292185:1435384" in registro["event_id"]), None)
+        return next((registro for registro in self.outbox() if ":novo:100004:200001" in registro["event_id"]), None)
 
     def lotes_da_novidade(self, ponte: PonteFalsa) -> list[list[dict]]:
-        return [lote for lote in ponte.lotes if any(":novo:292185:1435384" in item["event_id"] for item in lote)]
+        return [lote for lote in ponte.lotes if any(":novo:100004:200001" in item["event_id"] for item in lote)]
 
     def preparar_linha_de_base(self, agora: datetime) -> None:
         self.rodar(agora)
 
     def test_novidade_amanha_descoberta_as_10_sai_imediatamente_sem_resumo_duplicado(self):
         self.preparar_linha_de_base(self.brt(16, 9))
-        self.canvas.assignments["292185"] = [self.quiz(1435384, self.brt(17, 10, 10), self.brt(17, 10, 25))]
+        self.canvas.assignments["100004"] = [self.quiz(200001, self.brt(17, 10, 10), self.brt(17, 10, 25))]
         ponte = PonteFalsa()
 
         # 07:00–11:59 é novidade útil agora, e não espera o resumo das 18:00.
@@ -79,13 +79,13 @@ class JanelasNovidadeTests(unittest.TestCase):
         # O evento novo ocupa o lugar do resumo/véspera; não há duplicata.
         self.rodar(self.brt(16, 18), ponte)
         self.assertEqual([item["event_id"] for lote in ponte.lotes for item in lote],
-                         ["grupo:novo:292185:1435384"])
+                         ["grupo:novo:100004:200001"])
         self.rodar(self.brt(17, 7), ponte)
         self.assertEqual(len(self.lotes_da_novidade(ponte)), 1)
 
     def test_novidade_amanha_descoberta_as_1810_sai_somente_as_07(self):
         self.preparar_linha_de_base(self.brt(16, 9))
-        self.canvas.assignments["292185"] = [self.quiz(1435384, self.brt(17, 10, 10), self.brt(17, 10, 25))]
+        self.canvas.assignments["100004"] = [self.quiz(200001, self.brt(17, 10, 10), self.brt(17, 10, 25))]
         ponte = PonteFalsa()
 
         self.rodar(self.brt(16, 18, 10), ponte)
@@ -99,7 +99,7 @@ class JanelasNovidadeTests(unittest.TestCase):
 
     def test_novidade_amanha_descoberta_as_2000_sai_somente_as_07(self):
         self.preparar_linha_de_base(self.brt(16, 9))
-        self.canvas.assignments["292185"] = [self.quiz(1435384, self.brt(17, 10, 10), self.brt(17, 10, 25))]
+        self.canvas.assignments["100004"] = [self.quiz(200001, self.brt(17, 10, 10), self.brt(17, 10, 25))]
         ponte = PonteFalsa()
 
         self.rodar(self.brt(16, 20), ponte)
@@ -116,14 +116,14 @@ class JanelasNovidadeTests(unittest.TestCase):
         from suricata.dominio.publico import Atividade
 
         abre = self.brt(16, 18, 10)
-        atividade = Atividade("292185", "Fundamentos", "Quiz", "1435384", "quiz", abre,
+        atividade = Atividade("100004", "Fundamentos", "Quiz", "200001", "quiz", abre,
                               None, self.brt(16, 18, 25), 3.0, "", "canvas")
         self.assertEqual(janela_novidade(atividade, self.brt(16, 18, 10)), "imediata")
         self.assertEqual(janela_novidade(atividade, self.brt(16, 20, 59)), "imediata")
 
     def test_evento_do_mesmo_dia_entre_12_e_18_nao_fica_retido(self):
         self.preparar_linha_de_base(self.brt(16, 9))
-        self.canvas.assignments["292185"] = [self.quiz(1435384, self.brt(16, 13, 10), self.brt(16, 13, 25))]
+        self.canvas.assignments["100004"] = [self.quiz(200001, self.brt(16, 13, 10), self.brt(16, 13, 25))]
         ponte = PonteFalsa()
 
         self.rodar(self.brt(16, 13), ponte)
@@ -134,7 +134,7 @@ class JanelasNovidadeTests(unittest.TestCase):
     def test_publicacao_as_21h_descoberta_na_rodada_quiz_amanha_pending_e_um_envio_as_07(self):
         """Aceite literal: publicação 21:00 BRT, descoberta nessa rodada, sem reenvio."""
         self.preparar_linha_de_base(self.brt(16, 20, 50))
-        self.canvas.assignments["292185"] = [self.quiz(1435384, self.brt(17, 10, 10), self.brt(17, 10, 25))]
+        self.canvas.assignments["100004"] = [self.quiz(200001, self.brt(17, 10, 10), self.brt(17, 10, 25))]
         ponte = PonteFalsa()
 
         # Descoberta às 21:00: não publica à noite, mas deixa a novidade durável.
@@ -151,7 +151,7 @@ class JanelasNovidadeTests(unittest.TestCase):
         self.assertEqual(self.novidade()["estado"], "sent")
 
     def test_item_descoberto_em_sombra_nao_e_consumido_antes_do_outbox(self):
-        self.canvas.assignments["292185"] = [self.quiz(1435384, self.brt(17, 10, 10), self.brt(17, 10, 25))]
+        self.canvas.assignments["100004"] = [self.quiz(200001, self.brt(17, 10, 10), self.brt(17, 10, 25))]
         self.preparar_linha_de_base(self.brt(16, 11, 50))
         ponte = PonteFalsa()
 
@@ -162,7 +162,7 @@ class JanelasNovidadeTests(unittest.TestCase):
 
     def test_novidade_sem_ack_permanece_pendente(self):
         self.preparar_linha_de_base(self.brt(16, 9))
-        self.canvas.assignments["292185"] = [self.quiz(1435384, self.brt(16, 10, 10), self.brt(16, 10, 25))]
+        self.canvas.assignments["100004"] = [self.quiz(200001, self.brt(16, 10, 10), self.brt(16, 10, 25))]
         ponte = PonteFalsa(ack=False)
 
         self.rodar(self.brt(16, 10), ponte)

@@ -33,7 +33,7 @@ SEED = 20260918
 AMOSTRAS = 240
 JID = "120363000000000000-1700000000@g.us"
 
-CURSOS = [("292184", "Computabilidade"), ("289837", "Mentoria"), ("276510", "Teoria da Computação"),
+CURSOS = [("100001", "Computabilidade"), ("100002", "Mentoria"), ("276510", "Teoria da Computação"),
           ("281144", "Banco de Dados"), ("295002", "Engenharia de Software")]
 PALAVRAS = ["Prova", "quiz relâmpago", "Lista de exercícios", "Trabalho prático", "Seminário",
             "entrega do projeto", "Revisão", "Atividade avaliativa", "lab", "Leitura prévia"]
@@ -55,7 +55,7 @@ def _atividade(aleatorio: random.Random, i: int) -> Atividade:
     return Atividade(curso_id, curso, str(1000 + i), f"{titulo} #{i}",
                      aleatorio.choice(TIPOS), datas[0], datas[1], datas[2],
                      aleatorio.choice([None, 1.0, 3.0, 10.0]),
-                     f"https://pucminas.instructure.com/courses/{curso_id}/assignments/{1000 + i}")
+                     f"https://canvas.example.test/courses/{curso_id}/assignments/{1000 + i}")
 
 
 def _anuncios(aleatorio: random.Random, atividades: list[Atividade]) -> list[Anuncio] | None:
@@ -67,7 +67,7 @@ def _anuncios(aleatorio: random.Random, atividades: list[Atividade]) -> list[Anu
         curso_id, curso = aleatorio.choice(CURSOS)
         saida.append(Anuncio(f"anuncio-{aleatorio.randint(1, 9999)}", curso_id, curso,
                              aleatorio.choice(PALAVRAS), "recado do professor",
-                             "https://pucminas.instructure.com/courses/x/discussion_topics/y"))
+                             "https://canvas.example.test/courses/x/discussion_topics/y"))
     _ = atividades
     return saida
 

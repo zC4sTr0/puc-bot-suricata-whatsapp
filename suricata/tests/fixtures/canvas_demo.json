@@ -2,13 +2,13 @@
  "_comentario": "Fixture congelada do modo demo: dados públicos e sintéticos. Relógio fixo do demo: ter 15/09/2026, 17:50 de Brasília (20:50 UTC); a rodada 2 acontece 10 min depois (18:00 BRT, hora da véspera). 'novidades' só entra na rodada 2: quiz-relâmpago publicado às 18:05 BRT. Horários em UTC (BRT = UTC-3; 16/09 23:59 BRT = 17/09 02:59 UTC).",
  "cursos": [
   {
-   "id": 292184,
+   "id": 100001,
    "name": "Computabilidade"
   }
  ],
  "anuncios": [],
  "assignments": {
-  "292184": [
+  "100001": [
    {
     "id": 901,
     "name": "Lista 1: Indução matemática",
@@ -19,7 +19,7 @@
     "unlock_at": null,
     "due_at": null,
     "lock_at": "2026-09-17T02:59:00Z",
-    "html_url": "https://canvas.example.test/courses/292184/assignments/901"
+    "html_url": "https://canvas.example.test/courses/100001/assignments/901"
    },
    {
     "id": 902,
@@ -31,12 +31,12 @@
     "unlock_at": "2026-09-16T03:00:00Z",
     "due_at": "2026-09-17T02:59:00Z",
     "lock_at": "2026-09-17T02:59:00Z",
-    "html_url": "https://canvas.example.test/courses/292184/assignments/902"
+    "html_url": "https://canvas.example.test/courses/100001/assignments/902"
    }
   ]
  },
  "novidades": {
-  "292184": [
+  "100001": [
    {
     "id": 903,
     "name": "Quiz relâmpago",
@@ -48,7 +48,7 @@
     "unlock_at": "2026-09-15T21:05:00Z",
     "due_at": null,
     "lock_at": "2026-09-15T21:20:00Z",
-    "html_url": "https://canvas.example.test/courses/292184/assignments/903"
+    "html_url": "https://canvas.example.test/courses/100001/assignments/903"
    }
   ]
  }

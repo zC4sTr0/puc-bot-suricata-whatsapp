@@ -85,7 +85,7 @@ def instalar_node_deps() -> None:
     except subprocess.CalledProcessError as exc:
         print(
             f"AVISO: npm ci falhou (exit {exc.returncode}). A dependencia Git "
-            "(libsignal) pode exigir rede. Veja docs/TROUBLESHOOTING.md. "
+            "(libsignal) pode exigir rede. Veja docs/troubleshooting.md. "
             "Os testes .mjs ficam de fora ate resolver; o resto do bootstrap "
             "continua."
         )
@@ -134,7 +134,7 @@ def main() -> int:
         return 1
     print(
         "\nTudo verde por aqui. Proximos passos:\n"
-        "  - Siga a trilha do estudante: docs/TRILHA-ESTUDANTE.md\n"
+        "  - Continue com o guia: docs/guia.md\n"
         "  - Modo demo offline: python -m suricata --mode demo\n"
         "  - Para contribuir: CONTRIBUTING.md"
     )

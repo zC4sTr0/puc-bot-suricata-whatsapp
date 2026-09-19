@@ -15,8 +15,8 @@ class CursosExcluidosConfigTests(unittest.TestCase):
 
     def test_lista_comma_separada_aceita_espacos(self):
         self.assertEqual(
-            cursos_excluidos_do_ambiente({"SURICATA_CURSOS_EXCLUIDOS": "104959, 292184"}),
-            frozenset({"104959", "292184"}),
+            cursos_excluidos_do_ambiente({"SURICATA_CURSOS_EXCLUIDOS": "104959, 100001"}),
+            frozenset({"104959", "100001"}),
         )
 
     def test_rejeita_id_nao_numerico(self):
@@ -33,14 +33,14 @@ class CursosExcluidosConfigTests(unittest.TestCase):
 
     def test_coleta_usa_exclusoes_configuradas(self):
         canvas = CanvasFalso()
-        coletar(canvas.cliente(), AGORA, cursos_excluidos={"104959", "289837"})
-        self.assertFalse(any("/courses/104959/" in url or "/courses/289837/" in url for url in canvas.urls))
+        coletar(canvas.cliente(), AGORA, cursos_excluidos={"104959", "100002"})
+        self.assertFalse(any("/courses/104959/" in url or "/courses/100002/" in url for url in canvas.urls))
 
     def test_coleta_le_a_env_quando_nao_recebe_override(self):
         canvas = CanvasFalso()
-        with patch.dict("os.environ", {"SURICATA_CURSOS_EXCLUIDOS": "104959,289837"}):
+        with patch.dict("os.environ", {"SURICATA_CURSOS_EXCLUIDOS": "104959,100002"}):
             coletar(canvas.cliente(), AGORA)
-        self.assertFalse(any("/courses/104959/" in url or "/courses/289837/" in url for url in canvas.urls))
+        self.assertFalse(any("/courses/104959/" in url or "/courses/100002/" in url for url in canvas.urls))
 
 
 if __name__ == "__main__":

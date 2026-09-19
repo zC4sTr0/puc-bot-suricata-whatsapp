@@ -102,7 +102,7 @@ A fixture da demo contém dados sintéticos. Exemplos e relatórios da demo são
 
 O Cloud Scheduler dispara o Cloud Run Job. O job recebe configuração do ambiente do processo (em produção, materializada pelo Secret Manager), executa a rodada e termina. O `Dockerfile` usa `python3 -m suricata` com `shadow` como padrão; um container sem sobrescrita apenas reporta saúde.
 
-O armazenamento pode ser um diretório local quando `SURICATA_ESTADO_URI` não usa `gs://`, ou um bucket quando usa `gs://`. O Docker não deve conter `auth.json`, QR, sessão ou segredo. O procedimento de publicação está em [`deploy-gcp.md`](deploy-gcp.md); as variáveis e seus significados estão em [`interno/CONFIGURATION.md`](interno/CONFIGURATION.md) e [`.env.example`](../.env.example).
+O armazenamento pode ser um diretório local quando `SURICATA_ESTADO_URI` não usa `gs://`, ou um bucket quando usa `gs://`. O Docker não deve conter `auth.json`, QR, sessão ou segredo. O procedimento de publicação está em [`deploy-gcp.md`](deploy-gcp.md); as variáveis e seus significados estão em [`configuracao.md`](configuracao.md) e [`.env.example`](../.env.example).
 
 ## Mapa das pastas
 
@@ -130,4 +130,4 @@ A regra de ownership é simples: `dominio/` não conhece rede nem disco; `integr
 5. Não reintroduza a família legada removida (`sentinela`, `application`, `domain`, `adapter`, `estado`, `grupo`, `delivery`, `notifiers/` e `legacy/`) nem fachadas de compatibilidade sem contrato explícito.
 6. Teste verde offline não prova IAM, build, digest implantado, Canvas ao vivo, sessão ou entrega WhatsApp.
 
-Os contratos exatos estão em [`interno/CONTRACTS.md`](interno/CONTRACTS.md); o mapa módulo a módulo, em [`interno/MAPA.md`](interno/MAPA.md). O tutorial de uso é [`guia.md`](guia.md).
+Os contratos exatos são exercitados pelos testes em `suricata/tests/`; o tutorial de uso é [`guia.md`](guia.md).

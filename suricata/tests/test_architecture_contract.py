@@ -21,4 +21,4 @@ def test_clean_architecture_contract_keeps_node_as_named_transport_boundary():
 
     assert '"enviar.mjs"' in bridge
     assert node_entrypoint.exists()
-    assert (ROOT / "docs" / "interno" / "CONTRACTS.md").exists()
+    assert (ROOT / "docs" / "arquitetura.md").exists()

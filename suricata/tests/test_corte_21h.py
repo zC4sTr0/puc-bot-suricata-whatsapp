@@ -38,7 +38,7 @@ class Corte21hTests(unittest.TestCase):
             "unlock_at": inicio.isoformat(),
             "lock_at": fim.isoformat(),
             "due_at": None,
-            "html_url": "https://pucminas.instructure.com/atividade",
+            "html_url": "https://canvas.example.test/atividade",
         }
 
     def rodar(self, agora: datetime) -> tuple[int, dict]:
@@ -58,7 +58,7 @@ class Corte21hTests(unittest.TestCase):
     def test_nova_atividade_do_mesmo_dia_apos_21h_e_descartada(self):
         self.rodar(self.brt(15, 12))
         inicio, fim = self.brt(15, 20), self.brt(15, 23)
-        self.canvas.assignments["292184"] = [self.quiz(1, inicio, fim)]
+        self.canvas.assignments["100001"] = [self.quiz(1, inicio, fim)]
 
         codigo, relatorio = self.rodar(self.brt(15, 21, 1))
 
@@ -70,7 +70,7 @@ class Corte21hTests(unittest.TestCase):
     def test_descoberta_literal_as_2100_de_ontem_vai_para_07_de_hoje(self):
         self.rodar(self.brt(15, 12))
         inicio, fim = self.brt(16, 10), self.brt(16, 10, 15)
-        self.canvas.assignments["292184"] = [self.quiz(2, inicio, fim)]
+        self.canvas.assignments["100001"] = [self.quiz(2, inicio, fim)]
 
         # Caso literal: descoberta exatamente às 21:00 de ontem.
         self.rodar(self.brt(15, 21))
@@ -85,7 +85,7 @@ class Corte21hTests(unittest.TestCase):
     def test_novidade_amanha_apos_21h_preserva_evento_para_07h(self):
         self.rodar(self.brt(15, 12))
         inicio, fim = self.brt(16, 10), self.brt(16, 10, 15)
-        self.canvas.assignments["292184"] = [self.quiz(3, inicio, fim)]
+        self.canvas.assignments["100001"] = [self.quiz(3, inicio, fim)]
 
         self.rodar(self.brt(15, 21, 1))
 
@@ -98,7 +98,7 @@ class Corte21hTests(unittest.TestCase):
 
     def test_nova_atividade_do_mesmo_dia_ja_presente_ontem_nao_e_excecao(self):
         inicio, fim = self.brt(15, 20), self.brt(15, 20, 15)
-        self.canvas.assignments["292184"] = [self.quiz(4, inicio, fim)]
+        self.canvas.assignments["100001"] = [self.quiz(4, inicio, fim)]
         self.rodar(self.brt(14, 10))
 
         self.rodar(self.brt(15, 21, 1))

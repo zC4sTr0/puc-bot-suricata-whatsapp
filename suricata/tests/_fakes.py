@@ -24,9 +24,9 @@ def iso(momento: datetime) -> str:
 
 class CanvasFalso:
     def __init__(self) -> None:
-        self.cursos = [{"id": 292184, "name": "Computabilidade"}, {"id": 289837, "name": "Mentoria"},
+        self.cursos = [{"id": 100001, "name": "Computabilidade"}, {"id": 100002, "name": "Mentoria"},
                        {"id": 104959, "name": "Coordenação"}]
-        self.assignments: dict[str, list] = {"292184": []}
+        self.assignments: dict[str, list] = {"100001": []}
         self.status_cursos = 200
         self.status_assignments = 200
         self.status_anuncios = 200
@@ -61,4 +61,4 @@ class PonteFalsa:
 def quiz(i: int, *, abre: datetime | None, fecha: datetime | None, nome: str = "Quiz relâmpago") -> dict:
     return {"id": i, "name": nome, "points_possible": 3, "quiz_id": 900 + i,
             "unlock_at": iso(abre) if abre else None, "lock_at": iso(fecha) if fecha else None, "due_at": None,
-            "html_url": f"https://canvas.example.test/courses/292184/assignments/{i}?fixture=synthetic"}
+            "html_url": f"https://canvas.example.test/courses/100001/assignments/{i}?fixture=synthetic"}

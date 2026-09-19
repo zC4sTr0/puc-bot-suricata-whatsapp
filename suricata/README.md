@@ -21,13 +21,12 @@ reporta saúde.
 - Tutorial progressivo, sem efeitos: [`docs/guia.md`](../docs/guia.md)
 - Como contribuir: [`CONTRIBUTING.md`](../CONTRIBUTING.md)
 - Índice geral da documentação: [`docs/README.md`](../docs/README.md)
-- Mapa módulo a módulo e contratos: [`docs/interno/MAPA.md`](../docs/interno/MAPA.md) e
-  [`docs/interno/CONTRACTS.md`](../docs/interno/CONTRACTS.md)
-- Testes (o que provam e o que não): [`tests/README.md`](tests/README.md)
+- Arquitetura e contratos: [`docs/arquitetura.md`](../docs/arquitetura.md) e
+  [`tests/README.md`](tests/README.md)
 - Ponte Node/WhatsApp: [`whatsapp/README.md`](whatsapp/README.md)
 - Fronteira de infraestrutura: [`infra/README.md`](infra/README.md)
 
 A configuração vem do ambiente do processo (variáveis `SURICATA_*`,
-documentadas em [`docs/interno/CONFIGURATION.md`](../docs/interno/CONFIGURATION.md)
+documentadas em [`docs/configuracao.md`](../docs/configuracao.md)
 e no [`.env.example`](../.env.example) da raiz); não existe arquivo de
 configuração.

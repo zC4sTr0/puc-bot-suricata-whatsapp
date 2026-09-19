@@ -151,4 +151,4 @@ Não apague o estado para “limpar” uma falha e não faça rollback trocando 
 - Uma operação real depende de autorização do responsável, destino confirmado, IAM revisado, estado recuperável e observação contínua.
 - Documentação não substitui read-back do projeto `<projeto-autorizado>`, região `<regiao-confirmada>`, Job, Scheduler, bucket, digest e identidade no ambiente real.
 
-Para aprender, comece pelo [`guia.md`](guia.md) e pela demo. Para entender a estrutura, leia [`arquitetura.md`](arquitetura.md). Para uma operação autorizada, use também [`deploy-gcp.md`](deploy-gcp.md) e os documentos internos, lembrando que eles descrevem controles e não concedem autorização.
+Para aprender, comece pelo [`guia.md`](guia.md) e pela demo. Para entender a estrutura, leia [`arquitetura.md`](arquitetura.md). Para uma operação autorizada, use também [`deploy-gcp.md`](deploy-gcp.md) e [`configuracao.md`](configuracao.md), lembrando que esses documentos descrevem controles e não concedem autorização.

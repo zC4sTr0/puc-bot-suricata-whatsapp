@@ -71,7 +71,7 @@ class RodadaTests(unittest.TestCase):
         return {r["event_id"]: r for r in json.loads(obj.dados)} if obj.dados else {}
 
     def test_linha_de_base_nao_anuncia_o_que_ja_existe(self):
-        self.canvas.assignments["292184"] = [quiz(1, abre=AGORA + timedelta(days=2), fecha=AGORA + timedelta(days=2, minutes=15))]
+        self.canvas.assignments["100001"] = [quiz(1, abre=AGORA + timedelta(days=2), fecha=AGORA + timedelta(days=2, minutes=15))]
         codigo, rel = self.rodar()
         self.assertEqual((codigo, rel["linha_de_base"], rel["eventos"]), (0, True, []))
         self.assertIsNotNone(self.objetos.ler(MEMORIA).dados)
@@ -79,7 +79,7 @@ class RodadaTests(unittest.TestCase):
     def test_sombra_nao_consume_item_antes_de_outbox_duravel(self):
         self.rodar()
         abre = AGORA + timedelta(hours=3)
-        self.canvas.assignments["292184"] = [quiz(7, abre=abre, fecha=abre + timedelta(hours=1))]
+        self.canvas.assignments["100001"] = [quiz(7, abre=abre, fecha=abre + timedelta(hours=1))]
 
         self.rodar(AGORA + timedelta(minutes=10))
         ponte = PonteFalsa()
@@ -91,7 +91,7 @@ class RodadaTests(unittest.TestCase):
     def test_falha_de_publicacao_nao_consume_item(self):
         self.rodar()
         abre = AGORA + timedelta(hours=3)
-        self.canvas.assignments["292184"] = [quiz(8, abre=abre, fecha=abre + timedelta(hours=1))]
+        self.canvas.assignments["100001"] = [quiz(8, abre=abre, fecha=abre + timedelta(hours=1))]
 
         class Falha(PonteFalsa):
             def enviar_lote(self, grupo_jid, eventos):
@@ -107,18 +107,18 @@ class RodadaTests(unittest.TestCase):
     def test_corte_21h_descartando_evento_de_hoje_nao_consume_item(self):
         self.rodar(AGORA - timedelta(days=1))
         inicio = AGORA.replace(hour=20, minute=0)
-        self.canvas.assignments["292184"] = [quiz(9, abre=inicio, fecha=inicio + timedelta(minutes=15))]
+        self.canvas.assignments["100001"] = [quiz(9, abre=inicio, fecha=inicio + timedelta(minutes=15))]
 
         # Após o corte, o evento de hoje é descartado e não vira "visto".
         self.rodar(AGORA.replace(hour=21, minute=1), entrega=True, ponte=PonteFalsa())
-        self.canvas.assignments["292184"] = []
+        self.canvas.assignments["100001"] = []
         _, rel = self.rodar(AGORA.replace(hour=10, minute=10), entrega=True, ponte=PonteFalsa())
         self.assertEqual(rel["eventos"], [])
 
     def test_quiz_sem_prazo_novo_gera_aviso_em_brasilia_e_cobre_mentoria(self):
         self.rodar()
         abre = datetime(2026, 9, 14, 13, 10, tzinfo=timezone.utc)  # 10:10 Brasília
-        self.canvas.assignments["292184"] = [quiz(7, abre=abre, fecha=abre + timedelta(minutes=15))]
+        self.canvas.assignments["100001"] = [quiz(7, abre=abre, fecha=abre + timedelta(minutes=15))]
         codigo, rel = self.rodar(AGORA + timedelta(minutes=10))
         self.assertEqual(codigo, 0)
         self.assertEqual([e["tipo"] for e in rel["eventos"]], ["novo"])
@@ -128,13 +128,13 @@ class RodadaTests(unittest.TestCase):
         self.assertIn("🔓 seg 14/09 10:10 → 🔒 10:25 (15 min)", texto)
         self.assertNotIn("esteja", texto)  # D36: só constata, nunca manda
         self.assertNotIn("token", texto)  # query de URL nunca vai ao grupo
-        self.assertTrue(any("/courses/289837/assignments" in url for url in self.canvas.urls))
+        self.assertTrue(any("/courses/100002/assignments" in url for url in self.canvas.urls))
         self.assertFalse(any("/104959/" in u for u in self.canvas.urls))
         self.assertEqual(self.objetos.ler(OUTBOX).dados, None)  # sombra não enfileira
 
     def test_entrega_confirmada_nao_repete(self):
         self.rodar()
-        self.canvas.assignments["292184"] = [quiz(7, abre=AGORA + timedelta(hours=3), fecha=AGORA + timedelta(hours=4))]
+        self.canvas.assignments["100001"] = [quiz(7, abre=AGORA + timedelta(hours=3), fecha=AGORA + timedelta(hours=4))]
         ponte = PonteFalsa()
         self.rodar(AGORA + timedelta(minutes=10), entrega=True, ponte=ponte)
         self.rodar(AGORA + timedelta(minutes=20), entrega=True, ponte=ponte)
@@ -145,7 +145,7 @@ class RodadaTests(unittest.TestCase):
 
     def test_sem_ack_reenvia_mesmo_message_id_ate_confirmar_e_nunca_unknown(self):
         self.rodar()
-        self.canvas.assignments["292184"] = [quiz(7, abre=AGORA + timedelta(hours=3), fecha=AGORA + timedelta(hours=4))]
+        self.canvas.assignments["100001"] = [quiz(7, abre=AGORA + timedelta(hours=3), fecha=AGORA + timedelta(hours=4))]
         falha = PonteFalsa(ack=False)
         self.rodar(AGORA + timedelta(minutes=10), entrega=True, ponte=falha)
         self.assertEqual(next(iter(self.outbox().values()))["estado"], "pending")
@@ -157,7 +157,7 @@ class RodadaTests(unittest.TestCase):
 
     def test_crash_com_evento_in_flight_reenvia_na_rodada_seguinte(self):
         self.rodar()
-        self.canvas.assignments["292184"] = [quiz(7, abre=AGORA + timedelta(hours=3), fecha=AGORA + timedelta(hours=4))]
+        self.canvas.assignments["100001"] = [quiz(7, abre=AGORA + timedelta(hours=3), fecha=AGORA + timedelta(hours=4))]
 
         class Morre(PonteFalsa):
             def enviar_lote(self, grupo_jid, eventos):
@@ -174,9 +174,9 @@ class RodadaTests(unittest.TestCase):
     def test_evento_expira_em_vez_de_sair_atrasado(self):
         self.rodar()
         abre = AGORA + timedelta(minutes=30)
-        self.canvas.assignments["292184"] = [quiz(7, abre=abre, fecha=abre + timedelta(minutes=15))]
+        self.canvas.assignments["100001"] = [quiz(7, abre=abre, fecha=abre + timedelta(minutes=15))]
         self.rodar(AGORA + timedelta(minutes=10), entrega=True, ponte=PonteFalsa(ack=False))
-        self.canvas.assignments["292184"] = []
+        self.canvas.assignments["100001"] = []
         self.rodar(AGORA + timedelta(hours=2), entrega=True, ponte=PonteFalsa())
         self.assertEqual({r["estado"] for r in self.outbox().values()}, {"expirado"})
 
@@ -202,7 +202,7 @@ class RodadaTests(unittest.TestCase):
     def test_lembrete_quinze_minutos_antes_uma_vez_e_nao_duplica_com_novo(self):
         """D32: lembrete antes de um quiz já conhecido abrir; uma vez só."""
         abre = AGORA + timedelta(hours=2)
-        self.canvas.assignments["292184"] = [quiz(1, abre=abre, fecha=abre + timedelta(minutes=15))]
+        self.canvas.assignments["100001"] = [quiz(1, abre=abre, fecha=abre + timedelta(minutes=15))]
         self.rodar(entrega=True, ponte=PonteFalsa())  # linha de base durável
         self.assertEqual(self.rodar(abre - timedelta(minutes=30))[1]["eventos"], [])
         _, rel = self.rodar(abre - timedelta(minutes=12), entrega=True, ponte=PonteFalsa())
@@ -210,7 +210,7 @@ class RodadaTests(unittest.TestCase):
         self.assertIn("o quiz abre às 11:00 e fecha 11:15!", rel["eventos"][0]["texto"])
         self.assertEqual(self.rodar(abre - timedelta(minutes=2))[1]["eventos"], [])
         # quiz publicado já dentro da janela: só o aviso de publicação
-        self.canvas.assignments["292184"].append(quiz(2, abre=abre, fecha=abre + timedelta(minutes=15)))
+        self.canvas.assignments["100001"].append(quiz(2, abre=abre, fecha=abre + timedelta(minutes=15)))
         _, rel = self.rodar(abre - timedelta(minutes=5))
         self.assertEqual([e["tipo"] for e in rel["eventos"]], ["novo"])
 
@@ -218,22 +218,22 @@ class RodadaTests(unittest.TestCase):
         hoje = AGORA + timedelta(hours=3)          # 12:00 de hoje
         amanha = AGORA + timedelta(days=1)         # 09:00 de amanhã
         longe = AGORA + timedelta(days=40)
-        self.canvas.assignments["292184"] = [quiz(1, abre=hoje, fecha=hoje + timedelta(minutes=15)),
+        self.canvas.assignments["100001"] = [quiz(1, abre=hoje, fecha=hoje + timedelta(minutes=15)),
                                              quiz(2, abre=amanha, fecha=amanha + timedelta(minutes=15)),
                                              quiz(3, abre=longe, fecha=longe + timedelta(minutes=15))]
         self.rodar(entrega=True, ponte=PonteFalsa())
         mover = lambda i, d: quiz(i, abre=d + timedelta(hours=1), fecha=d + timedelta(hours=1, minutes=15))  # noqa: E731
-        self.canvas.assignments["292184"] = [mover(1, hoje), mover(2, amanha), mover(3, longe)]
+        self.canvas.assignments["100001"] = [mover(1, hoje), mover(2, amanha), mover(3, longe)]
         _, rel = self.rodar(AGORA + timedelta(minutes=10), entrega=True, ponte=PonteFalsa())  # 09:10
         self.assertEqual([e["event_id"].split(":")[3] for e in rel["eventos"]], ["1", "2"])
-        self.canvas.assignments["292184"] = [mover(1, hoje), mover(2, amanha + timedelta(hours=2)), mover(3, longe)]
+        self.canvas.assignments["100001"] = [mover(1, hoje), mover(2, amanha + timedelta(hours=2)), mover(3, longe)]
         _, rel = self.rodar(AGORA + timedelta(hours=10), entrega=True, ponte=PonteFalsa())  # 19:00
         self.assertEqual([e["event_id"].split(":")[3] for e in rel["eventos"] if e["tipo"] == "mudou"], ["2"])
 
 
-def _anuncio(i: int, titulo: str, mensagem: str = "", curso: int = 292184) -> dict:
+def _anuncio(i: int, titulo: str, mensagem: str = "", curso: int = 100001) -> dict:
     return {"id": i, "title": titulo, "message": f"<p>{mensagem}</p>", "context_code": f"course_{curso}",
-            "posted_at": "2026-09-14T11:00:00Z", "html_url": f"https://pucminas.instructure.com/courses/{curso}/discussion_topics/{i}"}
+            "posted_at": "2026-09-14T11:00:00Z", "html_url": f"https://canvas.example.test/courses/{curso}/discussion_topics/{i}"}
 
 
 class AnuncioRodadaTests(unittest.TestCase):
@@ -242,7 +242,7 @@ class AnuncioRodadaTests(unittest.TestCase):
     rodar = RodadaTests.rodar
 
     def test_anuncio_de_prova_avisa_e_antigo_ou_irrelevante_nao(self):
-        self.canvas.assignments["292184"] = [quiz(1, abre=None, fecha=AGORA + timedelta(days=9))]
+        self.canvas.assignments["100001"] = [quiz(1, abre=None, fecha=AGORA + timedelta(days=9))]
         self.canvas.anuncios = [_anuncio(50, "Prova 1 remarcada", "já existia")]
         self.assertEqual(self.rodar(entrega=True, ponte=PonteFalsa())[1]["eventos"], [])  # linha de base também dos anúncios
         self.canvas.anuncios += [_anuncio(51, "Slides da aula 5", "material"),
@@ -258,7 +258,7 @@ class AnuncioRodadaTests(unittest.TestCase):
     def test_falha_nos_anuncios_nao_bloqueia_quiz(self):
         self.rodar()
         self.canvas.status_anuncios = 500
-        self.canvas.assignments["292184"] = [quiz(7, abre=AGORA + timedelta(hours=3), fecha=AGORA + timedelta(hours=4))]
+        self.canvas.assignments["100001"] = [quiz(7, abre=AGORA + timedelta(hours=3), fecha=AGORA + timedelta(hours=4))]
         codigo, rel = self.rodar(AGORA + timedelta(minutes=10))
         self.assertEqual((codigo, rel["estado"], [e["tipo"] for e in rel["eventos"]]), (0, "parcial", ["novo"]))
 
@@ -271,7 +271,7 @@ class TextoTests(unittest.TestCase):
         momento = "2026-11-26T13:30:00Z"
         a = atividade_de(PublicAssignment(id="1", name="Avaliação II", points_possible=25.0, unlock_at=momento,
                                           lock_at=momento, submission_types=("none",)),
-                         "292185", "Fundamentos de Ciência de Dados - Campus Lourdes - PLU - Manhã - 2026/2")
+                         "100004", "Fundamentos de Ciência de Dados - Campus Lourdes - PLU - Manhã - 2026/2")
         texto = texto_novo(a)
         self.assertEqual(texto.splitlines()[:3], ["🚨 🎓 *PUC Bot*: prova no Canvas!",
                                                   "📚 Fundamentos de Ciência de Dados — Avaliação II · 25 pts",
@@ -292,8 +292,8 @@ class PonteRealTests(unittest.TestCase):
         from suricata.integracao.bridge import BridgeError, WhatsAppBridge
 
         abre = AGORA + timedelta(hours=1)
-        a = Atividade("292184", "Computabilidade", "1", "Quiz", "quiz", abre, None, abre + timedelta(minutes=15), 3.0,
-                      "https://pucminas.instructure.com/courses/292184/assignments/1")
+        a = Atividade("100001", "Computabilidade", "1", "Quiz", "quiz", abre, None, abre + timedelta(minutes=15), 3.0,
+                      "https://canvas.example.test/courses/100001/assignments/1")
         textos = [texto_novo(a), texto_lembrete(a), texto_mudou(a), texto_anuncio("C", "Prova", "linha", "")]
         eventos = [{"event_id": f"e{i}", "message_id": message_id(JID, f"e{i}"), "texto": t} for i, t in enumerate(textos)]
         self.assertTrue(all("\n" in t for t in textos))
@@ -362,7 +362,7 @@ if __name__ == "__main__":
 class VesperaTests(unittest.TestCase):
     """Mensagem das 18:00: agrupada por matéria; antecedência para matéria pesada."""
 
-    def _atividade(self, titulo, tipo, abre=None, fecha=None, curso="Introdução à Computação", curso_id="292189",
+    def _atividade(self, titulo, tipo, abre=None, fecha=None, curso="Introdução à Computação", curso_id="100005",
                    pontos=None, estudo=""):
         from suricata.dominio.publico import Atividade
 
@@ -483,7 +483,7 @@ class MateriaPesadaTests(unittest.TestCase):
 class AgendaManualTests(unittest.TestCase):
     """Datas anotadas em aula complementam o Canvas; o Canvas sempre vence."""
 
-    def _canvas(self, titulo, tipo, dia_iso, assignment_id="1", curso_id="292189"):
+    def _canvas(self, titulo, tipo, dia_iso, assignment_id="1", curso_id="100005"):
         from suricata.dominio.publico import BRASILIA, Atividade
 
         d = datetime.fromisoformat(dia_iso).replace(tzinfo=BRASILIA)
@@ -493,13 +493,13 @@ class AgendaManualTests(unittest.TestCase):
     def test_complementa_so_o_que_o_canvas_nao_cobre(self):
         from suricata.rodada.agenda_manual import complementar
 
-        canvas = [self._canvas("Prova 1", "avaliacao", "2026-09-23", "1441228")]
+        canvas = [self._canvas("Prova 1", "avaliacao", "2026-09-23", "200002")]
         manual = [
-            {"id": "ligado", "curso_id": "292189", "titulo": "Prova 1", "tipo": "avaliacao", "data": "2026-09-30", "canvas_assignment_id": "1441228"},
-            {"id": "mesmo-dia", "curso_id": "292189", "titulo": "P1", "tipo": "avaliacao", "data": "2026-09-23"},
-            {"id": "sem-data", "curso_id": "292189", "titulo": "ADA", "tipo": "avaliacao", "data": None},
+            {"id": "ligado", "curso_id": "100005", "titulo": "Prova 1", "tipo": "avaliacao", "data": "2026-09-30", "canvas_assignment_id": "200002"},
+            {"id": "mesmo-dia", "curso_id": "100005", "titulo": "P1", "tipo": "avaliacao", "data": "2026-09-23"},
+            {"id": "sem-data", "curso_id": "100005", "titulo": "ADA", "tipo": "avaliacao", "data": None},
             {"id": "sem-oferta", "curso_id": None, "titulo": "Prova 2", "tipo": "avaliacao", "data": "2026-10-10"},
-            {"id": "ic-prova-2", "curso_id": "292189", "curso": "Introdução à Computação", "titulo": "Prova 2",
+            {"id": "ic-prova-2", "curso_id": "100005", "curso": "Introdução à Computação", "titulo": "Prova 2",
              "tipo": "avaliacao", "data": "2026-12-03", "pontos": 30},
         ]
         (extra,) = complementar(canvas, manual)
