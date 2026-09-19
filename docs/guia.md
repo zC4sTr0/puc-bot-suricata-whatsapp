@@ -140,6 +140,14 @@ janela BRT aberta (nada sai entre 21:00 e 06:59). Errar qualquer um deles
 trava o envio. Para entender o porquê de cada trava, leia
 [`arquitetura.md`](arquitetura.md).
 
+Alternativamente às env vars de destino, `SURICATA_CONFIG` aponta para um
+arquivo JSON com os destinos (útil quando o JSON ficaria grande demais para
+uma variável de ambiente): `{"destinos": [{"id": "turma-a", "jid": "...@g.us"}]}`.
+Os destinos do arquivo são a base e as env vars de destino, quando presentes,
+sobrepõem o arquivo (env > arquivo); arquivo ausente ou inválido faz o runtime
+falhar fechado, no mesmo padrão das outras validações. A chave `lease_minutos`
+do arquivo é aceita, mas o lease continua lido de `SURICATA_LEASE_MINUTOS`.
+
 ## Colocando no WhatsApp de verdade
 
 Chegou até aqui e quer entrega real? Os três passos, na ordem:
