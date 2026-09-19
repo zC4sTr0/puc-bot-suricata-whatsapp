@@ -22,9 +22,9 @@ def _lease_minutos_do_ambiente() -> int:
     try:
         minutos = int(os.environ.get("SURICATA_LEASE_MINUTOS", "6"))
     except ValueError as exc:
-        raise ValueError("SURICATA_LEASE_MINUTOS deve ser inteiro positivo") from exc
-    if minutos < 1:
-        raise ValueError("SURICATA_LEASE_MINUTOS deve ser inteiro positivo")
+        raise ValueError("SURICATA_LEASE_MINUTOS deve ser inteiro não negativo")
+    if minutos < 0:
+        raise ValueError("SURICATA_LEASE_MINUTOS deve ser inteiro não negativo")
     return minutos
 
 
