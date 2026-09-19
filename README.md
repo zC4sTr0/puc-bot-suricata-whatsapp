@@ -61,6 +61,8 @@ flowchart LR
     G -->|"✅ ACK"| E
 ```
 
+**O ciclo acima é a "rodada"**: a rodada é uma volta completa do bot — acorda, consulta o Canvas, decide o que é novidade, grava no estado e (só se tudo estiver liberado) envia. Ela roda a cada 10 minutos em produção e também localmente com `--mode rodada`. É o único caminho que envia mensagens.
+
 Três invariantes de segurança que o código inteiro respeita:
 
 | Invariante | Como |
@@ -123,6 +125,20 @@ flowchart TB
 ```
 
 O passo a passo completo (build, canário sem entrega, corte controlado, rollback por digest) está em [`docs/deploy-gcp.md`](docs/deploy-gcp.md).
+
+## 📣 Quero avisar algo que não está no Canvas
+
+Prova marcada em aula, material postado fora do sistema, prazo que só você sabe: publique na **agenda manual** e o bot anuncia no grupo na janela certa, igual aos avisos do Canvas.
+
+```bash
+# 1. escreva um arquivo com o item (id único por item; data AAAA-MM-DD ou null)
+# 2. veja o que seria publicado, sem publicar nada:
+python deploy/publicar_agenda.py --arquivo minha-agenda.json --dry-run
+# 3. publique (vai para o estado que a rodada lê):
+python deploy/publicar_agenda.py --arquivo minha-agenda.json
+```
+
+Formato completo, exemplo pronto e regras (id único, tipos aceitos) em [`docs/guia.md`](docs/guia.md) — seção "Publicando itens manuais na agenda". Publicar duas vezes o mesmo `id` não duplica aviso.
 
 ## 🎓 Trilha do estudante
 
