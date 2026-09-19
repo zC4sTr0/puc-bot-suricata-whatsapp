@@ -5,8 +5,16 @@ import re
 import unittest
 from datetime import datetime
 
-from suricata.dominio.publico import (BRASILIA, Atividade, montar_vespera, observar, texto_aviso_prova, texto_lembrete,
-                              texto_mudou, texto_novo)
+from suricata.dominio.publico import (
+    BRASILIA,
+    Atividade,
+    montar_vespera,
+    observar,
+    texto_aviso_prova,
+    texto_lembrete,
+    texto_mudou,
+    texto_novo,
+)
 
 
 def brt(dia, h=0, m=0, mes=9):

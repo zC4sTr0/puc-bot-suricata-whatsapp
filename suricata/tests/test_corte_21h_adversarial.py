@@ -8,11 +8,10 @@ from __future__ import annotations
 import json
 import tempfile
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 from suricata.dominio.message_id import message_id
-from suricata.storage.outbox import Outbox
 from suricata.rodada import OUTBOX, OutboxSincronizado, entregar
 from suricata.storage.gcs import ObjetosLocais
 from suricata.tests.test_rodada import JID, PonteFalsa

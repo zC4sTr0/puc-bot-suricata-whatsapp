@@ -7,10 +7,28 @@ from datetime import date, datetime, timedelta, timezone
 from typing import TYPE_CHECKING, Any
 
 from ..storage.persistencia_rodada import RETENCAO
-from .publico import (BRASILIA, Atividade, anuncio_de_agora, anuncio_relevante, decidir, eh_dia_de_aula,
-                      expira_em, HORA_AVISO_PROVA, HORA_VESPERA, SILENCIO, dias_relevantes, montar_vespera,
-                      provas_de_amanha, quando_importa, precisa_lembrete, texto_anuncio, texto_aviso_prova,
-                      texto_lembrete, texto_mudou, texto_novo)
+from .publico import (
+    BRASILIA,
+    HORA_AVISO_PROVA,
+    HORA_VESPERA,
+    SILENCIO,
+    Atividade,
+    anuncio_de_agora,
+    anuncio_relevante,
+    decidir,
+    dias_relevantes,
+    eh_dia_de_aula,
+    expira_em,
+    montar_vespera,
+    precisa_lembrete,
+    provas_de_amanha,
+    quando_importa,
+    texto_anuncio,
+    texto_aviso_prova,
+    texto_lembrete,
+    texto_mudou,
+    texto_novo,
+)
 
 if TYPE_CHECKING:
     # Anuncio vive em rodada.coleta; import direto criaria ciclo
@@ -29,7 +47,7 @@ class Evento:
 
     @classmethod
     def de_atividade(cls, tipo: str, a: Atividade, agora: datetime | None = None,
-                     todas: list[Atividade] | None = None) -> "Evento":
+                     todas: list[Atividade] | None = None) -> Evento:
         if tipo == "novo":
             event_id, texto = f"grupo:novo:{a.chave}", texto_novo(a, agora, todas)
         elif tipo == "mudou":

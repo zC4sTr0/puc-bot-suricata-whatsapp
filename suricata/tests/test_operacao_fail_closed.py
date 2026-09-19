@@ -7,11 +7,18 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from suricata.integracao.canvas import CanvasClient
 from suricata.dominio.publico import BRASILIA
-from suricata.rodada import Coleta, Evento, Destino, destinos_do_ambiente, executar, entregar, OutboxSincronizado
+from suricata.integracao.canvas import CanvasClient
+from suricata.rodada import (
+    Coleta,
+    Evento,
+    OutboxSincronizado,
+    destinos_do_ambiente,
+    entregar,
+    executar,
+)
 from suricata.storage.gcs import ObjetosLocais
-from suricata.tests.test_rodada import CanvasFalso, JID
+from suricata.tests.test_rodada import JID, CanvasFalso
 
 
 class PonteQueNaoPodeSerChamada:
@@ -144,7 +151,7 @@ class OperacaoFailClosedTests(unittest.TestCase):
             self.assertEqual(ponte.chamadas, 0)
 
     def test_contrato_documenta_diario_07h_ausente_no_caminho_atual_e_no_deploy(self):
-        plano = Path(__file__).resolve().parents[2] / "docs" / "PLANO-SURICATA-WHATSAPP.md"
+        plano = Path(__file__).resolve().parents[2] / "docs" / "historico" / "PLANO-SURICATA-WHATSAPP.md"
         texto = plano.read_text(encoding="utf-8")
         self.assertIn("diário das 07:00", texto)
         self.assertIn("pendência", texto.lower())

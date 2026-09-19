@@ -1,0 +1,15 @@
+# Normalização: o índice é LF; working copies seguem o SO via core.autocrlf.
+* text=auto eol=lf
+
+# Binários
+*.png binary
+*.jpg binary
+*.ico binary
+
+# Node e lockfiles
+package-lock.json -diff
+
+# Scripts com shebang mantêm permissão executável
+*.sh text eol=lf
+deploy/*.py text eol=lf
+scripts/*.py text eol=lf

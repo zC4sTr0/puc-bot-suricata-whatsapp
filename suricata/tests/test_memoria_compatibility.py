@@ -2,8 +2,8 @@ import unittest
 from datetime import datetime, timezone
 from types import SimpleNamespace
 
-from suricata.rodada.execucao import comprometer_memoria
 from suricata.dominio.memoria_rodada import comprometer_memoria as direto
+from suricata.rodada.execucao import comprometer_memoria
 
 
 def _atividade(chave="lista-1", fecha="2026-09-16T03:00:00+00:00",

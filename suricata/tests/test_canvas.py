@@ -1,13 +1,13 @@
 import unittest
 
 from suricata.integracao.canvas import (
+    ROUTES,
     CanvasClient,
     CanvasResponseKind,
     PublicAnnouncement,
-    classify_status,
     PublicAssignment,
-    ROUTES,
     _itens_do_payload,
+    classify_status,
 )
 
 

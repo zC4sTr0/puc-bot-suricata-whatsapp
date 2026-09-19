@@ -11,7 +11,10 @@ class BridgeIntegrationTests(unittest.TestCase):
 
     def test_bridge_rejeita_event_id_duplicado_antes_de_tocar_runner(self):
         storage = type("Storage", (), {})()
-        runner = lambda *_args, **_kwargs: self.fail("runner não deveria ser chamado")
+
+        def runner(*_args, **_kwargs):
+            self.fail("runner não deveria ser chamado")
+
         evento = {
             "event_id": "duplicado",
             "message_id": message_id(GROUP, "duplicado"),

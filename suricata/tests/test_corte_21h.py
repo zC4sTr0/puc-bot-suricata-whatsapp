@@ -7,7 +7,7 @@ import unittest
 from datetime import datetime
 from pathlib import Path
 
-from suricata.rodada import OUTBOX, Evento, OutboxSincronizado, executar, entregar
+from suricata.rodada import OUTBOX, Evento, OutboxSincronizado, entregar, executar
 from suricata.storage.gcs import ObjetosLocais
 from suricata.tests.test_rodada import JID, CanvasFalso, PonteFalsa
 

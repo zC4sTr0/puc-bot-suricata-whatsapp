@@ -1,0 +1,27 @@
+# Regras CONSERVADORAS — fundação de qualidade (Wave 1).
+# Ferramenta de DEV apenas: nada disto entra em [project].dependencies.
+# `ruff format` NÃO é gate (decisão do plano): apenas `ruff check`.
+target-version = "py311"
+line-length = 100
+extend-exclude = ["node_modules", ".venv"]
+
+[lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+ignore = [
+    # E501: a base legada já tem ~126 linhas >100 em produção (tests ainda
+    # mais). Reformatar em massa geraria diff gigante sem valor; o
+    # comprimento dominante real é << 100. Novo código deve caber em 100,
+    # mas o gate não pune o legado.
+    "E501",
+    # UP017/UP042 sugerem datetime.UTC e enum.StrEnum, exclusivos de 3.11+.
+    # O pyproject exige >=3.11, mas o runtime de dev local é 3.10.11 e
+    # roda a suíte inteira: aplicar os fixes quebraria o dev local.
+    "UP017",
+    "UP042",
+]
+
+[lint.per-file-ignores]
+# O bootstrap verifica sys.version_info < (3, 11) de propósito: tolera e
+# avisa em vez de abortar (o dev local roda 3.10). Não é bloco morto.
+"scripts/bootstrap.py" = ["UP036"]

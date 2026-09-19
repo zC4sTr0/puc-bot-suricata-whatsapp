@@ -11,7 +11,7 @@ import subprocess
 import threading
 import time
 import urllib.request
-from typing import Callable
+from collections.abc import Callable
 
 from .cas import StorageError
 

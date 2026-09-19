@@ -1,7 +1,7 @@
 import unittest
 
-import suricata.rodada.execucao as execucao
 import suricata.rodada as rodada
+import suricata.rodada.execucao as execucao
 from suricata.dominio.lotes import MAX_LOTE, agrupar_envios
 
 
@@ -21,7 +21,7 @@ class LotesCompatibilityTests(unittest.TestCase):
         claims = [_claim("grupo:novo:a"), _claim("grupo:mudou:b:1")]
         envios = agrupar_envios(claims, "jid")
         self.assertEqual(len(envios), 2)
-        for claim, envio in zip(claims, envios):
+        for claim, envio in zip(claims, envios, strict=True):
             self.assertEqual(envio["claims"], [claim])
             self.assertEqual(envio["event_id"], claim["event_id"])
             self.assertEqual(envio["message_id"], claim["message_id"])

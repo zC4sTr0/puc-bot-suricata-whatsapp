@@ -8,11 +8,11 @@ from __future__ import annotations
 import json
 import os
 import uuid
+from collections.abc import Callable
 from datetime import datetime, timedelta
-from typing import Any, Callable
+from typing import Any
 
 from .cas import CASConflict
-
 
 LEASE = "locks/rodada.lock"
 LEASE_MINUTOS = int(os.environ.get("SURICATA_LEASE_MINUTOS", "6"))

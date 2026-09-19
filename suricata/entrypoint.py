@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import json
 import sys
-from typing import Any, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 # "rodada" é o caminho de produção (Cloud Run); "shadow" é a probe local
 # sem efeitos; "demo" é a probe funcional offline (fixtures congeladas).

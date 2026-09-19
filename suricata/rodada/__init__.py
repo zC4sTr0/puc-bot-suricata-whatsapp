@@ -27,21 +27,78 @@ from __future__ import annotations
 
 import sys
 
-from . import agenda_manual
+from ..dominio.corte_rodada import (
+    _autorizacao_corte,
+    _autorizados_persistidos,
+    _corte_21h,
+    _evento_disponivel,
+    _janela_manha,
+)
+from ..dominio.lotes import MAX_LOTE, agrupar_envios
+from ..dominio.planejamento import (
+    _LISTA_URGENTE,
+    Evento,
+    _chaves,
+    _limite_manha,
+    _pode_aguardar_07h,
+    planejar,
+    planejar_aviso_prova,
+    planejar_vespera,
+)
+from ..dominio.publico import Atividade, texto_vespera
 from ..integracao.canvas import CanvasClient
-from .coleta import Coleta, ColetaIndisponivel, EXCLUIDAS, coletar
-from .config import Destino, destinos_do_ambiente
 from ..storage.lease_rodada import LEASE, LEASE_MINUTOS, _campo_json
 from ..storage.persistencia_rodada import OUTBOX, OutboxSincronizado
-from ..dominio.planejamento import (_LISTA_URGENTE, Evento, _chaves, _limite_manha, _pode_aguardar_07h,
-                                    planejar, planejar_aviso_prova, planejar_vespera)
-from ..dominio.publico import Atividade, texto_vespera
-from ..dominio.corte_rodada import (_autorizacao_corte, _autorizados_persistidos, _corte_21h,
-                                    _evento_disponivel, _janela_manha)
-from ..dominio.lotes import MAX_LOTE, agrupar_envios
-from .execucao import (_agora_vivo, _todos, entregar,
-                       executar, executar_destinos, Relatorio)
+from . import agenda_manual
+from .coleta import EXCLUIDAS, Coleta, ColetaIndisponivel, coletar
+from .config import Destino, destinos_do_ambiente
+from .execucao import Relatorio, _agora_vivo, _todos, entregar, executar, executar_destinos
 from .runtime import run_from_environment
+
+# Fachada histórica: tudo abaixo é superfície pública deliberada — tests e
+# scripts importam a partir daqui, não dos módulos internos.
+__all__ = [
+    "agenda_manual",
+    "CanvasClient",
+    "Coleta",
+    "ColetaIndisponivel",
+    "EXCLUIDAS",
+    "coletar",
+    "Destino",
+    "destinos_do_ambiente",
+    "LEASE",
+    "LEASE_MINUTOS",
+    "_campo_json",
+    "OUTBOX",
+    "OutboxSincronizado",
+    "_LISTA_URGENTE",
+    "Evento",
+    "_chaves",
+    "_limite_manha",
+    "_pode_aguardar_07h",
+    "planejar",
+    "planejar_aviso_prova",
+    "planejar_vespera",
+    "Atividade",
+    "texto_vespera",
+    "_autorizacao_corte",
+    "_autorizados_persistidos",
+    "_corte_21h",
+    "_evento_disponivel",
+    "_janela_manha",
+    "MAX_LOTE",
+    "agrupar_envios",
+    "_agora_vivo",
+    "_todos",
+    "entregar",
+    "executar",
+    "executar_destinos",
+    "Relatorio",
+    "run_from_environment",
+    "MEMORIA",
+    "RELATORIO",
+    "main",
+]
 
 MEMORIA = "grupo/memoria.json"
 RELATORIO = "grupo/ultima-rodada.json"
@@ -52,8 +109,8 @@ RELATORIO = "grupo/ultima-rodada.json"
 
 def main(argv: list[str] | None = None) -> int:
     """Configuração só por ambiente (Cloud Run): nada de segredo em argv."""
-    from ..storage.gcs import SessaoWhatsApp, construir_objetos
     from ..integracao.bridge import WhatsAppBridge
+    from ..storage.gcs import SessaoWhatsApp, construir_objetos
 
     return run_from_environment(
         canvas_factory=CanvasClient,

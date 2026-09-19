@@ -7,12 +7,12 @@ import re
 import subprocess
 import tempfile
 from collections import Counter
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from ..dominio.message_id import message_id
-from ..storage.cas import AuthSnapshot, CASConflict, SuricataSessionStorage, StorageError
+from ..storage.cas import StorageError, SuricataSessionStorage
 
 
 class BridgeError(RuntimeError):

@@ -13,7 +13,8 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from ._comum import Objeto
 from .cas import CASConflict, StorageError

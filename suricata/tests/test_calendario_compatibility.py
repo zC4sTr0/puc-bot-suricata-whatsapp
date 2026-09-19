@@ -51,7 +51,8 @@ class CalendarioCompatibilityTests(unittest.TestCase):
 
 
 def _sem_timezone(ano, mes, dia):
-    from datetime import datetime, time
+    from datetime import datetime
+
     from suricata.dominio.horario import BRASILIA
     return datetime(ano, mes, dia, 18, 0, tzinfo=BRASILIA)
 

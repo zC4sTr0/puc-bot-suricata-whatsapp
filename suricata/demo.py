@@ -22,9 +22,10 @@ from __future__ import annotations
 
 import json
 import tempfile
+from collections.abc import Mapping
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from .integracao.canvas import CanvasClient
 from .rodada.execucao import executar

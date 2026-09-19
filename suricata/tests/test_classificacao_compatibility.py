@@ -1,10 +1,17 @@
+import dataclasses
 import unittest
 from datetime import datetime, timezone
 from types import SimpleNamespace
 
 import suricata.dominio.publico as publico
-from suricata.dominio.classificacao import (Atividade, atividade_de, classificar_tipo,
-                                    data, nome_curto, resumo_estudo)
+from suricata.dominio.classificacao import (
+    Atividade,
+    atividade_de,
+    classificar_tipo,
+    data,
+    nome_curto,
+    resumo_estudo,
+)
 from suricata.rodada.coleta import atividade_de as atividade_de_coleta
 
 
@@ -27,7 +34,7 @@ class ClassificacaoCompatibilityTests(unittest.TestCase):
         unlock = datetime(2026, 9, 15, 12, 0, tzinfo=timezone.utc)
         due = datetime(2026, 9, 17, 3, 0, tzinfo=timezone.utc)
         atividade = Atividade("101", "Curso", "42", "T", "tarefa", unlock, due, None, 7.0, "u")
-        with self.assertRaises(Exception):
+        with self.assertRaises(dataclasses.FrozenInstanceError):
             atividade.tipo = "quiz"  # frozen
         self.assertEqual(atividade.chave, "101:42")
         self.assertIs(atividade.fecha, due)

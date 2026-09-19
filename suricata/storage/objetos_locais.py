@@ -85,7 +85,7 @@ class ObjetosLocais:
             backups: list[tuple[Path, Path]] = []
             trocados: list[Path] = []
             try:
-                for destino, conteudo in ((caminho, dados), (meta_caminho, metadados)):
+                for _destino, conteudo in ((caminho, dados), (meta_caminho, metadados)):
                     with tempfile.NamedTemporaryFile(
                         mode="wb", dir=caminho.parent, prefix=f".{caminho.name}.", suffix=".tmp", delete=False
                     ) as arquivo:
