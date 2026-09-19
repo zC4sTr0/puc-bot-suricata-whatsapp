@@ -1,98 +1,158 @@
-# Suricata College — WhatsApp
+<div align="center">
+
+<img src="docs/img/banner.svg" width="640" alt="Suricata" />
+
+**Avisos acadêmicos coletivos no WhatsApp** — o bot que acompanha o Canvas da turma e avisa o grupo na hora certa, sem nunca expor nada pessoal.
 
 [![CI](https://github.com/zC4sTr0/suricata-whatsapp/actions/workflows/suricata.yml/badge.svg)](https://github.com/zC4sTr0/suricata-whatsapp/actions/workflows/suricata.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)](pyproject.toml)
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-261230?logo=ruff&logoColor=white)](ruff.toml)
+[![Dependencies: 0](https://img.shields.io/badge/dependencies-0-brightgreen?logo=python&logoColor=white)](pyproject.toml)
+[![Tests](https://img.shields.io/badge/tests-285%20passing-brightgreen)](suricata/tests)
 
-## 1. O que faz
+[Começar](#-quickstart) · [Como funciona](#-como-funciona) · [WhatsApp](#-sincronizando-com-o-whatsapp) · [Configuração](#%EF%B8%8F-configuração) · [Deploy](#-deploy-no-google-cloud) · [Trilha do estudante](#-trilha-do-estudante)
 
-A Suricata consulta atividades públicas do Canvas, identifica novidades coletivas e prepara avisos simples para o grupo autorizado da turma. O fluxo é Python → outbox/estado → ponte Node/Baileys → WhatsApp, com ACK antes de marcar uma mensagem como enviada.
+</div>
 
-## Quickstart
+---
 
-Std lib pura: zero `pip install`. Do clone ao primeiro aviso:
+## ✨ O que é
+
+A Suricata consulta **atividades públicas** do Canvas (provas, listas, quizzes), identifica o que é novidade para a turma e envia **avisos coletivos** no grupo autorizado do WhatsApp. Mensagens só são marcadas como enviadas **depois** do ACK do servidor — reenvio nunca duplica. Nunca publica notas, frequência ou qualquer situação individual.
+
+## 🚀 Quickstart
 
 ```bash
-python -m suricata --mode shadow   # probe zero-config
-python -m suricata --mode demo     # avisos planejados offline com fixtures, entrega desligada
-python -m pytest -q                # suíte completa
+git clone https://github.com/zC4sTr0/suricata-whatsapp && cd suricata-whatsapp
 ```
 
-Os testes `.mjs` (ponte Node/Baileys) exigem Node 20+ e a dependência instalada
-uma vez por clone:
+**1. Sem instalar nada** (Python 3.11+ puro, zero `pip install`):
+
+```bash
+python -m suricata --mode demo
+```
+
+Saída: as mensagens que *seriam* enviadas, com relatório completo — tudo offline, relógio congelado, entrega desligada. É o bot inteiro funcionando na sua máquina em segundos.
+
+**2. Suíte completa** (o outro comando é só a ponte Node):
 
 ```bash
 npm ci --prefix suricata/whatsapp --ignore-scripts
+python -m pytest -q
 ```
 
-Ou deixe um comando fazer tudo: `python scripts/bootstrap.py` verifica Python/Node,
-instala a dependência Node e roda compileall, pytest e shadow.
-
-Para evoluir daqui, siga a [trilha do estudante](docs/TRILHA-ESTUDANTE.md) —
-quatro níveis, de testes verdes até uma rodada local com estado em diretório.
-Regras de contribuição em [CONTRIBUTING.md](CONTRIBUTING.md); as variáveis
-`SURICATA_*` estão documentadas com comentários em [.env.example](.env.example).
-
-## 2. O que nunca faz
-
-Nunca publica notas, frequência, atrasos, entregas individuais ou qualquer situação pessoal. Não recebe comandos acadêmicos, não envia atividades ao Canvas e não grava sessão, QR ou segredo no Git/imagem/log.
-
-## 3. Teste local sem efeitos
+**3. Um comando que valida tudo** (ambiente + matriz inteira):
 
 ```bash
-python -m suricata --mode shadow
-python -m compileall -q suricata
-python -m pytest -q suricata/tests
-python -m unittest discover -s suricata/tests
-node --test suricata/tests/*.mjs suricata/whatsapp/tests/*.mjs
+python scripts/bootstrap.py
 ```
 
-`shadow` é uma probe local. Para o caminho funcional sem entrega, use `--mode demo` (offline, fixtures congeladas) ou a rodada com `SURICATA_ENTREGA=desligada`; nunca use JID ou sessão real.
+## 🧠 Como funciona
 
-## 4. Modos
+```mermaid
+flowchart LR
+    A["☁️ Cloud Scheduler<br/>a cada 10 min"] --> B["⚙️ rodada<br/><code>python -m suricata --mode rodada</code>"]
+    B -->|"GET apenas leitura"| C["📚 Canvas<br/>dados públicos"]
+    C --> D["🧠 planejamento<br/>novidades · janelas BRT · corte 21h"]
+    D --> E[("🗄️ estado<br/>memória · lease · outbox")]
+    E --> F["🌉 ponte Node<br/>Baileys"]
+    F --> G["💬 WhatsApp<br/>grupo da turma"]
+    G -->|"✅ ACK"| E
+```
 
-O CLI tem três modos, e só três:
+Três invariantes de segurança que o código inteiro respeita:
 
-| Modo | O que faz | Envia? |
-|---|---|---:|
-| `shadow` | probe local sem Canvas, estado ou entrega; zero-config, usada pelo CI e pelo Docker. | Não |
-| `demo` | rodada offline com fixtures congeladas, entrega desligada; para estudante. | Não |
-| `rodada` | caminho canônico Canvas → planejamento → outbox → ponte; config por ambiente. | Condicionado ao ambiente |
+| Invariante | Como |
+|---|---|
+| **fail-closed** | Sem config, estado, lease ou ACK → nada é enviado. `SURICATA_ENTREGA` só envia com o valor exato `ligada` |
+| **ACK antes de `sent`** | Sem ACK do servidor a mensagem volta para `pending` e é reenviada com o **mesmo** `message_id` (idempotência) |
+| **só dados coletivos** | A fronteira Canvas admite apenas campos públicos; notas e dados individuais nunca atravessam |
 
-Os modos `sentinela`, `grupos` e `teste-envio` foram removidos na simplificação de modos de 2026-09-18; o histórico vive no git.
+```mermaid
+stateDiagram-v2
+    [*] --> pending
+    pending --> in_flight : claim (antes do envio)
+    in_flight --> sent : ACK válido
+    in_flight --> pending : falha/timeout/logout
+    pending --> expirado : corte 21h
+    sent --> [*]
+    expirado --> [*]
+```
 
-## 5. Produção
+## 💬 Sincronizando com o WhatsApp
 
-O alvo documentado é o projeto GCP Suricata, região `southamerica-east1`, Cloud Run Job `suricata-rodada` e Scheduler `suricata-rodada-10min`. O estado operacional e os valores atuais devem ser conferidos em `docs/STATUS.md` e por read-back, nunca inferidos deste texto.
+A sessão do WhatsApp vive **fora do repo** (nunca versionada, nunca na imagem):
 
-O índice de documentação está em [`docs/README.md`](docs/README.md); ele separa produto, operação, segurança, deploy, continuidade e histórico.
+1. **Parear** (operação humana, terminal local): `node suricata/whatsapp/parear.mjs --auth-dir <diretório-fora-do-repo>` — leia [`suricata/whatsapp/README.md`](suricata/whatsapp/README.md) para o fluxo completo.
+2. A ponte Node usa `SURICATA_WA_AUTH_DIR` para encontrar a sessão em produção (materializada do GCS via CAS, nunca copiada).
+3. Confirme o JID do grupo antes de qualquer entrega real.
 
-Para onboarding humano, leia nesta ordem: `AGENTS.md` → [`docs/STATUS.md`](docs/STATUS.md) → [`docs/CONTRACTS.md`](docs/CONTRACTS.md) → [`suricata/README.md`](suricata/README.md) → [`suricata/ARCHITECTURE.md`](suricata/ARCHITECTURE.md) → [`suricata/RUNBOOK.md`](suricata/RUNBOOK.md) → [`suricata/tests/README.md`](suricata/tests/README.md). Planos históricos não substituem read-back.
+O detalhamento de cada etapa está no [guia](docs/guia.md).
 
-## 6. Mensagens, Canvas, estado e Node
+## ⚙️ Configuração
 
-Mensagens são planejadas em `suricata/dominio/publico.py`/`planejamento.py` e orquestradas em `suricata/rodada/__init__.py`. Canvas é consultado por `suricata/integracao/canvas.py` e `coleta.py`, sempre com dados públicos. Estado, lease e outbox ficam em `suricata/storage/`, `outbox.py`, `persistencia_rodada.py` e `lease_rodada.py`. A ponte está em `suricata/integracao/bridge.py`; o Node está em `suricata/whatsapp/`.
+Tudo por variáveis de ambiente — veja [`.env.example`](.env.example) comentado. O essencial do modo `rodada`:
 
-## 7. Configuração sem segredo
+| Variável | Obrigatória | O que faz |
+|---|---|---|
+| `SURICATA_CANVAS_TOKEN` | ✅ | token de acesso à API do Canvas (nunca no repo) |
+| `SURICATA_ESTADO_URI` | ✅ | estado da rodada: **diretório local** ou `gs://…` |
+| `SURICATA_ENTREGA` | — | `ligada` habilita envio; **default: desligada** |
+| `SURICATA_GRUPO_JID` | — | JID do grupo destino (`…@g.us`) |
+| `SURICATA_DESTINOS_JSON` | — | múltiplos destinos com janela própria |
 
-Use variáveis de ambiente ou Secret Manager: `SURICATA_CANVAS_TOKEN`, `SURICATA_ESTADO_URI`, `SURICATA_ENTREGA`, `SURICATA_GRUPO_JID` (destino da rodada; continua válido), `SURICATA_DESTINOS_JSON`, `SURICATA_LEASE_MINUTOS` e `SURICATA_WA_AUTH_DIR`. Nunca coloque valores reais em JSON, YAML, logs ou argumentos.
+<details>
+<summary><b>Todas as variáveis</b> (lease, auth, destinos)</summary>
 
-## 8. Testar, implantar e verificar
+Ver [`.env.example`](.env.example) — cada linha documenta obrigatória/opcional, valor de exemplo seguro e quando importa. A referência completa de semânticas está em [`docs/interno/CONFIGURATION.md`](docs/interno/CONFIGURATION.md).
+</details>
 
-O CI está em `.github/workflows/suricata.yml`. O build usa o `Dockerfile` da raiz e o lockfile Node. Para deploy, siga `docs/DEPLOYMENT.md`: build por digest, read-back do Job/Scheduler, canário desligado, rollback pela imagem anterior e nenhum scheduler duplicado.
+## ☁️ Deploy no Google Cloud
 
-## 9. Retomada e continuidade
+Produção = **um** Cloud Run Job (`suricata-rodada`) acionado por **um** Scheduler (`suricata-rodada-10min`), imagem por digest no Artifact Registry, estado em GCS — região `southamerica-east1`. Nada de segundo Scheduler, jamais.
 
-O roteiro executável para um agente sem o histórico desta conversa está em
-`docs/PLANO-CONTINUIDADE-INDEPENDENTE.md`. Ele deve ser lido junto com
-`docs/PLANO-EXTRACAO-SURICATA.md` e `docs/STATUS.md`. O plano histórico
-`docs/PLANO-SURICATA-WHATSAPP.md` é referência de contratos e não autoriza
-comandos do Bot pessoal ou ações externas por cópia.
+```mermaid
+flowchart TB
+    R["🐙 GitHub<br/>main (merge squash)"] --> CB["🏗️ Cloud Build"]
+    CB --> AR["📦 Artifact Registry<br/>imagem por digest"]
+    AR --> JOB["⚙️ Cloud Run Job<br/>suricata-rodada"]
+    SCH["⏰ Scheduler<br/>*/10 min"] --> JOB
+    JOB --> GCS[("🗄️ estado<br/>bucket Suricata")]
+    JOB --> WA["💬 WhatsApp"]
+```
 
-## 10. Parar e reverter
+O passo a passo completo (build, canário sem entrega, corte controlado, rollback por digest) está em [`docs/deploy-gcp.md`](docs/deploy-gcp.md).
 
-Não desligue recursos por suposição. Em incidente, desligue entrega no caminho autorizado, preserve estado/outbox e faça read-back. Rollback significa apontar o Job para o digest anterior conhecido, verificar a configuração e observar a próxima execução; nunca reescreva histórico nem apague estado.
+## 🎓 Trilha do estudante
 
-## 11. Retomada rápida
+Progressiva, do zero ao domínio — cada nível diz o que você vê, o que isso prova e o próximo passo:
 
-Um agente novo deve começar por `AGENTS.md`, `docs/PLANO-CONTINUIDADE-INDEPENDENTE.md`, `docs/PLANO-EXTRACAO-SURICATA.md` e `docs/STATUS.md`, executar a matriz de verificação e continuar a primeira etapa pendente.
+| Nível | Comando | Prova |
+|---|---|---|
+| 1 · testes verdes | `python -m pytest -q` | contratos congelados |
+| 2 · probe | `python -m suricata --mode shadow` | pacote e entrypoint íntegros |
+| 3 · rodada offline | `python -m suricata --mode demo` | o pipeline inteiro, sem efeitos |
+| 4 · produção local | `SURICATA_ESTADO_URI=./tmp … --mode rodada` | estado real, entrega desligada |
+
+Guia completo em [`docs/guia.md`](docs/guia.md).
+
+## 🧰 Desenvolvimento
+
+```text
+suricata/
+├── rodada/      orquestração (execucao, runtime, coleta, agenda_manual, config)
+├── dominio/     regras puras (planejamento, publico, corte, memoria, lotes, relatorio)
+├── integracao/  adaptadores (canvas, bridge)
+├── storage/     persistência e concorrência (outbox, lease, CAS, GCS/local)
+├── whatsapp/    ponte Node (Baileys)
+└── tests/       suíte de contratos (pytest + unittest + node --test)
+```
+
+- **Matriz de validação** antes de qualquer PR: `python -m compileall -q suricata && python -m pytest -q && python -m unittest discover -s suricata/tests && node --test suricata/tests/*.mjs suricata/whatsapp/tests/*.mjs`
+- **Lint**: `ruff check .` (config em [`ruff.toml`](ruff.toml))
+- Como contribuir: [`CONTRIBUTING.md`](CONTRIBUTING.md) — fatias pequenas, teste de contrato antes do código, PR com provas.
+
+## 📄 Licença
+
+[MIT](LICENSE) — livre para estudar, usar e modificar.

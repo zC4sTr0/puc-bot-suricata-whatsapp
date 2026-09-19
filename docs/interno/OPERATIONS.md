@@ -1,6 +1,6 @@
 # Operações
 
-1. Ler `AGENTS.md`, `docs/PLANO-EXTRACAO-SURICATA.md` e `docs/STATUS.md`.
+1. Ler `AGENTS.md`, `docs/historico/PLANO-EXTRACAO-SURICATA.md` e `docs/interno/STATUS.md`.
 2. Conferir branch, status, diff e testes.
 3. Para nuvem, confirmar projeto/região/Job/Scheduler e digest por read-back.
 4. Em incidente, não reenviar nem forçar `sent`: preserve `pending`, ACK e geração.

@@ -41,7 +41,7 @@ Esperado: uma linha JSON com `mode=shadow`, `status=ok`, `adapter=none`, código
 SURICATA_ENTREGA=desligada python -m suricata --mode rodada
 ```
 
-Use somente com estado e token de teste controlados. `desligada` é um bloqueio de entrega, não prova de que toda integração externa esteja ausente. Para simulação determinística, prefira `--mode demo` ou os testes/fixtures de [`tests/README.md`](tests/README.md), com Canvas, relógio, memória e ponte falsos.
+Use somente com estado e token de teste controlados. `desligada` é um bloqueio de entrega, não prova de que toda integração externa esteja ausente. Para simulação determinística, prefira `--mode demo` ou os testes/fixtures de [`tests/README.md`](../../suricata/tests/README.md), com Canvas, relógio, memória e ponte falsos.
 
 Os modos `sentinela`, `grupos` e `teste-envio` foram removidos na simplificação de modos de 2026-09-18; procedimentos que os usavam estão no histórico do git.
 
@@ -75,7 +75,7 @@ Não copie tokens, headers, conteúdo de `auth.json`, URLs assinadas ou logs bru
 
 ### Nomes divergentes
 
-O plano histórico usa `suricata-sentinela` e `suricata-sentinela-10min`. O inventário [`infra/isolamento.json`](infra/isolamento.json) registra, em 2026-09-16, `suricata-rodada` e `suricata-rodada-10min`, além de uma execução datada. Esses nomes são fatos históricos **não verificados novamente**. Nunca execute, atualize ou delete pelo nome sem primeiro listar e confirmar o recurso, projeto, região, imagem, argumentos e agenda.
+O plano histórico usa `suricata-sentinela` e `suricata-sentinela-10min`. O inventário [`infra/isolamento.json`](../../suricata/infra/isolamento.json) registra, em 2026-09-16, `suricata-rodada` e `suricata-rodada-10min`, além de uma execução datada. Esses nomes são fatos históricos **não verificados novamente**. Nunca execute, atualize ou delete pelo nome sem primeiro listar e confirmar o recurso, projeto, região, imagem, argumentos e agenda.
 
 ## 4. Critérios de parada
 

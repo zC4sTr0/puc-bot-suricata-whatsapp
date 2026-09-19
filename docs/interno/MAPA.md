@@ -200,9 +200,9 @@ Todos são offline por desenho: doubles, fixtures sintéticas, diretórios tempo
 
 - `Dockerfile` fixa `ENTRYPOINT ["python3", "-m", "suricata"]` e `CMD ["--mode", "shadow"]`; instala o runtime Python, faz instalação Node pelo lockfile e copia o contexto `suricata/`. O `CMD` pode ser substituído pelo runtime. **Não verificado:** build Docker limpo, digest publicado, Job/Cloud Run/IAM e sessão real.
 - `infra/isolamento.json` é inventário declarativo datado, não injeção de ambiente. `infra/README.md` descreve o isolamento.
-- `ARCHITECTURE.md` é a referência de contratos/modos/fonte de configuração e confirma que o estado de nuvem só vale com data/read-back.
-- `RUNBOOK.md` é pré-voo/parada/gates H1–H3; comandos de nuvem nele são read-only salvo blocos explicitamente marcados como efeito.
-- `DOCUMENTATION.md` roteia produto, arquitetura, runbook, testes, WhatsApp, plano e isolamento.
+- `ARCHITECTURE.md` é um atalho para `docs/arquitetura.md`, a referência de contratos/modos/fonte de configuração, que confirma que o estado de nuvem só vale com data/read-back.
+- `RUNBOOK.md` (agora em `docs/interno/RUNBOOK.md`) é pré-voo/parada/gates H1–H3; comandos de nuvem nele são read-only salvo blocos explicitamente marcados como efeito.
+- `DOCUMENTATION.md` foi removido na reestruturação de docs; o roteamento geral vive em `docs/README.md`.
 - `tests/README.md` define executores e limites: suíte offline não prova Canvas/GCS/Cloud Run/WhatsApp reais.
 - `whatsapp/README.md` define `npm ci --ignore-scripts --omit=dev`, `npm test` e o bloqueio conhecido da dependência Git `libsignal` do Baileys. **Não verificado aqui:** instalação de rede reproduzível.
 

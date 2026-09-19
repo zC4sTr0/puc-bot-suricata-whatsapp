@@ -39,4 +39,4 @@ Antes de uma mudança de infraestrutura, faça `git diff --check`, a varredura d
 
 ## Plano de continuidade
 
-O estado executável vive em `docs/PLANO-CONTINUIDADE-INDEPENDENTE.md`. Ao retomar, leia o registro de progresso e continue da primeira etapa não concluída; atualize evidência e bloqueios reais, sem declarar sucesso baseado apenas em intenção ou auto-relato.
+O estado executável vive em `docs/historico/PLANO-CONTINUIDADE-INDEPENDENTE.md`. Ao retomar, leia o registro de progresso e continue da primeira etapa não concluída; atualize evidência e bloqueios reais, sem declarar sucesso baseado apenas em intenção ou auto-relato.
