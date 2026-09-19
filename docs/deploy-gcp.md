@@ -33,7 +33,11 @@ O caminho de uma mudança é sempre o mesmo: merge na `main` → build com
 digest registrado → canário sem entrega → corte controlado → observação.
 Rollback é apontar o Job de volta para o digest anterior.
 
-## Pré-requisitos
+### Pré-requisitos na sua máquina
+
+- **`gcloud` CLI (Google Cloud SDK)** — a única ferramenta obrigatória para deploy (o build da imagem é remoto, no Cloud Build). Instale pelo instalador oficial: https://cloud.google.com/sdk/docs/install (no Windows, `winget install Google.CloudSDK` também funciona). Depois: `gcloud init`, `gcloud auth login` e `gcloud config set project <projeto-suricata>`.
+- **Docker local** — **opcional**. Como o build roda no Cloud Build, você só precisa de Docker se quiser testar a imagem na sua máquina antes (ex.: `docker run --rm <imagem> --mode demo`).
+- **Git + acesso ao repo** e a sessão WhatsApp em produção (fora do escopo do deploy; veja o guia).
 
 Antes de qualquer passo de nuvem:
 
