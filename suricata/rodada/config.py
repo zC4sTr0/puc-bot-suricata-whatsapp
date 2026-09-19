@@ -11,6 +11,7 @@ import os
 import re
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 
 from ..dominio.horario import BRASILIA
 
@@ -32,6 +33,57 @@ class Destino:
         return agora.astimezone(BRASILIA).strftime("%H:%M") == self.janela_brt
 
 
+def _carregar_config_arquivo(caminho: str) -> dict:
+    """Lê e valida ``SURICATA_CONFIG``; qualquer falha é ValueError fail-closed."""
+    try:
+        texto = Path(caminho).read_text(encoding="utf-8")
+    except OSError as exc:
+        raise ValueError(f"SURICATA_CONFIG: arquivo não pôde ser lido: {caminho}") from exc
+    try:
+        dados = json.loads(texto)
+    except ValueError as exc:
+        raise ValueError("SURICATA_CONFIG: JSON inválido") from exc
+    destinos = dados.get("destinos") if isinstance(dados, dict) else None
+    if not isinstance(destinos, list) or not all(isinstance(i, dict) for i in destinos):
+        raise ValueError('SURICATA_CONFIG: schema inválido; esperado {"destinos": [...]}')
+    if not destinos:
+        raise ValueError("SURICATA_CONFIG: nenhum destino configurado no arquivo")
+    for item in destinos:
+        if not isinstance(item.get("id"), str) or not item["id"]:
+            raise ValueError("SURICATA_CONFIG: destino sem id")
+        if not isinstance(item.get("jid"), str) or not item["jid"].strip():
+            raise ValueError("SURICATA_CONFIG: destino sem jid")
+    lease = dados.get("lease_minutos")
+    if lease is not None and (isinstance(lease, bool) or not isinstance(lease, int) or lease < 1):
+        raise ValueError("SURICATA_CONFIG: lease_minutos deve ser inteiro >= 1")
+    return dados
+
+
+def _ambiente_com_arquivo(ambiente: dict[str, str]) -> dict[str, str]:
+    """Integra ``SURICATA_CONFIG``: arquivo é a base, env de destino sobrepõe."""
+    dados = _carregar_config_arquivo(ambiente["SURICATA_CONFIG"])
+    sintetico = {chave: valor for chave, valor in ambiente.items()
+                 if chave not in {"SURICATA_GRUPO_JID", "SURICATA_DESTINOS_JSON",
+                                  "SURICATA_DESTINOS"}}
+    adicionais: list[dict] = []
+    for item in dados["destinos"]:
+        if item.get("id") == "grupo":
+            sintetico.setdefault("SURICATA_GRUPO_JID", item.get("jid") or "")
+        else:
+            adicional = {"id": item.get("id"), "jid": item.get("jid")}
+            if item.get("janela_brt"):
+                adicional["janela_brt"] = item["janela_brt"]
+            adicionais.append(adicional)
+    if adicionais:
+        sintetico["SURICATA_DESTINOS_JSON"] = json.dumps(adicionais)
+    # Precedência env > arquivo: variáveis de destino presentes no ambiente
+    # real sobrescrevem o que veio do arquivo.
+    for chave in ("SURICATA_GRUPO_JID", "SURICATA_DESTINOS_JSON", "SURICATA_DESTINOS"):
+        if ambiente.get(chave):
+            sintetico[chave] = ambiente[chave]
+    return sintetico
+
+
 def destinos_do_ambiente(env: dict[str, str] | None = None) -> list[Destino]:
     """Lê destinos sem nomes/JIDs no código.
 
@@ -39,8 +91,18 @@ def destinos_do_ambiente(env: dict[str, str] | None = None) -> list[Destino]:
     JSON opt-in em ``SURICATA_DESTINOS_JSON`` (ou ``SURICATA_DESTINOS``),
     com itens ``{"id": "...", "jid": "..."}`` ou uma janela BRT opcional.
     O identificador só pode formar um segmento de caminho seguro.
+
+    ``SURICATA_CONFIG`` aponta opcionalmente para um arquivo JSON
+    ``{"destinos": [...], "lease_minutos": N?}``: os destinos do arquivo
+    são a base e as env vars de destino, quando presentes, sobrepõem
+    (env > arquivo). Arquivo ausente/inválido é fail-closed. ``lease_minutos``
+    do arquivo é aceito e validado, mas NÃO aplicado: ``LEASE_MINUTOS``
+    continua lido do ambiente no import de ``suricata.storage.lease_rodada``
+    (limitação documentada para não mover a leitura de forma invasiva).
     """
     ambiente = os.environ if env is None else env
+    if ambiente.get("SURICATA_CONFIG"):
+        ambiente = _ambiente_com_arquivo(ambiente)
     jid = ambiente.get("SURICATA_GRUPO_JID") or None
     if jid is not None and _JID_GRUPO.fullmatch(jid) is None:
         raise ValueError("JID de destino inválido")

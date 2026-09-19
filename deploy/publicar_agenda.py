@@ -1,8 +1,26 @@
 #!/usr/bin/env python3
-"""Publica uma agenda Suricata validada em um único destino configurado.
+"""Publica uma agenda Suricata validada no objeto ``agenda/manual.json`` do estado.
 
 A entrada é fornecida por ``--arquivo``. O destino vem de
-``SURICATA_ESTADO_URI``; não há bucket do Bot pessoal embutido.
+``SURICATA_ESTADO_URI`` (``gs://bucket`` ou caminho de diretório local);
+não há bucket do Bot pessoal embutido.
+
+Exemplo mínimo de arquivo de entrada::
+
+    {
+      "classe": "nota_pessoal",
+      "itens": [
+        {"id": "quiz-1", "tipo": "quiz", "titulo": "Quiz 1",
+         "curso": "Matemática", "curso_id": "mat", "data": "2026-12-10"},
+        {"id": "av-1", "tipo": "avaliacao", "titulo": "Prova final",
+         "curso": "Física", "curso_id": "fis", "data": null}
+      ]
+    }
+
+Modos:
+- padrão: valida e publica (CAS, leitura de conferência após gravar);
+- ``--validar``: valida e sai 0 sem publicar;
+- ``--dry-run``: valida, imprime o que publicaria e sai 0 sem escrever nada.
 """
 from __future__ import annotations
 
@@ -45,6 +63,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--arquivo", type=Path, required=True)
     parser.add_argument("--validar", action="store_true")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="valida e imprime o que publicaria, sem escrever")
     args = parser.parse_args()
     bruto = args.arquivo.read_bytes()
     dados = json.loads(bruto)
@@ -55,12 +75,18 @@ def main() -> int:
         return 2
     if args.validar:
         return 0
+    if args.dry_run:
+        for item in dados.get("itens") or []:
+            print(f"publicaria {item.get('id')}: [{item.get('tipo')}] "
+                  f"{item.get('titulo')} ({item.get('curso')}, data={item.get('data')})")
+        print(f"dry-run: {OBJETO} não gravado")
+        return 0
     destino = os.environ.get("SURICATA_ESTADO_URI")
     if not destino:
         print("ERRO SURICATA_ESTADO_URI ausente")
         return 2
-    from suricata.storage.gcs import ObjetosGCS
-    objetos = ObjetosGCS(destino)
+    from suricata.storage.gcs import construir_objetos
+    objetos = construir_objetos(destino)
     atual = objetos.ler(OBJETO)
     if atual.dados == bruto:
         print("agenda: já atualizada")
