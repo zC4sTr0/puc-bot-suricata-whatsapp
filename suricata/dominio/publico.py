@@ -10,13 +10,26 @@ Regras:
 """
 from __future__ import annotations
 
-import hashlib
 import re
-import unicodedata
-from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
+
+from .calendario import (  # noqa: F401 - _pascoa é fachada de compatibilidade
+    _pascoa,
+    eh_dia_de_aula,
+    feriados_nacionais,
+)
+from .classificacao import (  # noqa: F401 - nomes históricos, reexport deliberado
+    Atividade,
+    _limpo,
+    _sem_acento,
+    atividade_de,
+    classificar_tipo,
+    data,
+    nome_curto,
+    resumo_estudo,
+)
 from .horario import BRASILIA
-from .calendario import _pascoa, eh_dia_de_aula, feriados_nacionais
+
 HORA_AVISO_PROVA = 12  # véspera: aviso extra só com prova/quiz amanhã
 HORA_VESPERA = 18  # véspera: resumo do dia seguinte
 ANTECEDENCIA_LEMBRETE = timedelta(minutes=15)  # > intervalo de 10 min: alguma rodada cai antes
@@ -41,9 +54,6 @@ DIAS = ("seg", "ter", "qua", "qui", "sex", "sáb", "dom")
 
 # A normalização, a entidade Atividade e a classificação de tipo vivem em
 # ``classificacao``; os nomes históricos continuam importáveis daqui.
-from .classificacao import (Atividade, atividade_de, classificar_tipo, data,
-                            nome_curto, resumo_estudo, _limpo, _sem_acento)
-
 
 # Matérias pesadas recebem antecedência e a linha de estudo (titular, 2026-09-14).
 MATERIAS_PESADAS = frozenset({"292184"})  # Computabilidade

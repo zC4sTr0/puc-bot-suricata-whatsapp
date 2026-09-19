@@ -4,8 +4,14 @@ from types import SimpleNamespace
 
 import suricata.rodada as rodada
 import suricata.rodada.execucao as execucao
-from suricata.dominio.corte_rodada import (corte_21h, evento_disponivel, janela_manha,
-                                   _corte_21h, _evento_disponivel, _janela_manha)
+from suricata.dominio.corte_rodada import (
+    _corte_21h,
+    _evento_disponivel,
+    _janela_manha,
+    corte_21h,
+    evento_disponivel,
+    janela_manha,
+)
 from suricata.dominio.horario import BRASILIA
 
 

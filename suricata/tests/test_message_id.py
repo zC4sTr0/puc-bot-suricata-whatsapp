@@ -1,4 +1,3 @@
-import re
 import unittest
 
 from suricata.dominio.message_id import message_id

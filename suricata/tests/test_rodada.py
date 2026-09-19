@@ -11,7 +11,14 @@ from suricata.dominio.message_id import message_id
 from suricata.dominio.publico import classificar_tipo
 from suricata.rodada import LEASE, MEMORIA, OUTBOX, Relatorio, executar
 from suricata.storage.gcs import ObjetosLocais
-from suricata.tests._fakes import AGORA, JID, CanvasFalso, PonteFalsa, iso, quiz  # noqa: F401 — re-export p/ importadores
+from suricata.tests._fakes import (  # noqa: F401 — re-export p/ importadores
+    AGORA,
+    JID,
+    CanvasFalso,
+    PonteFalsa,
+    iso,
+    quiz,
+)
 
 
 class RodadaTests(unittest.TestCase):
@@ -258,8 +265,8 @@ class AnuncioRodadaTests(unittest.TestCase):
 
 class TextoTests(unittest.TestCase):
     def test_nome_curto_da_oferta_e_data_unica_quando_abre_e_fecha_juntos(self):
-        from suricata.integracao.canvas import PublicAssignment
         from suricata.dominio.publico import atividade_de, texto_novo
+        from suricata.integracao.canvas import PublicAssignment
 
         momento = "2026-11-26T13:30:00Z"
         a = atividade_de(PublicAssignment(id="1", name="Avaliação II", points_possible=25.0, unlock_at=momento,
@@ -275,8 +282,14 @@ class TextoTests(unittest.TestCase):
 class PonteRealTests(unittest.TestCase):
     def test_todo_texto_da_rodada_passa_na_validacao_da_ponte_real(self):
         """Medido 2026-09-14 na nuvem: a ponte recusava '\\n' e nenhum aviso multilinha saía."""
+        from suricata.dominio.publico import (
+            Atividade,
+            texto_anuncio,
+            texto_lembrete,
+            texto_mudou,
+            texto_novo,
+        )
         from suricata.integracao.bridge import BridgeError, WhatsAppBridge
-        from suricata.dominio.publico import Atividade, texto_anuncio, texto_lembrete, texto_mudou, texto_novo
 
         abre = AGORA + timedelta(hours=1)
         a = Atividade("292184", "Computabilidade", "1", "Quiz", "quiz", abre, None, abre + timedelta(minutes=15), 3.0,
@@ -296,6 +309,7 @@ class PonteCrashTests(unittest.TestCase):
     def test_crash_do_node_depois_do_ack_conta_como_entregue_e_grava_credenciais(self):
         """Medido 2026-09-14 na nuvem: acks=True/2 com exit=1 ('Node.js v22' no stderr)."""
         from unittest.mock import Mock
+
         from suricata.integracao.bridge import WhatsAppBridge
         from suricata.storage.cas import AuthSnapshot
 
@@ -470,7 +484,7 @@ class AgendaManualTests(unittest.TestCase):
     """Datas anotadas em aula complementam o Canvas; o Canvas sempre vence."""
 
     def _canvas(self, titulo, tipo, dia_iso, assignment_id="1", curso_id="292189"):
-        from suricata.dominio.publico import Atividade, BRASILIA
+        from suricata.dominio.publico import BRASILIA, Atividade
 
         d = datetime.fromisoformat(dia_iso).replace(tzinfo=BRASILIA)
         return Atividade(curso_id, "Introdução à Computação", assignment_id, titulo, tipo, d,
@@ -492,8 +506,8 @@ class AgendaManualTests(unittest.TestCase):
         self.assertEqual((extra.titulo, extra.fonte, extra.assignment_id), ("Prova 2", "caderno", "caderno:ic-prova-2"))
 
     def test_vespera_mostra_prova_do_caderno_amanha_e_chegando(self):
-        from suricata.rodada.agenda_manual import complementar
         from suricata.dominio.publico import BRASILIA, texto_vespera
+        from suricata.rodada.agenda_manual import complementar
 
         manual = [{"id": "alg-prova-1", "curso_id": "289812", "curso": "Introdução a Algoritmos", "titulo": "Prova 1",
                    "tipo": "avaliacao", "data": "2026-09-16", "pontos": 25}]
@@ -522,14 +536,14 @@ class AvisoProvaMeioDiaTests(unittest.TestCase):
 
     @staticmethod
     def _prova(dia_, tipo="avaliacao", titulo="Prova 1", fonte="canvas"):
-        from suricata.dominio.publico import Atividade, BRASILIA
+        from suricata.dominio.publico import BRASILIA, Atividade
 
         inicio = datetime(2026, 9, dia_, tzinfo=BRASILIA)
         return Atividade("289812", "Introdução a Algoritmos", titulo, titulo, tipo, inicio, None,
                          inicio + timedelta(hours=23, minutes=59), 25.0, "", fonte)
 
     def test_so_meio_dia_so_com_prova_uma_vez(self):
-        from suricata.dominio.publico import Atividade, BRASILIA
+        from suricata.dominio.publico import BRASILIA, Atividade
         from suricata.rodada import planejar_aviso_prova
 
         prova = self._prova(16, fonte="caderno")

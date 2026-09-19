@@ -1,9 +1,9 @@
 import unittest
 from datetime import datetime, timezone
 
-from suricata.rodada.config import Destino
 from suricata.dominio.horario import BRASILIA
 from suricata.dominio.publico import BRASILIA as PUBLICO_BRASILIA
+from suricata.rodada.config import Destino
 
 
 class TimeBoundaryCompatibilityTests(unittest.TestCase):

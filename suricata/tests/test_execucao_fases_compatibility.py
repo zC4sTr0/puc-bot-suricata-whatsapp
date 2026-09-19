@@ -3,9 +3,13 @@ import unittest
 from datetime import datetime, timezone
 from types import SimpleNamespace
 
-from suricata.rodada.execucao import (_carregar_memoria, _executar_entrega,
-                               _planejar_rodada, _publicar_relatorio)
 from suricata.dominio.relatorio import Relatorio
+from suricata.rodada.execucao import (
+    _carregar_memoria,
+    _executar_entrega,
+    _planejar_rodada,
+    _publicar_relatorio,
+)
 from suricata.storage.cas import StorageError
 
 

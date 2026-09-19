@@ -9,10 +9,9 @@ incondicional: a fixture vive no repositório.
 import unittest
 from pathlib import Path
 
-from suricata.integracao.bridge import BridgeError, WhatsAppBridge
 from suricata.dominio.message_id import message_id
+from suricata.integracao.bridge import BridgeError, WhatsAppBridge
 from suricata.storage.cas import AuthSnapshot
-
 
 GROUP = "120363000000000000@g.us"
 ROOT = Path(__file__).resolve().parents[1]

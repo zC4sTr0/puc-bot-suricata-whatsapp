@@ -14,7 +14,6 @@ from datetime import datetime
 
 from ..dominio.horario import BRASILIA
 
-
 _JID_GRUPO = re.compile(r"[0-9]+(?:-[0-9]+)?@g\.us")
 
 

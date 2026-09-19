@@ -12,7 +12,14 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from suricata.dominio.publico import BRASILIA, Atividade, anuncio_de_agora, decidir, montar_vespera, precisa_lembrete
+from suricata.dominio.publico import (
+    BRASILIA,
+    Atividade,
+    anuncio_de_agora,
+    decidir,
+    montar_vespera,
+    precisa_lembrete,
+)
 from suricata.rodada import OUTBOX, executar, planejar_aviso_prova, planejar_vespera
 from suricata.storage.gcs import ObjetosLocais
 from suricata.tests.test_rodada import JID, CanvasFalso, PonteFalsa, iso

@@ -16,10 +16,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 import suricata.storage.lease_rodada as lease_rodada
-from suricata.storage.lease_rodada import LEASE, LEASE_MINUTOS, Lease, _campo_json
 from suricata.storage.cas import CASConflict, StorageError
 from suricata.storage.gcs import Objeto, ObjetosLocais
-
+from suricata.storage.lease_rodada import LEASE, LEASE_MINUTOS, Lease, _campo_json
 
 AGORA = datetime(2026, 9, 18, 12, 0, tzinfo=timezone.utc)
 

@@ -1,12 +1,12 @@
-from datetime import datetime, timedelta, timezone
 import multiprocessing
 import os
 import shutil
 import subprocess
 import sys
-import time
 import tempfile
+import time
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from suricata.storage.outbox import Outbox, OutboxError
@@ -80,7 +80,7 @@ class OutboxConcurrencyTests(unittest.TestCase):
             results = [process.communicate(timeout=60) for process in processes]
             failures = [
                 (process.returncode, stdout, stderr)
-                for process, (stdout, stderr) in zip(processes, results)
+                for process, (stdout, stderr) in zip(processes, results, strict=True)
                 if process.returncode != 0
             ]
             self.assertEqual(failures, [], f"falhas na rodada {round_id}: {failures[:2]}")

@@ -11,10 +11,11 @@ import os
 import tempfile
 import time
 import uuid
+from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 from .locking import LockError, lock_arquivo
 
@@ -125,7 +126,7 @@ class Outbox:
         with _lock_arquivo(self._lock_path, timeout=self.lock_timeout):
             self._carregar()
             expired = []
-            for event_id, record in list(self._eventos.items()):
+            for _event_id, record in list(self._eventos.items()):
                 if record["estado"] == "pending" and _parse_iso(record["expira_em"]) <= now:
                     expired.append(self._transicionar_carregado(record, "expirado", agora=now))
             return expired

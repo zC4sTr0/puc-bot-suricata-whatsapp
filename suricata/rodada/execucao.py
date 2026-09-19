@@ -4,39 +4,38 @@ Extração estrutural de ``rodada.py``; contratos e ordem de efeitos preservados
 """
 from __future__ import annotations
 
-import hashlib
 import json
 import tempfile
+from collections.abc import Callable
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
-from . import agenda_manual
-from ..integracao.canvas import CanvasClient
-from .coleta import Coleta, ColetaIndisponivel, coletar
-from .config import Destino
-from ..dominio.corte_rodada import (_autorizacao_corte, _autorizados_persistidos, _corte_21h,
-                           _evento_disponivel, _janela_manha)
-from ..dominio.lotes import MAX_LOTE, agrupar_envios
-from ..storage.lease_rodada import Lease
+from ..dominio.corte_rodada import (
+    _autorizacao_corte,
+    _autorizados_persistidos,
+    _corte_21h,
+    _evento_disponivel,
+    _janela_manha,
+)
+from ..dominio.lotes import (  # noqa: F401 - MAX_LOTE é fachada de compatibilidade
+    MAX_LOTE,
+    agrupar_envios,
+)
 from ..dominio.memoria_rodada import comprometer_memoria
 from ..dominio.message_id import message_id
+from ..dominio.planejamento import Evento, _limite_manha, planejar
+from ..dominio.publico import BRASILIA, Atividade, em_silencio
+from ..dominio.relatorio import Relatorio
+from ..integracao.canvas import CanvasClient
+from ..storage.cas import CASConflict, StorageError
+from ..storage.lease_rodada import Lease
 from ..storage.outbox import OutboxError
 from ..storage.persistencia_rodada import OutboxSincronizado
-from ..dominio.planejamento import Evento, _limite_manha, _pode_aguardar_07h, planejar
-from ..dominio.publico import BRASILIA, Atividade, em_silencio, texto_lote
-from ..dominio.relatorio import Relatorio
-from ..storage.cas import CASConflict, StorageError
-
-
-
-
-
-
-
-
-
+from . import agenda_manual
+from .coleta import Coleta, ColetaIndisponivel, coletar
+from .config import Destino
 
 
 def _todos(fila: OutboxSincronizado) -> list[dict[str, Any]]:
@@ -132,7 +131,6 @@ def entregar(fila: OutboxSincronizado, ponte: Any, grupo_jid: str, eventos: list
     eventos_atuais = _registrar_eventos(fila, outbox, grupo_jid, eventos, momento)
     outbox.recuperar_interrompidos(agora=momento)
     atual = _agora_vivo(agora)
-    local_atual = atual.astimezone(BRASILIA)
     expirados = []
     if _janela_manha(atual):
         autorizados = _autorizados_persistidos(fila, atividades or [], atual)

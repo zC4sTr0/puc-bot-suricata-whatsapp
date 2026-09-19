@@ -26,20 +26,26 @@ raiz de composição que já referencia ambos sem criar acoplamento cruzado.
 """
 from __future__ import annotations
 
-import os  # noqa: F401 - ponto de patch histórico: testes fazem
-# ``patch("suricata.storage.gcs.os.replace")``, que resolve para o módulo
-# ``os`` global (o mesmo usado por ``objetos_locais`` em tempo de chamada).
+# Ponto de patch histórico: testes fazem ``patch("suricata.storage.gcs.os.replace")``,
+# que resolve para o módulo ``os`` global (o mesmo usado por ``objetos_locais``
+# em tempo de chamada).
+import os  # noqa: F401
+
+from ._comum import Objeto
 
 # Tipos e erros reexportados para preservar a superfície histórica do módulo
 # (eram atributos de ``gcs`` via import, antes da decomposição).
-from .cas import AuthSnapshot, CASConflict, ReadBackError, StorageError
+from .cas import (  # noqa: F401 - reexport histórico
+    AuthSnapshot,
+    CASConflict,
+    ReadBackError,
+    StorageError,
+)
 from .locking import LockError, lock_arquivo  # noqa: F401 - reexport de compatibilidade
-
-from ._comum import Objeto
 from .objetos_gcs import ObjetosGCS
 from .objetos_locais import ObjetosLocais
 from .sessao import SessaoWhatsApp
-from .token import METADATA_TOKEN_URL, TokenGCP
+from .token import METADATA_TOKEN_URL, TokenGCP  # noqa: F401 - reexport histórico
 
 
 def construir_objetos(uri: str) -> ObjetosGCS | ObjetosLocais:

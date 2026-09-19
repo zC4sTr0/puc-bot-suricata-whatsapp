@@ -1,6 +1,6 @@
-from datetime import datetime, timedelta, timezone
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from suricata.storage.outbox import Outbox, OutboxError
@@ -21,10 +21,12 @@ class OutboxTests(unittest.TestCase):
         again = outbox.adicionar(self.event, agora=self.now)
         self.assertEqual(first, again)
         outbox.transicionar("e1", "in_flight", agora=self.now)
-        with self.assertRaises(OutboxError): outbox.transicionar("e1", "sent", agora=self.now)
+        with self.assertRaises(OutboxError):
+            outbox.transicionar("e1", "sent", agora=self.now)
         sent = outbox.transicionar("e1", "sent", ack=True, agora=self.now)
         self.assertEqual(sent["estado"], "sent")
-        with self.assertRaises(OutboxError): outbox.transicionar("e1", "pending", agora=self.now)
+        with self.assertRaises(OutboxError):
+            outbox.transicionar("e1", "pending", agora=self.now)
 
     def test_crash_in_flight_volta_a_pending(self):
         outbox = Outbox(self.path)
@@ -53,7 +55,8 @@ class OutboxTests(unittest.TestCase):
     def test_reutilizacao_de_event_id_com_conteudo_diferente_falha(self):
         outbox = Outbox(self.path)
         outbox.adicionar(self.event, agora=self.now)
-        with self.assertRaises(OutboxError): outbox.adicionar({**self.event, "texto": "outro"}, agora=self.now)
+        with self.assertRaises(OutboxError):
+            outbox.adicionar({**self.event, "texto": "outro"}, agora=self.now)
 
     def test_expira_somente_depois_do_prazo(self):
         outbox = Outbox(self.path)
@@ -66,9 +69,12 @@ class OutboxTests(unittest.TestCase):
         outbox = Outbox(self.path)
         outbox.adicionar(self.event, agora=self.now)
         for state in ("unknown", "failed"):
-            with self.assertRaises(OutboxError): outbox.transicionar("e1", state)
+            with self.assertRaises(OutboxError):
+                outbox.transicionar("e1", state)
         outbox.transicionar("e1", "in_flight")
-        with self.assertRaises(OutboxError): outbox.transicionar("e1", "sent")
+        with self.assertRaises(OutboxError):
+            outbox.transicionar("e1", "sent")
 
 
-if __name__ == "__main__": unittest.main()
+if __name__ == "__main__":
+    unittest.main()

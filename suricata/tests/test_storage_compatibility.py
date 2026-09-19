@@ -51,8 +51,13 @@ class StorageCompatibilityTests(unittest.TestCase):
         # teste_envio.py (SessaoWhatsApp, construir_objetos). Testes:
         # test_lease_rodada.py (Objeto, ObjetosLocais) e
         # test_storage_robustez.py (ObjetosGCS), entre outros.
-        from suricata.storage.gcs import (Objeto, ObjetosGCS, ObjetosLocais,  # noqa: F401
-                                          SessaoWhatsApp, construir_objetos)
+        from suricata.storage.gcs import (  # noqa: F401
+            Objeto,
+            ObjetosGCS,
+            ObjetosLocais,
+            SessaoWhatsApp,
+            construir_objetos,
+        )
         self.assertIs(Objeto, _comum.Objeto)
         self.assertIs(ObjetosGCS, objetos_gcs.ObjetosGCS)
         self.assertIs(ObjetosLocais, objetos_locais.ObjetosLocais)

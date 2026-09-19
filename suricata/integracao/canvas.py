@@ -9,10 +9,11 @@ import re
 import urllib.error
 import urllib.parse
 import urllib.request
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from numbers import Real
-from typing import Any, Callable, Mapping, Sequence
+from typing import Any
 
 ORIGIN = "https://pucminas.instructure.com"
 API = "/api/v1"
@@ -149,13 +150,20 @@ def _itens_do_payload(
 def classify_status(status: Any) -> CanvasResponseKind:
     if isinstance(status, bool) or not isinstance(status, int):
         return CanvasResponseKind.INVALID_PAYLOAD
-    if status == 200: return CanvasResponseKind.OK
-    if status == 401: return CanvasResponseKind.UNAUTHORIZED
-    if status == 403: return CanvasResponseKind.FORBIDDEN
-    if status == 404: return CanvasResponseKind.NOT_FOUND
-    if status == 429: return CanvasResponseKind.RATE_LIMITED
-    if 400 <= status < 500: return CanvasResponseKind.CLIENT_ERROR
-    if status >= 500: return CanvasResponseKind.SERVER_ERROR
+    if status == 200:
+        return CanvasResponseKind.OK
+    if status == 401:
+        return CanvasResponseKind.UNAUTHORIZED
+    if status == 403:
+        return CanvasResponseKind.FORBIDDEN
+    if status == 404:
+        return CanvasResponseKind.NOT_FOUND
+    if status == 429:
+        return CanvasResponseKind.RATE_LIMITED
+    if 400 <= status < 500:
+        return CanvasResponseKind.CLIENT_ERROR
+    if status >= 500:
+        return CanvasResponseKind.SERVER_ERROR
     return CanvasResponseKind.CLIENT_ERROR
 
 

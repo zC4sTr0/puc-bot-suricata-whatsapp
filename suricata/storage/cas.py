@@ -8,9 +8,9 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
-
+from typing import Any
 
 BUCKET_URI = "gs://suricata-college-20260913-estado"
 AUTH_OBJECT_URI = f"{BUCKET_URI}/whatsapp/auth.json"
