@@ -56,8 +56,8 @@ class FakeCasBackend:
 class AdversarialStorageWorkerTests(unittest.TestCase):
     def test_concurrent_writers_only_one_generation_wins(self):
         backend = FakeCasBackend({"version": 0}, 7)
-        first = SuricataSessionStorage(run=backend.run)
-        second = SuricataSessionStorage(run=backend.run)
+        first = SuricataSessionStorage(session_object="gs://test.invalid/whatsapp/auth.json", run=backend.run)
+        second = SuricataSessionStorage(session_object="gs://test.invalid/whatsapp/auth.json", run=backend.run)
         first_snapshot = first.read_auth()
         second_snapshot = second.read_auth()
 
@@ -75,7 +75,7 @@ class AdversarialStorageWorkerTests(unittest.TestCase):
                 returncode=1,
             )
         )
-        storage = SuricataSessionStorage(run=run)
+        storage = SuricataSessionStorage(session_object="gs://test.invalid/whatsapp/auth.json", run=run)
 
         with self.assertRaises(CASConflict) as raised:
             storage.write_auth({"secret": "do-not-leak"}, expected_generation="41")
@@ -85,7 +85,7 @@ class AdversarialStorageWorkerTests(unittest.TestCase):
     def test_crash_after_remote_mutation_is_reported_without_retry(self):
         backend = FakeCasBackend({"version": 0}, 3)
         backend.fail_after_mutation = True
-        storage = SuricataSessionStorage(run=backend.run)
+        storage = SuricataSessionStorage(session_object="gs://test.invalid/whatsapp/auth.json", run=backend.run)
 
         with self.assertRaises(StorageError):
             storage.write_auth({"version": 1}, expected_generation="3")
@@ -112,7 +112,7 @@ class AdversarialStorageWorkerTests(unittest.TestCase):
 
         backend = TornReadBackend({"version": 1}, 10)
         with self.assertRaises(StorageError) as raised:
-            SuricataSessionStorage(run=backend.run).read_auth()
+            SuricataSessionStorage(session_object="gs://test.invalid/whatsapp/auth.json", run=backend.run).read_auth()
         self.assertEqual(str(raised.exception), "leitura inconsistente da sessão WhatsApp")
 
 

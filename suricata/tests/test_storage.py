@@ -16,18 +16,18 @@ class SuricataSessionStorageTests(unittest.TestCase):
             self.result('{"creds.json": "opaque"}'),
             self.result('{"generation": "17"}'),
         ])
-        storage = SuricataSessionStorage(run=run)
+        storage = SuricataSessionStorage(session_object="gs://test.invalid/whatsapp/auth.json", run=run)
 
         snapshot = storage.read_auth()
 
         self.assertEqual(snapshot.value, {"creds.json": "opaque"})
         self.assertEqual(snapshot.generation, "17")
         self.assertEqual(run.call_args_list[0].args[0][:4], ["gcloud", "storage", "objects", "describe"])
-        self.assertEqual(run.call_args_list[1].args[0][:4], ["gcloud", "storage", "cat", "gs://suricata-college-20260913-estado/whatsapp/auth.json"])
+        self.assertEqual(run.call_args_list[1].args[0][:4], ["gcloud", "storage", "cat", "gs://test.invalid/whatsapp/auth.json"])
 
     def test_missing_auth_is_explicit(self):
         run = Mock(return_value=self.result("", returncode=1, stderr="ERROR: object not found"))
-        storage = SuricataSessionStorage(run=run)
+        storage = SuricataSessionStorage(session_object="gs://test.invalid/whatsapp/auth.json", run=run)
 
         snapshot = storage.read_auth()
 
@@ -42,7 +42,7 @@ class SuricataSessionStorageTests(unittest.TestCase):
             self.result('{"creds.json": "opaque"}'),
             self.result('{"generation": "18"}'),
         ])
-        storage = SuricataSessionStorage(run=run)
+        storage = SuricataSessionStorage(session_object="gs://test.invalid/whatsapp/auth.json", run=run)
         value = {"creds.json": "opaque"}
 
         snapshot = storage.write_auth(value, expected_generation="17")
@@ -61,7 +61,7 @@ class SuricataSessionStorageTests(unittest.TestCase):
             self.result('{"creds.json": "opaque"}'),
             self.result('{"generation": "1"}'),
         ])
-        storage = SuricataSessionStorage(run=run)
+        storage = SuricataSessionStorage(session_object="gs://test.invalid/whatsapp/auth.json", run=run)
 
         storage.write_auth({"creds.json": "opaque"}, expected_generation=None)
 
@@ -85,7 +85,7 @@ class SuricataSessionStorageTests(unittest.TestCase):
         }
 
         with patch.dict(os.environ, herdado, clear=False):
-            SuricataSessionStorage(run=run).read_auth()
+            SuricataSessionStorage(session_object="gs://test.invalid/whatsapp/auth.json", run=run).read_auth()
 
         esperado = {"PATH": os.environ.get("PATH", "")}
         esperado.update({key: os.environ[key] for key in ("HOME", "USERPROFILE", "CLOUDSDK_CONFIG") if key in os.environ})
@@ -96,7 +96,7 @@ class SuricataSessionStorageTests(unittest.TestCase):
 
     def test_write_conflict_does_not_expose_session(self):
         run = Mock(return_value=self.result("", returncode=1, stderr="ERROR: 412 precondition failed"))
-        storage = SuricataSessionStorage(run=run)
+        storage = SuricataSessionStorage(session_object="gs://test.invalid/whatsapp/auth.json", run=run)
 
         with self.assertRaises(CASConflict) as raised:
             storage.write_auth({"secret": "must-not-appear"}, expected_generation="17")

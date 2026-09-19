@@ -12,8 +12,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-BUCKET_URI = "gs://suricata-college-20260913-estado"
-AUTH_OBJECT_URI = f"{BUCKET_URI}/whatsapp/auth.json"
 _GCLOUD_ENV_KEYS = ("PATH", "HOME", "USERPROFILE", "CLOUDSDK_CONFIG")
 
 
@@ -39,9 +37,10 @@ Runner = Callable[..., subprocess.CompletedProcess[bytes]]
 
 
 class SuricataSessionStorage:
-    """Lê/grava apenas ``whatsapp/auth.json`` no bucket do Suricata.
+    """Lê/grava o objeto de sessão configurado para o WhatsApp.
 
-    ``run`` existe para testes unitários; em produção o padrão é
+    Em produção, ``session_object`` ou ``SURICATA_WA_SESSION_OBJECT`` é
+    obrigatório; não há fallback implícito para outro produto ou namespace.
     :func:`subprocess.run`, sem shell. O payload JSON sempre vai por stdin,
     nunca por argv ou saída de log.
     """
@@ -49,10 +48,12 @@ class SuricataSessionStorage:
     def __init__(
         self,
         *,
+        session_object: str | None = None,
         gcloud: str | None = None,
         timeout: float = 30.0,
         run: Runner = subprocess.run,
     ) -> None:
+        self.session_object = _resolve_session_object(session_object, run=run)
         self.gcloud = gcloud or os.environ.get("SURICATA_GCLOUD_BIN", "gcloud")
         self.timeout = timeout
         self._run = run
@@ -60,14 +61,14 @@ class SuricataSessionStorage:
     def read_auth(self) -> AuthSnapshot:
         """Retorna a sessão e sua geração; ausência é ``(None, None)``."""
         metadata = self._invoke(
-            [self.gcloud, "storage", "objects", "describe", AUTH_OBJECT_URI, "--format=json"],
+            [self.gcloud, "storage", "objects", "describe", self.session_object, "--format=json"],
             missing_ok=True,
         )
         if metadata is None:
             return AuthSnapshot(None, None)
         generation = self._parse_generation(metadata)
         payload = self._invoke(
-            [self.gcloud, "storage", "cat", AUTH_OBJECT_URI],
+            [self.gcloud, "storage", "cat", self.session_object],
         )
         value = self._parse_object(payload.stdout)
 
@@ -75,7 +76,7 @@ class SuricataSessionStorage:
         # cat impede devolver payload de uma geração diferente da anunciada;
         # a mensagem de erro não inclui o payload nem seus campos.
         after_metadata = self._invoke(
-            [self.gcloud, "storage", "objects", "describe", AUTH_OBJECT_URI, "--format=json"],
+            [self.gcloud, "storage", "objects", "describe", self.session_object, "--format=json"],
             missing_ok=True,
         )
         if after_metadata is None:
@@ -116,7 +117,7 @@ class SuricataSessionStorage:
                 "storage",
                 "cp",
                 "-",
-                AUTH_OBJECT_URI,
+                self.session_object,
                 f"--if-generation-match={match}",
                 "--content-type=application/json",
             ],
@@ -178,6 +179,33 @@ class SuricataSessionStorage:
         if not isinstance(value, dict):
             raise StorageError("auth.json não é um objeto JSON")
         return value
+
+
+def _resolve_session_object(session_object: str | None, *, run: Runner) -> str:
+    """Resolve the session object without silently crossing product namespaces.
+
+    The legacy constant remains available only for injected test runners. A real
+    subprocess runner must receive explicit production configuration.
+    """
+    environment_object = os.environ.get("SURICATA_WA_SESSION_OBJECT")
+    if session_object is not None and environment_object is not None and session_object != environment_object:
+        raise StorageError("objeto da sessão WhatsApp ambíguo")
+    configured = session_object if session_object is not None else environment_object
+    if configured is None:
+        raise StorageError("objeto da sessão WhatsApp ausente")
+    _validate_session_object(configured)
+    return configured
+
+
+def _validate_session_object(value: str) -> None:
+    if not isinstance(value, str) or not value.startswith("gs://"):
+        raise StorageError("objeto da sessão WhatsApp inválido")
+    path = value[5:]
+    if not path or "/" not in path or any(char.isspace() or ord(char) < 32 for char in value):
+        raise StorageError("objeto da sessão WhatsApp inválido")
+    bucket, _, object_name = path.partition("/")
+    if not bucket or not object_name or "/" not in object_name:
+        raise StorageError("objeto da sessão WhatsApp inválido")
 
 
 def _gcloud_environment() -> dict[str, str]:

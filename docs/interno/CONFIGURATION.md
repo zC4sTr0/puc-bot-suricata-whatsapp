@@ -7,7 +7,8 @@
 - `SURICATA_ENTREGA`: use `desligada` em testes/canário; `ligada` somente no corte autorizado.
 - `SURICATA_GRUPO_JID` e `SURICATA_DESTINOS_JSON`: ambiente autorizado; nunca versionar valores reais.
 - `SURICATA_LEASE_MINUTOS`: lease da rodada, com validação fail-closed.
-- `SURICATA_WA_AUTH_DIR`: diretório externo temporário da sessão; nunca dentro do clone.
+- `SURICATA_WA_SESSION_OBJECT`: URI opcional do objeto de sessão GCS; quando presente, deve estar no mesmo bucket/prefixo de `SURICATA_ESTADO_URI`, ou a inicialização falha fechada. Quando ausente, usa `whatsapp/auth.json` dentro do namespace de estado.
+- `SURICATA_WA_AUTH_DIR`: diretório externo temporário da sessão local; nunca dentro do clone.
 
 ## Regras
 

@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1
-# Imagem construída com `gcloud builds submit suricata` (contexto = esta pasta).
+# Standalone compatibility image for the `suricata/` context. Production and CI
+# use the repository-root Dockerfile (`gcloud builds submit .`).
 # O runtime padrão é shadow: somente leitura, sem config, rede ou credencial.
 # Risco residual: o pin cobre a base, não os pacotes apt/npm instalados em cima.
 FROM node:22-bookworm-slim@sha256:83f487e0a63425e5b4d146fb5e5be574bcbe1b7b843d3ebafdd95eaf7767a7e5

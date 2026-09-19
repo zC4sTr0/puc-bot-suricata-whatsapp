@@ -17,7 +17,7 @@ class CasReadRevalidationTests(unittest.TestCase):
             self.result(json.dumps({"generation": "11"}).encode()),
         ]
         run = Mock(side_effect=calls)
-        storage = SuricataSessionStorage(run=run)
+        storage = SuricataSessionStorage(session_object="gs://test.invalid/whatsapp/auth.json", run=run)
 
         with self.assertRaises(StorageError) as raised:
             storage.read_auth()
@@ -31,7 +31,7 @@ class CasReadRevalidationTests(unittest.TestCase):
             self.result(b'{"generation":"10"}'),
             self.result(b'{"secret":"not-for-logs"'),
         ])
-        storage = SuricataSessionStorage(run=run)
+        storage = SuricataSessionStorage(session_object="gs://test.invalid/whatsapp/auth.json", run=run)
 
         with self.assertRaises(StorageError) as raised:
             storage.read_auth()
@@ -46,7 +46,7 @@ class CasReadRevalidationTests(unittest.TestCase):
                     self.result((f'{{"secret":"not-for-logs", "value": {constant}}}').encode()),
                     self.result(b'{"generation":"10"}'),
                 ])
-                storage = SuricataSessionStorage(run=run)
+                storage = SuricataSessionStorage(session_object="gs://test.invalid/whatsapp/auth.json", run=run)
 
                 with self.assertRaises(StorageError) as raised:
                     storage.read_auth()
@@ -60,7 +60,7 @@ class CasReadRevalidationTests(unittest.TestCase):
             self.result(b'{"secret":"opaque", "value": 1.5, "enabled": true, "empty": null}'),
             self.result(b'{"generation":"10"}'),
         ])
-        storage = SuricataSessionStorage(run=run)
+        storage = SuricataSessionStorage(session_object="gs://test.invalid/whatsapp/auth.json", run=run)
 
         self.assertEqual(
             storage.read_auth().value,
