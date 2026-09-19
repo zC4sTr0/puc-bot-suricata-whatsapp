@@ -19,7 +19,7 @@
 
 ## ✨ O que é
 
-A Suricata consulta **atividades públicas** do Canvas da turma (provas, listas, quizzes), identifica o que é novidade e avisa o grupo autorizado do WhatsApp **na hora certa**. Se o WhatsApp não confirma a entrega, o bot reenvia com o mesmo identificador — o grupo nunca vê aviso duplicado. E ele nunca publica notas, frequência ou qualquer situação individual.
+A Suricata consulta **atividades públicas** do Canvas (provas, listas, quizzes), identifica o que é novidade para a turma e envia **avisos coletivos** no grupo autorizado do WhatsApp. Se o WhatsApp não confirma a entrega, o bot reenvia com o mesmo identificador — o grupo nunca vê aviso duplicado. Nunca publica notas, frequência ou qualquer situação individual.
 
 ## 🚀 Quickstart
 
@@ -72,11 +72,15 @@ flowchart LR
 
 ### 🛡️ Por que ele nunca manda besteira
 
+
+Três invariantes de segurança que o código inteiro respeita:
+
 | Garantia | Como |
 |---|---|
 | **Nada sai por acidente** | Sem configuração, estado ou confirmação → nada é enviado. O envio precisa estar **expressamente ligado** |
 | **Nunca duplica aviso** | Cada aviso espera a **confirmação do WhatsApp**; se ela não vier, o aviso volta para a fila e reenvia com o mesmo identificador — o grupo vê 1 vez |
 | **Só fala o que é coletivo** | Olha apenas dados públicos do Canvas; notas, faltas e situações individuais nunca chegam perto do texto |
+
 
 ## 💬 Sincronizando com o WhatsApp
 
@@ -122,7 +126,7 @@ flowchart TB
 
 O passo a passo completo (build, canário sem entrega, corte controlado, rollback por digest) está em [`docs/deploy-gcp.md`](docs/deploy-gcp.md).
 
-**Pré-requisitos para mexer no deploy:** só o **`gcloud` CLI** (Google Cloud SDK) — o build da imagem acontece remotamente no Cloud Build, então **Docker local é opcional** (só se quiser testar a imagem na sua máquina). Instalação: [`docs/deploy-gcp.md`](docs/deploy-gcp.md) §Pré-requisitos.
+**Pré-requisitos para mexer no deploy:** só o **`gcloud` CLI** (Google Cloud SDK) — o build da imagem acontece remotamente no Cloud Build, então **Docker local é opcional**. Instalação e configuração: [`docs/deploy-gcp.md`](docs/deploy-gcp.md) §Pré-requisitos.
 
 > **Nota:** os últimos commits desta `main` (modernização + padronização) ainda **não foram deployados** — a imagem de produção é de um snapshot anterior. Deploy é um passo que custa (Cloud Build) e exige autorização expressa; o procedimento está documentado e testado.
 
