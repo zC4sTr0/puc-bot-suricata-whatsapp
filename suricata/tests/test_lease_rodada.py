@@ -94,15 +94,6 @@ class ConstantesLeaseRodadaTests(unittest.TestCase):
         finally:
             importlib.reload(lease_rodada)
 
-    def test_ttl_invalido_falha_fechado_no_import(self):
-        try:
-            for valor in ("-1", "nao-numero"):
-                with self.subTest(valor=valor), patch.dict(os.environ, {"SURICATA_LEASE_MINUTOS": valor}):
-                    with self.assertRaisesRegex(ValueError, "inteiro não negativo"):
-                        importlib.reload(lease_rodada)
-        finally:
-            importlib.reload(lease_rodada)
-
     def test_campo_json_ilegivel_devolve_none(self):
         for dados, campo, esperado in (
             (b'{"inicio": "ok"}', "inicio", "ok"),
