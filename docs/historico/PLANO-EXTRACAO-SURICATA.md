@@ -1,4 +1,6 @@
 # Plano de extração da Suricata para um repositório próprio
+> **Histórico — snapshot não normativo.** Preserva decisões e claims de época; não contém identificadores operacionais nem comandos copiáveis.
+
 
 > **Objetivo:** retirar a Suricata deste repositório acadêmico e criar um
 > repositório independente para o bot de WhatsApp.
@@ -108,7 +110,8 @@ Após cada subpasso, atualizar `Último passo concluído`, `Evidência` e
 
 Execute sempre a partir da raiz:
 
-```powershell
+```text
+# Histórico/pseudocódigo; não executar por cópia.
 Set-Location C:\GIT\suricata-whatsapp
 Get-Content docs\PLANO-EXTRACAO-SURICATA.md
 git status --short
@@ -161,7 +164,8 @@ pedir.
 
 Execute:
 
-```powershell
+```text
+# Histórico/pseudocódigo; não executar por cópia.
 git status --short
 git diff --check
 python -m compileall -q suricata
@@ -188,7 +192,8 @@ falha existente. Não conserte código nesta etapa.
 
 Liste os arquivos versionados da Suricata:
 
-```powershell
+```text
+# Histórico/pseudocódigo; não executar por cópia.
 git ls-files suricata
 ```
 
@@ -206,7 +211,8 @@ Separe a lista em:
 
 Execute:
 
-```powershell
+```text
+# Histórico/pseudocódigo; não executar por cópia.
 rg -n "scripts\.academico|academico/|periodos/|\.canvas|ACADEMICO_|puc-bot-|telegram-" suricata
 rg -n "suricata|SURICATA_" --glob '!suricata/**' .
 ```
@@ -232,7 +238,7 @@ em produção, verificar somente leitura:
 - Scheduler;
 - digest da imagem;
 - bucket de estado;
-- service account;
+- <service-account-confirmada>;
 - secrets por nome, sem ler valores;
 - últimas execuções;
 - estado de entrega.
@@ -492,7 +498,7 @@ Usar somente recursos com nomes Suricata:
 - projeto GCP Suricata;
 - bucket Suricata;
 - Artifact Registry Suricata;
-- service account Suricata;
+- <service-account-suricata-confirmada>;
 - secrets Suricata;
 - Job e Scheduler `suricata-*`.
 

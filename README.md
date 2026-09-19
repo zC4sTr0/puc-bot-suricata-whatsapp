@@ -1,178 +1,99 @@
 <div align="center">
 
-<img src="docs/img/banner.svg" width="640" alt="Suricata" />
+<img src="docs/img/banner.svg" width="640" alt="PUC Bot da Suricata" />
 
-**Avisos acadêmicos coletivos no WhatsApp** — o bot que acompanha o Canvas da turma e avisa o grupo na hora certa, sem nunca expor nada pessoal.
+# PUC Bot da Suricata
+
+**Avisos acadêmicos coletivos no WhatsApp para estudantes da PUC Minas.**
 
 [![CI](https://github.com/zC4sTr0/suricata-whatsapp/actions/workflows/suricata.yml/badge.svg)](https://github.com/zC4sTr0/suricata-whatsapp/actions/workflows/suricata.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)](pyproject.toml)
-[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-261230?logo=ruff&logoColor=white)](ruff.toml)
-[![Dependencies: 0](https://img.shields.io/badge/dependencies-0-brightgreen?logo=python&logoColor=white)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/tests-285%20passing-brightgreen)](suricata/tests)
 
-[Começar](#-quickstart) · [Como funciona](#-como-funciona) · [WhatsApp](#-sincronizando-com-o-whatsapp) · [Configuração](#%EF%B8%8F-configuração) · [Deploy](#-deploy-no-google-cloud) · [Trilha do estudante](#-trilha-do-estudante)
+[Começar](#começar) · [Como funciona](#como-funciona) · [Privacidade](docs/privacidade.md) · [Glossário](docs/glossario.md) · [Contribuir](#contribuir)
 
 </div>
 
----
+> **Importante:** o PUC Bot da Suricata é um projeto independente e não oficial da PUC Minas. Não representa, fala em nome de ou possui autorização institucional da universidade. Confirme sempre prazos e regras no Canvas e nos canais oficiais da sua disciplina.
 
-## ✨ O que é
+## Para que serve
 
-A Suricata consulta **atividades públicas** do Canvas (provas, listas, quizzes), identifica o que é novidade para a turma e envia **avisos coletivos** no grupo autorizado do WhatsApp. Se o WhatsApp não confirma a entrega, o bot reenvia com o mesmo identificador — o grupo nunca vê aviso duplicado. Nunca publica notas, frequência ou qualquer situação individual.
+O bot lê informações **públicas e coletivas** disponíveis no Canvas — por exemplo, uma prova, um quiz ou uma tarefa com prazo — e pode avisar um grupo autorizado do WhatsApp. A ideia é reduzir a chance de a turma perder uma mudança ou um prazo, sem publicar notas, faltas, respostas ou situações individuais.
 
-## 🚀 Quickstart
+O modelo atual é **coletivo**: uma instância atende um destino de turma/grupo autorizado. Ele não é um assistente particular de cada estudante e não acessa o seu perfil, suas entregas ou suas notas.
+
+A direção do projeto é permitir que **cada estudante opere o seu próprio bot**: sua conta/projeto cloud, seu token do Canvas, seu número pessoal para a configuração e um número/chip separado para a conta do bot. Depois do pareamento e da confirmação, essa pessoa poderá escolher os cursos e colocar o bot nos grupos que administra ou para os quais tem autorização. Esse é o objetivo do produto, não uma capacidade já disponível neste commit.
+
+## Começar
+
+Você pode conhecer o fluxo sem token, conta, Canvas ao vivo ou WhatsApp:
 
 ```bash
-git clone https://github.com/zC4sTr0/suricata-whatsapp && cd suricata-whatsapp
-```
-
-**1. Sem instalar nada** (Python 3.11+ puro, zero `pip install`):
-
-```bash
+git clone https://github.com/zC4sTr0/suricata-whatsapp
+cd suricata-whatsapp
 python -m suricata --mode demo
 ```
 
-Saída: as mensagens que *seriam* enviadas, com relatório completo — tudo offline, relógio congelado, entrega desligada. É o bot inteiro funcionando na sua máquina em segundos.
+O modo `demo` usa dados fictícios congelados e mostra as mensagens que seriam planejadas. Ele não envia nada e não prova que uma conta real do Canvas ou uma sessão do WhatsApp esteja funcionando.
 
-**2. Suíte completa** (o outro comando é só a ponte Node):
+Para validar o checkout local:
 
 ```bash
-npm ci --prefix suricata/whatsapp --ignore-scripts
 python -m pytest -q
 ```
 
-**3. Um comando que valida tudo** (ambiente + matriz inteira):
+Os testes verificam contratos locais do projeto. Uma suíte verde não comprova acesso ao Canvas, funcionamento do Google Cloud, conexão do WhatsApp ou entrega para um grupo real.
 
-```bash
-python scripts/bootstrap.py
-```
+O [guia passo a passo](docs/guia.md) explica os modos locais, a origem dos avisos e o que é necessário para uma operação autorizada.
 
-## 🧠 Como funciona
+## Como funciona
 
-O coração do bot é a **rodada**: uma volta completa do ciclo de avisos. A cada **10 minutos** (em produção, via agendador do Google Cloud), a rodada acorda, dá uma olhada no Canvas da turma, descobre o que é novidade (prova marcada, lista liberada, quiz abrindo), decide **se vale avisar e quando** — e grava tudo num estado durável antes de qualquer envio. Só depois de tudo conferido a mensagem sai, e ela só conta como enviada quando o **WhatsApp confirma a entrega**.
+1. O Canvas fornece atividades e anúncios que podem ser vistos coletivamente.
+2. O bot identifica novidades e organiza o aviso por disciplina, tipo e data.
+3. Regras de horário e segurança decidem se o aviso pode sair.
+4. O aviso é preparado para um grupo autorizado.
+5. A ponte do WhatsApp só é chamada quando a entrega está explicitamente habilitada; a confirmação da entrega é vinculada ao mesmo aviso para evitar duplicidade.
 
-```mermaid
-flowchart LR
-    A["☁️ Agendador<br/>a cada 10 min"] --> B["⚙️ rodada<br/><code>python -m suricata --mode rodada</code>"]
-    B -->|"só leitura"| C["📚 Canvas<br/>dados públicos da turma"]
-    C --> D["🧠 decide<br/>o que avisar · quando · para quem"]
-    D --> E[("🗄️ estado<br/>fila de avisos + memória")]
-    E --> F["🌉 envio<br/>ponte Node/Baileys"]
-    F --> G["💬 WhatsApp<br/>grupo da turma"]
-    G -->|"✅ confirma entrega"| E
-```
+Uma **rodada** é uma execução desse ciclo. Em uma operação configurada, o agendador pode iniciar rodadas regularmente, inclusive quando nenhuma mensagem será enviada. Acordar não significa enviar: o bot pode ficar em silêncio por horário, falta de novidade, coleta incompleta ou ausência de autorização.
 
-### ⏰ Quando ele roda?
+### Exemplos de avisos
 
-- A rodada **acorda a cada 10 minutos, todos os dias — inclusive fim de semana e feriado** (vai ao Canvas, prepara tudo).
-- Os avisos, porém, só saem nas **janelas da manhã** (07:00), **meio-dia** (12:00) e **véspera** (18:00, para o que vence no dia seguinte). Entre 23:00 e 07:00 é **silêncio total**.
-- O **calendário letivo é respeitado**: véspera não dispara para fim de semana ou feriado (só para dia de aula), e qualquer mensagem é cortada a partir das 21:00 da noite.
-- Resumo: a máquina roda 24/7, mas **mensagem no grupo só na hora certa, para o dia de aula certo**.
+- **Prova:** há uma avaliação publicada ou com prazo próximo, com a data que o Canvas informa.
+- **Quiz:** há um quiz disponível ou prestes a abrir, sem iniciar tentativa nem revelar resposta.
+- **Tarefa/entrega:** existe uma atividade com prazo, com link público e data quando esses dados estão disponíveis.
+- **Agenda manual:** um operador autorizado pode registrar uma informação coletiva que não está no Canvas, como uma prova anunciada em aula. Isso não transforma uma anotação em comunicado oficial.
 
-### 🛡️ Por que ele nunca manda besteira
+A mensagem deve indicar a origem — Canvas ou agenda manual — para que a turma saiba de onde veio a informação. Se o Canvas estiver indisponível ou não trouxer dados suficientes, o bot não deve tratar isso como “não há atividade”. Confira a fonte oficial.
 
+### Horários e limites
 
-Três invariantes de segurança que o código inteiro respeita:
+As regras atuais usam o horário de Brasília. O código possui janelas de entrega e corte noturno; uma rodada pode consultar e registrar um relatório sem enviar mensagem. Não interprete um aviso ausente como prova de que não existe tarefa: confira o Canvas.
 
-| Garantia | Como |
-|---|---|
-| **Nada sai por acidente** | Sem configuração, estado ou confirmação → nada é enviado. O envio precisa estar **expressamente ligado** |
-| **Nunca duplica aviso** | Cada aviso espera a **confirmação do WhatsApp**; se ela não vier, o aviso volta para a fila e reenvia com o mesmo identificador — o grupo vê 1 vez |
-| **Só fala o que é coletivo** | Olha apenas dados públicos do Canvas; notas, faltas e situações individuais nunca chegam perto do texto |
+O bot não decide se você deve estudar, não dá nota, não corrige atividade e não substitui professor, coordenação ou secretaria. Ele organiza avisos; a responsabilidade de confirmar o conteúdo continua sendo da pessoa estudante.
 
+## O que fica protegido
 
-## 💬 Sincronizando com o WhatsApp
+- Não coletamos notas, frequência, submissões, tentativas, respostas ou senhas de quiz para montar avisos.
+- Token do Canvas, sessão/QR do WhatsApp, destinos e estado operacional ficam fora do repositório e não devem ser publicados em issues, logs ou PRs.
+- O modo de demonstração é offline e usa apenas dados sintéticos.
+- Um link público ou uma atividade visível para a turma ainda pode conter dados pessoais publicados por terceiros. Por isso, não copie para o grupo nem para o Git informações que não sejam necessárias.
 
-A sessão do WhatsApp vive **fora do repo** (nunca versionada, nunca na imagem):
+Leia os [limites de privacidade](docs/privacidade.md) antes de configurar qualquer instância.
 
-1. **Parear** (operação humana, terminal local): `node suricata/whatsapp/parear.mjs --auth-dir <diretório-fora-do-repo>` — leia [`suricata/whatsapp/README.md`](suricata/whatsapp/README.md) para o fluxo completo.
-2. A ponte Node usa `SURICATA_WA_AUTH_DIR` para encontrar a sessão em produção (materializada do GCS via CAS, nunca copiada).
-3. Confirme o JID do grupo antes de qualquer entrega real.
+## O que é preciso para uma operação real
 
-O detalhamento de cada etapa está no [guia](docs/guia.md).
+Uma operação real não é ativada apenas clonando o projeto. Ela requer, no mínimo, autorização do responsável pelo destino, uma credencial adequada do Canvas, armazenamento protegido, uma sessão WhatsApp mantida fora do Git e confirmação do destinatário. Não peça nem publique credenciais neste repositório.
 
-## ⚙️ Configuração
+A documentação técnica está organizada em [`docs/`](docs/README.md). O deploy em nuvem é assunto de operador autorizado, não um passo necessário para testar o demo como estudante.
 
-Tudo por variáveis de ambiente — veja [`.env.example`](.env.example) comentado. O essencial do modo `rodada`:
+## Contribuir
 
-| Variável | Obrigatória | O que faz |
-|---|---|---|
-| `SURICATA_CANVAS_TOKEN` | ✅ | token de acesso à API do Canvas (nunca no repo) |
-| `SURICATA_ESTADO_URI` | ✅ | estado da rodada: **diretório local** ou `gs://…` |
-| `SURICATA_ENTREGA` | — | `ligada` habilita envio; **default: desligada** |
-| `SURICATA_GRUPO_JID` | — | JID do grupo destino (`…@g.us`) |
-| `SURICATA_DESTINOS_JSON` | — | múltiplos destinos com janela própria |
+Para sugerir melhoria, abra uma issue sem incluir token, QR, sessão, JID, conteúdo de turma identificável, captura do Canvas ou log de produção. Prefira exemplos fictícios e descreva o comportamento esperado. O código é distribuído sob a [licença MIT](LICENSE).
 
-<details>
-<summary><b>Todas as variáveis</b> (lease, auth, destinos)</summary>
+## Documentação
 
-Ver [`.env.example`](.env.example) — cada linha documenta obrigatória/opcional, valor de exemplo seguro e quando importa. A referência completa de semânticas está em [`docs/interno/CONFIGURATION.md`](docs/interno/CONFIGURATION.md).
-</details>
-
-## ☁️ Deploy no Google Cloud
-
-Produção = **um** Cloud Run Job (`suricata-rodada`) acionado por **um** Scheduler (`suricata-rodada-10min`), imagem por digest no Artifact Registry, estado em GCS — região `southamerica-east1`. Nada de segundo Scheduler, jamais.
-
-```mermaid
-flowchart TB
-    R["🐙 GitHub<br/>main (merge squash)"] --> CB["🏗️ Cloud Build"]
-    CB --> AR["📦 Artifact Registry<br/>imagem por digest"]
-    AR --> JOB["⚙️ Cloud Run Job<br/>suricata-rodada"]
-    SCH["⏰ Scheduler<br/>*/10 min"] --> JOB
-    JOB --> GCS[("🗄️ estado<br/>bucket Suricata")]
-    JOB --> WA["💬 WhatsApp"]
-```
-
-O passo a passo completo (build, canário sem entrega, corte controlado, rollback por digest) está em [`docs/deploy-gcp.md`](docs/deploy-gcp.md).
-
-**Pré-requisitos para mexer no deploy:** só o **`gcloud` CLI** (Google Cloud SDK) — o build da imagem acontece remotamente no Cloud Build, então **Docker local é opcional**. Instalação e configuração: [`docs/deploy-gcp.md`](docs/deploy-gcp.md) §Pré-requisitos.
-
-> **Nota:** os últimos commits desta `main` (modernização + padronização) ainda **não foram deployados** — a imagem de produção é de um snapshot anterior. Deploy é um passo que custa (Cloud Build) e exige autorização expressa; o procedimento está documentado e testado.
-
-## 📣 Quero avisar algo que não está no Canvas
-
-Prova marcada em aula, material postado fora do sistema, prazo que só você sabe: publique na **agenda manual** e o bot anuncia no grupo na janela certa, igual aos avisos do Canvas.
-
-```bash
-# 1. escreva um arquivo com o item (id único por item; data AAAA-MM-DD ou null)
-# 2. veja o que seria publicado, sem publicar nada:
-python deploy/publicar_agenda.py --arquivo minha-agenda.json --dry-run
-# 3. publique (vai para o estado que a rodada lê):
-python deploy/publicar_agenda.py --arquivo minha-agenda.json
-```
-
-Formato completo, exemplo pronto e regras (id único, tipos aceitos) em [`docs/guia.md`](docs/guia.md) — seção "Publicando itens manuais na agenda". Publicar duas vezes o mesmo `id` não duplica aviso.
-
-## 🎓 Trilha do estudante
-
-Progressiva, do zero ao domínio — cada nível diz o que você vê, o que isso prova e o próximo passo:
-
-| Nível | Comando | Prova |
-|---|---|---|
-| 1 · testes verdes | `python -m pytest -q` | contratos congelados |
-| 2 · probe | `python -m suricata --mode shadow` | pacote e entrypoint íntegros |
-| 3 · rodada offline | `python -m suricata --mode demo` | o pipeline inteiro, sem efeitos |
-| 4 · produção local | `SURICATA_ESTADO_URI=./tmp … --mode rodada` | estado real, entrega desligada |
-
-Guia completo em [`docs/guia.md`](docs/guia.md).
-
-## 🧰 Desenvolvimento
-
-```text
-suricata/
-├── rodada/      orquestração (execucao, runtime, coleta, agenda_manual, config)
-├── dominio/     regras puras (planejamento, publico, corte, memoria, lotes, relatorio)
-├── integracao/  adaptadores (canvas, bridge)
-├── storage/     persistência e concorrência (outbox, lease, CAS, GCS/local)
-├── whatsapp/    ponte Node (Baileys)
-└── tests/       suíte de contratos (pytest + unittest + node --test)
-```
-
-- **Matriz de validação** antes de qualquer PR: `python -m compileall -q suricata && python -m pytest -q && python -m unittest discover -s suricata/tests && node --test suricata/tests/*.mjs suricata/whatsapp/tests/*.mjs`
-- **Lint**: `ruff check .` (config em [`ruff.toml`](ruff.toml))
-- Como contribuir: [`CONTRIBUTING.md`](CONTRIBUTING.md) — fatias pequenas, teste de contrato antes do código, PR com provas.
-
-## 📄 Licença
-
-[MIT](LICENSE) — livre para estudar, usar e modificar.
+- [Guia](docs/guia.md): experimentar o projeto e entender os modos locais.
+- [Arquitetura](docs/arquitetura.md): fronteiras técnicas e regras do runtime.
+- [Privacidade](docs/privacidade.md): dados usados, não usados e limites da proteção.
+- [Glossário](docs/glossario.md): termos do Canvas, dos avisos e do projeto.
+- [Índice da documentação](docs/README.md): mapa das páginas públicas e internas.

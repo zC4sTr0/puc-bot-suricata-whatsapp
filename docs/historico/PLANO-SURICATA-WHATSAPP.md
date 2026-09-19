@@ -1,4 +1,6 @@
 # Plano Suricata — alertas da turma no WhatsApp (Cloud Run, 24/7)
+> **Histórico — snapshot não normativo.** Preserva decisões e claims de época; não contém identificadores operacionais nem comandos copiáveis.
+
 
 > **Frase de retomada:** quando o titular disser **"Suricata: releia o plano e retome."** — mesmo
 > no meio de outra tarefa —, pare o que estiver fazendo num ponto seguro, abra este arquivo, rode a
@@ -15,10 +17,10 @@
 > **Emenda de isolamento — 2026-09-14:** este produto é separado do Bot acadêmico
 > pessoal do Telegram. Antes de S1, a implementação deve ser migrada para a raiz
 > `suricata/`, com Dockerfile, testes, estado, imagem, serviço/Jobs, schedulers,
-> bucket, service accounts e secrets próprios. Não alterar nem compartilhar em
+> bucket, <service-account-confirmada>s e secrets próprios. Não alterar nem compartilhar em
 > runtime `scripts/academico/**`, `academico/estado/**`, o serviço `academico-controle`,
 > os Jobs `academico-*`, os schedulers `diario-0700`/`sentinela-10min`, o bucket
-> `gs://puc-bot-20260912-estado` ou os secrets `telegram-*`/`canvas-token` do Bot
+> `gs://<bucket-nao-versionado>` ou os secrets `telegram-*`/`<secret-canvas-confirmado>` do Bot
 > Telegram. O token Canvas poderá ser uma cópia autorizada em um secret Suricata
 > próprio; o valor nunca deve ser lido, impresso ou versionado. Até a separação
 > ser verificada, S1–S9 ficam bloqueadas e S0 ganha o passo S0.0-Isolamento.
@@ -38,14 +40,14 @@ data, evidência curta). Nunca marque ✅ sem a evidência pedida.
 
 | Etapa | O quê | Status | Último passo | Data | Evidência |
 |---|---|---|---|---|---|
-| S0 | Runtime no `HEAD`, push, isolamento | ✅ | commits `01e4052`…`0254663` publicados | 2026-09-14 | `main` = `origin/main`; projeto próprio `suricata-college-20260913` |
+| S0 | Runtime no `HEAD`, push, isolamento | ✅ | commits `<id-nao-versionado>`…`<id-nao-versionado>` publicados | 2026-09-14 | `main` = `origin/main`; projeto próprio `<projeto-suricata-confirmado>` |
 | S1 | Latência: varredura sem planner, trava 6 min, 24/7 | ✅ | `rodada.py` | 2026-09-14 | coleta real: 9 ofertas, 31 atividades, ~6 s; Scheduler `*/10 * * * *` |
 | S2 | Camada pública sem dado pessoal | ✅ | persona "Suricata" (D27) + véspera 18:00 (D26) + anúncios | 2026-09-14 | prévia com dados reais: véspera 14/09 lista a entrega de 15/09; 18 testes de rodada/véspera |
 | S3 | Ponte WhatsApp e outbox sem `unknown` | ✅ | ACK pelo stanza do WebSocket; crash pós-ACK tolerado | 2026-09-14 | outbox: `sent 2`, rodada seguinte 0 reenvios |
-| S4 | Pareamento e grupo | 🔄 | QR lido 2026-09-14 ~13:33; sessão só no bucket | 2026-09-14 | chip está só em **"teste bot"** (3 participantes). **H2 pendente:** chip entrar no grupo da turma |
+| S4 | Pareamento e grupo | 🔄 | QR lido 2026-09-14 ~13:33; sessão só no bucket | 2026-09-14 | chip está só em **"<grupo-teste>"** (3 participantes). **H2 pendente:** chip entrar no grupo da turma |
 | S5 | Medições WhatsApp | 🔄 | M-WA-01 ✅ (ACK status 2, ~63 s por conexão); **M-WA-02 ✅ (F42)** | 2026-09-14 | H3 feita pelo titular (print): teste enviado 4× e provas ~7× com o mesmo ID aparecem **1 vez** cada. M-WA-03 conta de 14/09 a 17/09 |
-| S6 | Imagem, Job, Scheduler, sombra | ✅ | digest `sha256:7afd7228…d134` | 2026-09-14 | Job `suricata-rodada`; sombra `concluida` antes de ligar entrega |
-| S7 | Linha de base e ativação | 🔄 | entrega ligada para **"teste bot"** | 2026-09-14 | 2 provas reais publicadas 13:55 detectadas e enviadas (atraso inflado pelos bugs corrigidos no mesmo dia) |
+| S6 | Imagem, Job, Scheduler, sombra | ✅ | digest `sha256:<digest-nao-versionado>` | 2026-09-14 | Job `<job-suricata-confirmado>`; sombra `concluida` antes de ligar entrega |
+| S7 | Linha de base e ativação | 🔄 | entrega ligada para **"<grupo-teste>"** | 2026-09-14 | 2 provas reais publicadas 13:55 detectadas e enviadas (atraso inflado pelos bugs corrigidos no mesmo dia) |
 | S8 | Vigilância | 🔄 | alertas Cloud Monitoring por e-mail: "Suricata: rodada falhando" (≥ 2 execuções com falha em 20 min) e "Suricata: rodada parada" (nenhuma execução em 30 min) | 2026-09-14 | falta aviso "sem visão" no grupo e aviso de sessão caída no Telegram (D24) |
 | S9 | Documentação | 🔄 | auditoria histórica externa ao clone; estado atual em `docs/STATUS.md` | 2026-09-14 | — |
 
@@ -53,21 +55,21 @@ data, evidência curta). Nunca marque ✅ sem a evidência pedida.
 entregando no grupo **de teste**. O caminho de produção é `python -m suricata --mode rodada`
 (`suricata/rodada.py`); `--mode sentinela` e os módulos `adapter`/`application`/`delivery`/`estado`
 são legado não usado pela nuvem. Configuração do Job (só ambiente): `SURICATA_ESTADO_URI`,
-`SURICATA_ENTREGA=ligada`, `SURICATA_GRUPO_JID` (destino legado "teste bot"),
-`SURICATA_DESTINOS_JSON` (destinos adicionais), secret `SURICATA_CANVAS_TOKEN=suricata-canvas-token:1`.
+`SURICATA_ENTREGA=ligada`, `SURICATA_GRUPO_JID` (destino legado "<grupo-teste>"),
+`SURICATA_DESTINOS_JSON` (destinos adicionais), secret `SURICATA_CANVAS_TOKEN=<secret-canvas-confirmado>:<versao>`.
 
 **Destinos descobertos e configuração atual (verificado pela execução
-`suricata-rodada-rkl8p`, modo `grupos`):** `teste bot` =
-`120363413467147632@g.us`; `Trabalho interdisciplinar` =
-`120363411246956882@g.us`; `Ciência de Dados e IA` =
-`120363408899805839@g.us`. O Job mantém `teste bot` em
-`SURICATA_GRUPO_JID` e envia também para `Trabalho interdisciplinar` por
+`<execucao-nao-versionada>`, modo `grupos`):** `<grupo-teste>` =
+`<jid-grupo-teste>`; `<grupo-turma>` =
+`<jid-grupo-turma>`; `<grupo-adicional>` =
+`<jid-grupo-adicional>`. O Job mantém `<grupo-teste>` em
+`SURICATA_GRUPO_JID` e envia também para `<grupo-turma>` por
 `SURICATA_DESTINOS_JSON`, no mesmo Scheduler `*/10 * * * *` e no mesmo
 fluxo de coleta, decisão, renderer, outbox e sessão. Memória, outbox e
 relatório são namespaced por destino para evitar colisões.
 
 Para descobrir novamente sem enviar mensagens, rode
-`gcloud run jobs execute suricata-rodada --args=--mode,grupos` (projeto/região da Suricata) e leia
+[comando de nuvem omitido: somente leitura com projeto, região e recurso obtidos por read-back autorizado]
 somente `jsonPayload.grupos`. Para substituir o destino legado, faça-o apenas com JID confirmado;
 a configuração adicional deve usar `SURICATA_DESTINOS_JSON`.
 
@@ -129,7 +131,7 @@ Se medir que uma rodada normal passa de 90 s, pare e reporte: o SLA deixa de ser
 | D20 | Ofertas: **todas, exceto Espaço da Coordenação (104959)**; Mentoria de Carreira (289837) passou a ser coberta; oferta **sem nenhuma tarefa** na rodada também fica fora. | Regra dinâmica em `rodada.py`. |
 | D21 | ~~**Madrugada também**~~ **substituída por D34**: alerta urgente sai na hora, 24/7. | Scheduler `*/10 * * * *`. |
 | D22 | **Aviso incerto nunca pode existir**: todo evento do grupo termina `sent` (com confirmação do servidor) ou continua sendo reenviado até confirmar ou expirar. Nenhum estado `unknown` no canal WhatsApp. | Outbox com reenvio idempotente (S3). |
-| D23 | **Não rotacionar o token Canvas.** Usar o `canvas-token` já registrado no Secret Manager. | MG-06 fica como risco aceito; não é gate. Não pedir rotação. |
+| D23 | **Não rotacionar o token Canvas.** Usar o `<secret-canvas-confirmado>` já registrado no Secret Manager. | MG-06 fica como risco aceito; não é gate. Não pedir rotação. |
 | D24 | O Telegram do titular continua como está (alertas pessoais) **e** vira canal de operação (sessão caída, job parado, evento expirado). O grupo nunca recebe erro técnico, exceto o aviso de "sem visão" (S8). | — |
 | D25 | Interação humana mínima: a IA **só entrega o QR code**; o resto é automático. Portões humanos permitidos: ler o QR (H1), colocar o chip no grupo da turma se ainda não estiver (H2), olhar o grupo de teste uma vez (H3). | — |
 | D26 | (2026-09-14) **Sem mensagem das 07:00.** Resumo às **18:00 da véspera**, só quando amanhã é dia de aula (seg–sex, fora de feriado nacional por lei; Carnaval e Corpus Christi são ponto facultativo e **não** bloqueiam). Não envia se não houver nada amanhã nem nos 6 dias seguintes. | `rodada.planejar_vespera`, `publico.texto_vespera` |
@@ -215,7 +217,7 @@ Medidos em 2026-09-13 para este plano:
 
 | ID | Fato | Uso |
 |---|---|---|
-| F38 | Assignments por oferta (token): 292184=11, 292185=6, 289812=1, 289818=3, 292189=3, 289835=3, 289852=1; **zero** em 289837 (Mentoria), 292200 (TI 7096100), 104959 (Coordenação), 256534 (Extensão). | Grupo começa com 7 ofertas; as de zero entram sozinhas quando ganharem a primeira tarefa. |
+| F38 | Assignments por oferta (token): 292184=11, 292185=6, 289812=1, 289818=3, 292189=3, 289835=3, 289852=1; **zero** em 289837 (Mentoria), 292200 (TI <id-nao-versionado>), 104959 (Coordenação), 256534 (Extensão). | Grupo começa com 7 ofertas; as de zero entram sozinhas quando ganharem a primeira tarefa. |
 | F39 | Groups API oficial da Meta limita grupo a **8 participantes** (documentação Meta, lida em 09-13). | Justifica D18. |
 | F40 | npm `@whiskeysockets/baileys`: `latest` = `7.0.0-rc14`, `legacy` = `6.7.24` (lido em 09-13). `sendMessage` aceita `{ messageId }`. | S3. Reconfira a versão no dia da execução e registre. |
 | F41 | Sentinela no Cloud Run: rodada de ~15 s do início ao fim, 1–2 GETs, `concluida` (execuções de 09-13). | Orçamento §1. |
@@ -235,7 +237,7 @@ Medidos em 2026-09-13 para este plano:
 flowchart LR
   SCH["Cloud Scheduler<br/>*/10 * * * * e 0 7 * * *"] --> JOB["Cloud Run Job<br/>(Python + Node, 1 task)"]
   JOB -->|GET token| CV["Canvas<br/>planner · assignments · announcements"]
-  JOB <-->|CAS| GCS[("GCS suricata-college-20260913-estado<br/>estado · outbox · whatsapp/auth.json")]
+  JOB <-->|CAS| GCS[("GCS <projeto-suricata-confirmado>-estado<br/>estado · outbox · whatsapp/auth.json")]
   JOB -->|subprocess JSON| NODE["whatsapp/enviar.mjs<br/>Baileys: conecta → envia → ack → sai"]
   NODE -->|WebSocket| WA["Grupo da turma"]
   JOB -->|ops| TG["Telegram do titular"]
@@ -250,7 +252,7 @@ Princípios:
   stdout. Quem baixa/sobe a sessão do GCS, com geração (CAS), é o Python.
 - **Uma trava para tudo.** Diário, sentinela e envio WhatsApp continuam sob o mesmo lease GCS
   (`locks/bot.lock`); por isso a sessão do WhatsApp nunca é usada por dois containers ao mesmo tempo.
-- **A sessão do WhatsApp é segredo.** Só existe em `gs://suricata-college-20260913-estado/whatsapp/auth.json`
+- **A sessão do WhatsApp é segredo.** Só existe em `gs://<projeto-suricata-confirmado>-estado/whatsapp/auth.json`
   e, durante a rodada, num diretório temporário do container. Nunca em Git, log, imagem, relatório,
   argv ou conversa. No PC, só durante o pareamento (S4), e é apagada logo depois.
 
@@ -284,7 +286,7 @@ Todas as invariantes do plano mestre §1 continuam valendo, com estes ajustes da
 2. Nunca gravar nota, token, cookie, JWT, URL assinada, senha de quiz **ou a sessão do WhatsApp**
    fora de `whatsapp/auth.json` no bucket. Nunca imprimir o conteúdo da sessão nem o QR em log da
    nuvem.
-3. Nunca imprimir o valor de `canvas-token` nem de `telegram-token`. Confira só se existem.
+3. Nunca imprimir o valor de `<secret-canvas-confirmado>` nem de `telegram-token`. Confira só se existem.
 4. O grupo só recebe o que a camada `grupo.py` renderiza. **Nunca** `Situação:`, `entregue`,
    `atrasado`, `perdido`, nota ou bibliografia pessoal.
 5. Não mexer no Chrome dedicado: este plano é 100% token.
@@ -530,10 +532,11 @@ O pareamento é o **único** momento em que algo do WhatsApp roda no PC. A opera
 
 **S4.2 Abrir o QR para o titular** 🤖 → 🧑 **H1**
 - Ação (PowerShell, janela visível separada, porque a saída das ferramentas não chega ao titular):
-  ```powershell
+  ```text
+# Histórico/pseudocódigo; não executar por cópia.
   $wa = "$env:TEMP\suricata-pareamento"; New-Item -ItemType Directory -Force $wa | Out-Null
   Push-Location suricata\whatsapp; npm ci; Pop-Location
-  Start-Process powershell -ArgumentList '-NoExit','-Command',"node suricata\whatsapp\parear.mjs --auth-dir $wa\.wa-auth --png $wa\qr.png"
+  [comando operacional omitido; procedimento histórico não executável por cópia]
   ```
   Se a sessão do titular for remota (celular), envie também `$wa\qr.png` com `SendUserFile` e reenvie
   quando o arquivo mudar (o QR expira em ~20 s; prefira o console).
@@ -544,9 +547,9 @@ O pareamento é o **único** momento em que algo do WhatsApp roda no PC. A opera
 
 **S4.3 Subir a sessão e apagar do PC** 🤖
 - Ação: script Python (scratch) que lê todos os arquivos de `$wa\.wa-auth`, monta
-  `{nome: conteúdo}` e grava em `whatsapp/auth.json` com o armazenamento Suricata `gs://suricata-college-20260913-estado`
-  e geração `None` (criação). Depois: `Remove-Item -Recurse -Force "$wa\.wa-auth", "$wa\qr.png"`.
-- Esperado: `gcloud storage ls gs://suricata-college-20260913-estado/whatsapp/` lista `auth.json`;
+  `{nome: conteúdo}` e grava em `whatsapp/auth.json` com o armazenamento Suricata `gs://<projeto-suricata-confirmado>-estado`
+  [comando operacional omitido; procedimento histórico não executável por cópia]
+[comando de nuvem omitido: somente leitura com projeto, região e recurso obtidos por read-back autorizado]
   `Test-Path "$wa\.wa-auth"` → `False`.
 - Se já existir `auth.json` (re-pareamento): leia a geração atual e sobrescreva com ela; não apague o bucket.
 
@@ -593,36 +596,36 @@ imagem. A validação local do layout não substitui o build real.
 - `.dockerignore` e `.gcloudignore`: acrescentar `**/node_modules` e `**/.wa-auth*`.
 - Teste de empacotamento (`test_cloud_packaging.py`): Dockerfile copia `whatsapp/` e não copia `.wa-auth`.
 
-**S6.2 Build.** `gcloud builds submit suricata --tag southamerica-east1-docker.pkg.dev/suricata-college-20260913/suricata:$(date +%Y%m%d-%H%M)`.
+[comando de nuvem omitido: somente leitura com projeto, região e recurso obtidos por read-back autorizado]
 Esperado: `SUCCESS`; somente então registre o digest medido. Até lá, não
 invente nem registre digest. Imagem < 400 MB.
 
 **S6.3 Jobs no digest novo, sombra primeiro — histórico, não executar por cópia.**
 Antes de qualquer ação, liste os recursos no projeto/região confirmados e
 substitua os nomes abaixo pelos nomes retornados no read-back. O `RUNBOOK.md` é
-a fonte operacional; não atualize `suricata-sentinela`/`suricata-diario` por
+a fonte operacional; não atualize `<job-legado-confirmado>`/`<job-diario-confirmado>` por
 suposição.
 ```bash
-IMG="southamerica-east1-docker.pkg.dev/suricata-college-20260913/suricata@sha256:<digest>"
-for J in suricata-sentinela suricata-diario; do
-  "$G" run jobs update $J --image "$IMG" --region southamerica-east1 --task-timeout 5m --max-retries 1 \
+# alvo/comando omitido; consultar o runbook e confirmar por read-back
+# alvo/comando omitido; consultar o runbook e confirmar por read-back
+  # alvo/comando omitido; consultar o runbook e confirmar por read-back
     --update-env-vars SURICATA_LEASE_MINUTOS=6,SURICATA_WHATSAPP_GRUPO_JID=<jid>
 done
 ```
 - Para a sombra, execute o Job Suricata com modo explícito de simulação e confira por read-back:
-  `"$G" run jobs execute suricata-sentinela --region southamerica-east1 --wait --args=--mode,--shadow`
+  [comando operacional omitido; procedimento histórico não executável por cópia]
 - Esperado: `Succeeded`; relatório com `varredura`, `grupo` e **zero** entregas; `describe` do Job com
   os argumentos Suricata esperados e sem variáveis herdadas do Bot Telegram.
 - Nota histórica substituída: o contrato atual de `--mode shadow` é uma probe
   sem Canvas, estado ou entrega. Ele não grava `grupo/sentinela.json`; não o use
   como linha de base. A sombra funcional legada é `--mode sentinela` e o caminho
   canônico atual é `--mode rodada`, ambos exigindo seus próprios gates.
-- Logs: `"$G" logging read 'resource.type=cloud_run_job' --limit 200 --format='value(textPayload)'`
+[comando operacional omitido; procedimento histórico não executável por cópia]
   sem `Bearer`, `eyJ`, `:AA`, `noiseKey`, `signedIdentityKey`, `"creds"`. Achado → pare e reporte.
 
 **S6.4 Scheduler 24/7 — histórico, não executar por cópia.**
-`"$G" scheduler jobs update suricata-sentinela-10min --location southamerica-east1 --schedule "*/10 * * * *" --time-zone America/Sao_Paulo`
-- Esperado: `scheduler jobs list` mostra `suricata-sentinela-10min`, `*/10 * * * *` e `ENABLED`.
+[comando operacional omitido; procedimento histórico não executável por cópia]
+- Esperado: `scheduler jobs list` mostra `<scheduler-legado-confirmado>`, `*/10 * * * *` e `ENABLED`.
 
 **S6.5** Commit `feat(bot): imagem com WhatsApp e sentinela 24/7`. Registro → S6 ✅ com digest.
 
@@ -668,7 +671,7 @@ Teste para os dois.
 evento `expirado`, conflito de sessão, varredura incompleta por 3 rodadas seguidas.
 
 **S8.4 Job parado (sem código nosso para avisar).** Crie um alerta do Cloud Monitoring por e-mail
-para a conta do projeto: métrica de execuções `suricata-sentinela` com falha ≥ 2 em 30 min, e ausência
+para a conta do projeto: métrica de execuções `<job-legado-confirmado>` com falha ≥ 2 em 30 min, e ausência
 de execução por 30 min. Registre os nomes das políticas.
 
 **S8.5 Chip.** Registre ao titular, uma vez: **"Deixe o celular do chip ligado com internet pelo menos

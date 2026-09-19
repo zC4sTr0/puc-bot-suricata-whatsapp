@@ -61,4 +61,4 @@ class PonteFalsa:
 def quiz(i: int, *, abre: datetime | None, fecha: datetime | None, nome: str = "Quiz relâmpago") -> dict:
     return {"id": i, "name": nome, "points_possible": 3, "quiz_id": 900 + i,
             "unlock_at": iso(abre) if abre else None, "lock_at": iso(fecha) if fecha else None, "due_at": None,
-            "html_url": f"https://pucminas.instructure.com/courses/292184/assignments/{i}?token=segredo"}
+            "html_url": f"https://canvas.example.test/courses/292184/assignments/{i}?fixture=synthetic"}

@@ -1,4 +1,6 @@
 # Mapa humano da árvore Suricata
+> **Interno — não normativo para lançamento público.** Contém contratos e orientação operacional genérica; valores reais exigem read-back autorizado.
+
 
 > **Escopo e proveniência:** fotografia histórica da árvore lida em 2026-09-17, atualizada pela simplificação de modos de 2026-09-18. Este mapa descreve o código e os documentos da revisão daquela data; não é prova do estado atual da nuvem nem substitui o branch/commit atual. Caminhos deste arquivo foram conferidos no disco, excluindo `__pycache__/` e `node_modules/`. Onde a relação de chamada é inferida por imports, `main()` ou testes, isso está marcado como **hipótese estática**.
 >
@@ -41,7 +43,7 @@ suricata/
 │   ├── outbox.py               máquina de estados durável
 │   ├── persistencia_rodada.py  outbox temporário publicado por CAS
 │   ├── lease_rodada.py         lease ativo `locks/rodada.lock`
-│   ├── cas.py                  CAS de `whatsapp/auth.json` via gcloud
+[comando operacional omitido; procedimento histórico não executável por cópia]
 │   ├── gcs.py                  facade: objetos GCS/locais e CAS ativo
 │   ├── token.py / objetos_gcs.py / objetos_locais.py / sessao.py / _comum.py
 │   └── locking.py              lock de arquivo multi-processo
@@ -77,9 +79,9 @@ suricata/
 | `lease_rodada.py` | Serializa a rodada ativa no objeto `locks/rodada.lock`, abandonando leases antigos por CAS. | `rodada.py`; testes de lease/caminho real. | `objetos.ler/gravar/apagar`, `CASConflict`; `SURICATA_LEASE_MINUTOS` (padrão 6). |
 | `bridge.py` | Valida lote, materializa auth temporária, executa Node por stdin e só aceita resposta sanitizada/compatível. | `rodada.py`; testes de bridge. | `node whatsapp/enviar.mjs`, `storage.cas.SessaoWhatsApp`, `message_id`, subprocesso sem payload em argv. |
 | `message_id.py` | Deriva identidade determinística de destino/evento para reenvio sem duplicação. | `rodada.py`, `bridge.py`, `execucao.py`. | Hash/normalização local; não chama rede. |
-| `storage/gcs.py` | Implementa objetos GCS por JSON API com geração, read-back, retry limitado e equivalente local para testes/sombra. | `rodada.py`, `persistencia_rodada.py`; testes de storage. | metadata server ou `gcloud auth print-access-token`, HTTP Storage API, `ObjetosLocais`, locks. |
+[comando operacional omitido; procedimento histórico não executável por cópia]
 | `storage/locking.py` | Fornece lock cross-processo portátil: mutex nomeado no Windows e `fcntl` no POSIX. | `storage/gcs.py`, `outbox.py`; testes de storage/outbox. | filesystem, `ctypes`/Kernel32 no Windows, `fcntl` no POSIX e retry limitado. |
-| `storage/cas.py` | Compatibilidade de sessão WhatsApp baseada em `gcloud storage`, com leitura de geração antes/depois e escrita condicional. | `bridge.py`, testes de storage. | subprocesso `gcloud`, `whatsapp/auth.json`; não expõe token/sessão em erro. |
+| `storage/cas.py` | Compatibilidade de sessão WhatsApp baseada em um utilitário de armazenamento, com leitura de geração antes/depois e escrita condicional. | `bridge.py`, testes de storage. | subprocesso de ferramenta de armazenamento; `whatsapp/auth.json`; não expõe token/sessão em erro. |
 
 ### Python não produtivo ou de apoio
 
@@ -204,7 +206,7 @@ Todos são offline por desenho: doubles, fixtures sintéticas, diretórios tempo
 - `RUNBOOK.md` (agora em `docs/interno/RUNBOOK.md`) é pré-voo/parada/gates H1–H3; comandos de nuvem nele são read-only salvo blocos explicitamente marcados como efeito.
 - `DOCUMENTATION.md` foi removido na reestruturação de docs; o roteamento geral vive em `docs/README.md`.
 - `tests/README.md` define executores e limites: suíte offline não prova Canvas/GCS/Cloud Run/WhatsApp reais.
-- `whatsapp/README.md` define `npm ci --ignore-scripts --omit=dev`, `npm test` e o bloqueio conhecido da dependência Git `libsignal` do Baileys. **Não verificado aqui:** instalação de rede reproduzível.
+[comando operacional omitido; procedimento histórico não executável por cópia]
 
 ## 8. Corte das 21h e janela de envio
 
@@ -248,7 +250,7 @@ Limites confirmados nos documentos: primeira rodada é linha de base e não anun
 ## 11. Hipóteses e não verificado
 
 - As relações “quem chama” foram derivadas de imports, `main()` e referências locais; não foi usado tracing em produção.
-- `infra/isolamento.json` registra nomes históricos de Job/Scheduler divergentes do plano (`suricata-rodada*` versus `suricata-sentinela*`); não há read-back de nuvem neste mapa.
+- `infra/isolamento.json` registra nomes históricos de Job/Scheduler divergentes do plano (`<job-suricata-confirmado>*` versus `<job-legado-confirmado>*`); não há read-back de nuvem neste mapa.
 - Não foi provado build Docker real, instalação npm com rede, digest implantado, IAM, Cloud Run, Scheduler ativo, GCS atual, Canvas ao vivo, sessão Baileys conectada ou envio real.
 - `delivery.py`, `notifiers/whatsapp.py`, `lease.py`, aliases e pareamento terminal permanecem por compatibilidade/testes; ausência de chamada direta no caminho descrito não prova que nenhum consumidor externo os use.
 - `test_bridge_node_e2e.py` depende da presença/configuração do stub local; não é prova de subprocesso Node real com Baileys.

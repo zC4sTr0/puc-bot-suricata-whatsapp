@@ -1,4 +1,6 @@
 # Runbook humano conservador — Suricata
+> **Interno — não normativo para lançamento público.** Contém contratos e orientação operacional genérica; valores reais exigem read-back autorizado.
+
 
 > Este runbook privilegia leitura, reversibilidade e parada. Os comandos de nuvem abaixo são read-only, salvo os blocos explicitamente marcados como **ação com efeito**. Não executar uma ação com efeito sem autorização específica e sem os gates H1–H3 aplicáveis.
 
@@ -49,25 +51,26 @@ Os modos `sentinela`, `grupos` e `teste-envio` foram removidos na simplificaçã
 
 Defina o binário e o alvo sem alterar recursos:
 
-```bash
-G="/c/Users/C4sTr/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud"
-PROJECT="suricata-college-20260913"
+```text
+# Pseudocódigo somente leitura; não copiar sem read-back autorizado.
+# alvo/comando omitido; consultar o runbook e confirmar por read-back
+PROJECT="<projeto-suricata-confirmado>"
 REGION="southamerica-east1"
-"$G" projects describe "$PROJECT" --format='yaml(projectId,lifecycleState)' \
+# alvo/comando omitido; consultar o runbook e confirmar por read-back
   --quiet
-"$G" run jobs list --region "$REGION" --project "$PROJECT" \
+# alvo/comando omitido; consultar o runbook e confirmar por read-back
   --format='table(name,latestCreatedExecution,startTime,completionTime)' --quiet
-"$G" scheduler jobs list --location "$REGION" --project "$PROJECT" \
+# alvo/comando omitido; consultar o runbook e confirmar por read-back
   --format='table(name,state,schedule,timeZone)' --quiet
-"$G" artifacts repositories list --location "$REGION" --project "$PROJECT" \
+# alvo/comando omitido; consultar o runbook e confirmar por read-back
   --format='table(name,format)' --quiet
-"$G" storage ls "gs://${PROJECT}-estado/" --project "$PROJECT"
+# alvo/comando omitido; consultar o runbook e confirmar por read-back
 ```
 
 Para um Job encontrado no read-back, consulte sem executar:
 
 ```bash
-"$G" run jobs describe NOME_CONFIRMADO --region "$REGION" --project "$PROJECT" \
+# alvo/comando omitido; consultar o runbook e confirmar por read-back
   --format='yaml(name,template.template.containers,template.template.timeout,template.template.maxRetries)' --quiet
 ```
 
@@ -75,13 +78,13 @@ Não copie tokens, headers, conteúdo de `auth.json`, URLs assinadas ou logs bru
 
 ### Nomes divergentes
 
-O plano histórico usa `suricata-sentinela` e `suricata-sentinela-10min`. O inventário [`infra/isolamento.json`](../../suricata/infra/isolamento.json) registra, em 2026-09-16, `suricata-rodada` e `suricata-rodada-10min`, além de uma execução datada. Esses nomes são fatos históricos **não verificados novamente**. Nunca execute, atualize ou delete pelo nome sem primeiro listar e confirmar o recurso, projeto, região, imagem, argumentos e agenda.
+O plano histórico usa `<job-legado-confirmado>` e `<scheduler-legado-confirmado>`. O inventário [`infra/isolamento.json`](../../suricata/infra/isolamento.json) registra, em 2026-09-16, `<job-suricata-confirmado>` e `<scheduler-suricata-confirmado>`, além de uma execução datada. Esses nomes são fatos históricos **não verificados novamente**. Nunca execute, atualize ou delete pelo nome sem primeiro listar e confirmar o recurso, projeto, região, imagem, argumentos e agenda.
 
 ## 4. Critérios de parada
 
 Pare imediatamente e registre o fato quando ocorrer qualquer um destes casos:
 
-- projeto, região, Job, Scheduler, bucket ou service account não correspondem ao namespace Suricata;
+- projeto, região, Job, Scheduler, bucket ou <service-account-confirmada> não correspondem ao namespace Suricata;
 - aparecer recurso `academico-*`, `diario-0700`, `sentinela-10min`, bucket `puc-bot-*` ou secret `telegram-*` no alvo;
 - imagem/digest não puder ser ligado ao código local por evidência;
 - IAM, estado, sessão ou geração CAS estiverem inválidos ou desconhecidos;
@@ -134,7 +137,7 @@ Deploy, atualização de imagem, alteração de Job/Scheduler, mudança de env v
 
 Antes de qualquer uma dessas ações, exigir: diff revisado, build Docker real, imagem por digest, read-back do recurso, projeto/região confirmados, IAM verificado, plano/registro atualizado e gate humano aplicável. Se qualquer evidência faltar, permaneça em sombra ou pare.
 
-Nunca use `gcloud run jobs update`, `gcloud scheduler jobs update`, `gcloud run jobs execute`, `gcloud builds submit` ou upload de `auth.json` como “teste” sem autorização própria. Após uma ação autorizada, leia de volta o recurso exato; sucesso do comando não prova que o estado desejado foi aplicado.
+[comando de nuvem omitido: somente leitura com projeto, região e recurso obtidos por read-back autorizado]
 
 ## 7. Recuperação conservadora
 

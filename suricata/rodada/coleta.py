@@ -1,13 +1,15 @@
 """Coleta de dados do Canvas para uma rodada da Suricata."""
 from __future__ import annotations
 
+from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from ..dominio.publico import Atividade, atividade_de
 from ..integracao.canvas import CanvasClient, CanvasResponseKind
+from .config import cursos_excluidos_do_ambiente
 
-EXCLUIDAS = frozenset({"104959"})  # D20: Coordenação; Mentoria coberta
+EXCLUIDAS = cursos_excluidos_do_ambiente({})  # compatibilidade com importadores legados
 
 
 class ColetaIndisponivel(RuntimeError):
@@ -32,11 +34,14 @@ class Coleta:
     anuncios: list[Anuncio] | None  # None = rota falhou (não é evidência de ausência)
 
 
-def coletar(canvas: CanvasClient, agora: datetime) -> Coleta:
+def coletar(canvas: CanvasClient, agora: datetime,
+            *, cursos_excluidos: Collection[str] | None = None) -> Coleta:
     cursos = canvas.courses()
     if cursos.kind is not CanvasResponseKind.OK:
         raise ColetaIndisponivel(f"lista de ofertas: {cursos.kind.value} (HTTP {cursos.status})")
-    ofertas = {c.id: c.name for c in cursos.items if c.id not in EXCLUIDAS}
+    excluidas = (cursos_excluidos_do_ambiente()
+                 if cursos_excluidos is None else frozenset(cursos_excluidos))
+    ofertas = {c.id: c.name for c in cursos.items if c.id not in excluidas}
     atividades: list[Atividade] = []
     falhas: list[str] = []
     com_tarefa: list[str] = []

@@ -1,4 +1,6 @@
 # Segurança
+> **Interno — não normativo para lançamento público.** Contém contratos e orientação operacional genérica; valores reais exigem read-back autorizado.
+
 
 Ameaças principais: vazamento de token/sessão, mistura com o Bot Telegram, exposição de estado pessoal, envio para destino errado, duplicata após crash, ACK falso, corrida de estado e deploy de origem não rastreável.
 

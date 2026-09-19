@@ -1,4 +1,6 @@
 # Configuração
+> **Interno — não normativo para lançamento público.** Contém contratos e orientação operacional genérica; valores reais exigem read-back autorizado.
+
 
 ## Variáveis
 

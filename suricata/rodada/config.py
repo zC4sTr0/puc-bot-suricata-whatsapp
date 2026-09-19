@@ -16,6 +16,28 @@ from pathlib import Path
 from ..dominio.horario import BRASILIA
 
 _JID_GRUPO = re.compile(r"[0-9]+(?:-[0-9]+)?@g\.us")
+_ID_CURSO = re.compile(r"[0-9]+")
+_DEFAULT_CURSOS_EXCLUIDOS = frozenset({"104959"})
+
+
+def cursos_excluidos_do_ambiente(env: dict[str, str] | None = None) -> frozenset[str]:
+    """Lê a lista de ofertas Canvas excluídas, com default legado.
+
+    ``SURICATA_CURSOS_EXCLUIDOS`` é uma lista separada por vírgulas. Cada
+    item deve ser um ID numérico e a lista não pode conter duplicatas.
+    """
+    ambiente = os.environ if env is None else env
+    bruto = ambiente.get("SURICATA_CURSOS_EXCLUIDOS")
+    if bruto is None:
+        return _DEFAULT_CURSOS_EXCLUIDOS
+    itens = [item.strip() for item in bruto.split(",")]
+    if not bruto.strip() or any(not item for item in itens):
+        raise ValueError("SURICATA_CURSOS_EXCLUIDOS deve ser uma lista não vazia")
+    if any(_ID_CURSO.fullmatch(item) is None for item in itens):
+        raise ValueError("SURICATA_CURSOS_EXCLUIDOS deve conter apenas IDs numéricos")
+    if len(itens) != len(set(itens)):
+        raise ValueError("SURICATA_CURSOS_EXCLUIDOS não pode conter IDs duplicados")
+    return frozenset(itens)
 
 
 @dataclass(frozen=True)
@@ -147,4 +169,4 @@ def destinos_do_ambiente(env: dict[str, str] | None = None) -> list[Destino]:
     return destinos
 
 
-__all__ = ["Destino", "destinos_do_ambiente"]
+__all__ = ["Destino", "cursos_excluidos_do_ambiente", "destinos_do_ambiente"]

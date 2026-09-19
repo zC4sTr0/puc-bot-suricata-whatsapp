@@ -18,7 +18,7 @@ class IsolamentoTests(unittest.TestCase):
     def test_manifesto_tem_projeto_e_prefixo_proprios(self):
         manifesto = json.loads(MANIFEST.read_text(encoding="utf-8"))
         gcp = manifesto["gcp"]
-        self.assertEqual(gcp["project_id"], "suricata-college-20260913")
+        self.assertEqual(gcp["project_id"], "example-suricata-project")
         self.assertEqual(gcp["resource_prefix"], "suricata-")
         self.assertEqual(manifesto["repository"]["root"], "suricata/")
 

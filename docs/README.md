@@ -1,11 +1,22 @@
-# Documentação
+# Documentação do PUC Bot da Suricata
 
-- [`guia.md`](guia.md) — tutorial progressivo: do clone até o WhatsApp, em quatro níveis.
-- [`arquitetura.md`](arquitetura.md) — como funciona por dentro: rodada, outbox, CAS, lease e fronteiras.
-- [`deploy-gcp.md`](deploy-gcp.md) — build, canário sem entrega, corte controlado e rollback no Google Cloud.
-- [`interno/`](interno/) — referência de operação e contratos (CONTRACTS, STATUS, RUNBOOK, MAPA, CONFIGURATION, SECURITY, OPERATIONS, TROUBLESHOOTING).
-- [`historico/`](historico/) — planos e decisões anteriores; leitura opcional, não autoriza comandos.
+O PUC Bot da Suricata é independente e não oficial da PUC Minas. Esta documentação descreve o projeto técnico; para prazos e regras acadêmicas, use o Canvas e os canais oficiais da sua disciplina.
 
-Regra de leitura: documentos descrevem; o read-back decide. Nenhuma página
-aqui substitui a leitura do recurso real antes de agir — e nenhuma contém
-sessão, QR, token, JID real ou payload de produção.
+## Comece por aqui
+
+- [`../README.md`](../README.md) — visão geral para estudantes, limites do modelo coletivo e demo offline.
+- [`guia.md`](guia.md) — tutorial progressivo: testar localmente e entender a origem dos avisos.
+- [`privacidade.md`](privacidade.md) — dados usados, dados que não devem ser coletados e limites da proteção.
+- [`glossario.md`](glossario.md) — Canvas, prova, quiz, tarefa, rodada, origem do aviso e outros termos.
+
+## Para aprofundar
+
+- [`arquitetura.md`](arquitetura.md) — funcionamento interno, armazenamento e fronteiras técnicas.
+- [`deploy-gcp.md`](deploy-gcp.md) — referência de deploy no Google Cloud para operadores autorizados; não é necessário para executar o demo.
+- [`cloud.md`](cloud.md) — explicação humana da camada cloud, separando demo/local, operação autorizada, canário, rollback, custos e limites.
+- [`interno/`](interno/) — contratos e operação técnica. Esses documentos não autorizam acesso a ambientes, grupos ou credenciais.
+- [`historico/`](historico/) — planos e decisões anteriores; são contexto histórico, não instruções atuais. Os documentos `individual-bot-*` são rascunhos não implementados sobre a possível evolução individual.
+
+## Limites de leitura
+
+Documentação não substitui a confirmação no recurso real. Nenhuma página pública deve conter token, QR, sessão, JID real, payload de produção ou dado identificável de estudante. Avisos do bot são informativos: confirme o conteúdo diretamente na fonte oficial.

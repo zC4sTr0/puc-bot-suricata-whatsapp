@@ -2,21 +2,21 @@
   "produto": "suricata-college",
   "canal": "whatsapp",
   "gcp": {
-    "project_id": "suricata-college-20260913",
+    "project_id": "example-suricata-project",
     "region": "southamerica-east1",
     "resource_prefix": "suricata-",
-    "forbidden_project_id": "puc-bot-20260912",
+    "forbidden_project_id": "example-forbidden-project",
     "forbidden_resource_prefixes": ["academico-", "diario-0700", "sentinela-10min"],
-    "forbidden_bucket": "gs://puc-bot-20260912-estado",
+    "forbidden_bucket": "gs://example-forbidden-state",
     "forbidden_secret_prefixes": ["telegram-", "canvas-token"],
     "billing": {
       "status": "enabled",
-      "budget_id": "7e0ba3d0-03ea-41e0-b20a-0be423ae28b2",
+      "budget_id": "example-budget",
       "alert_amount": "5BRL"
     },
-    "bucket": "gs://suricata-college-20260913-estado",
-    "artifact_registry": "projects/suricata-college-20260913/locations/southamerica-east1/repositories/suricata",
-    "runtime_service_account": "suricata-runtime@suricata-college-20260913.iam.gserviceaccount.com",
+    "bucket": "gs://example-suricata-state",
+    "artifact_registry": "projects/example-suricata-project/locations/southamerica-east1/repositories/suricata",
+    "runtime_service_account": "example-service-account",
     "resource_status": "historical_snapshot_not_revalidated_2026-09-16"
   },
   "repository": {
@@ -28,8 +28,8 @@
   "status": "snapshot histórico não revalidado (2026-09-16)",
   "evidence": {
     "snapshot_date": "2026-09-16",
-    "project": "snapshot: gcloud projects describe suricata-college-20260913 -> ACTIVE",
-    "services_jobs_schedulers": "snapshot: Job suricata-rodada e Scheduler suricata-rodada-10min registrados como ativos; execução suricata-rodada-hd9gb registrada como concluída com sucesso em 2026-09-16T09:20:21Z",
+    "project": "snapshot: projeto GCP de exemplo não verificado",
+    "services_jobs_schedulers": "snapshot: recursos de exemplo não verificados; nenhuma execução real registrada",
     "telegram_project_untouched": true
   },
   "not_revalidated_in_current_session": [

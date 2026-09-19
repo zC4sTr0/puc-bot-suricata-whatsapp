@@ -1,4 +1,6 @@
 # Contratos do runtime
+> **Interno — não normativo para lançamento público.** Contém contratos e orientação operacional genérica; valores reais exigem read-back autorizado.
+
 
 Este documento descreve interfaces observáveis que uma refatoração deve preservar. Ele não é configuração de produção.
 

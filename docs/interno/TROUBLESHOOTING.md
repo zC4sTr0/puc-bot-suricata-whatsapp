@@ -1,4 +1,6 @@
 # Troubleshooting
+> **Interno — não normativo para lançamento público.** Contém contratos e orientação operacional genérica; valores reais exigem read-back autorizado.
+
 
 - **Testes Python falham:** distinguir falha preexistente de regressão; não mascarar com skip.
 - **npm ci falha:** a dependência Git `libsignal` exige rede; não inventar pacote/hash.

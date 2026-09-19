@@ -19,7 +19,7 @@
     "unlock_at": null,
     "due_at": null,
     "lock_at": "2026-09-17T02:59:00Z",
-    "html_url": "https://pucminas.instructure.com/courses/292184/assignments/901"
+    "html_url": "https://canvas.example.test/courses/292184/assignments/901"
    },
    {
     "id": 902,
@@ -31,7 +31,7 @@
     "unlock_at": "2026-09-16T03:00:00Z",
     "due_at": "2026-09-17T02:59:00Z",
     "lock_at": "2026-09-17T02:59:00Z",
-    "html_url": "https://pucminas.instructure.com/courses/292184/assignments/902"
+    "html_url": "https://canvas.example.test/courses/292184/assignments/902"
    }
   ]
  },
@@ -48,7 +48,7 @@
     "unlock_at": "2026-09-15T21:05:00Z",
     "due_at": null,
     "lock_at": "2026-09-15T21:20:00Z",
-    "html_url": "https://pucminas.instructure.com/courses/292184/assignments/903"
+    "html_url": "https://canvas.example.test/courses/292184/assignments/903"
    }
   ]
  }

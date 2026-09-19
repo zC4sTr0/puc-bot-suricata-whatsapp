@@ -1,174 +1,216 @@
-# Deploy no Google Cloud — para humanos
+# Deploy no Google Cloud — guia público
 
-> **Snapshot de 2026-09-17/18.** Tudo que este arquivo descreve sobre a nuvem
-> foi lido por read-back naquela data. Nomes de projeto, Job, Scheduler e
-> digest mudam; **sempre faça read-back antes de agir** — nenhum texto
-> (inclusive este) substitui a leitura do recurso real.
+Este documento explica o desenho e os gates de deploy sem publicar nomes de
+projeto, buckets, Jobs, Schedulers, contas de serviço, JIDs, digests ou IDs de
+build. Os valores entre `<ângulos>` são preenchidos somente por um operador
+autorizado, depois de um read-back do ambiente real.
 
-## O que existe lá hoje
+> **Escopo:** este é um procedimento público e sanitizado. Ele não é um
+> inventário da produção. Nunca transforme os placeholders deste arquivo em
+> valores reais dentro de um commit.
 
-A produção é propositalmente pequena: **um** Cloud Run Job acionado por
-**um** Scheduler, uma imagem por digest, um bucket de estado. Na região
-`southamerica-east1`, projeto `suricata-college-20260913`:
+## O que acontece
 
-| Recurso | Nome observado (read-back) | Papel |
-|---|---|---|
-| Cloud Run Job | `suricata-rodada` | roda `python -m suricata --mode rodada` |
-| Scheduler | `suricata-rodada-10min` | `*/10 * * * *`, timezone `America/Sao_Paulo`, `ENABLED` |
-| Job canário | `suricata-canario-prod` | mesma imagem, entrega desligada, estado separado |
-| Artifact Registry | `southamerica-east1-docker.pkg.dev/suricata-college-20260913/suricata/suricata` | imagem por digest |
-| Bucket de estado | `gs://suricata-college-20260913-estado/` | memória, outbox, lease, sessão (via CAS) |
+Uma mudança aprovada segue este caminho:
 
 ```mermaid
 flowchart TB
-    R["🐙 GitHub<br/>main (merge squash)"] --> CB["🏗️ Cloud Build"]
-    CB --> AR["📦 Artifact Registry<br/>imagem por digest"]
-    AR --> JOB["⚙️ Cloud Run Job<br/>suricata-rodada"]
-    SCH["⏰ Scheduler<br/>*/10 min"] --> JOB
-    JOB --> GCS[("🗄️ bucket de estado")]
-    JOB --> WA["💬 WhatsApp"]
+    G["Git: commit aprovado"] --> B["Cloud Build\nconstrói a imagem"]
+    B --> A["Artifact Registry\nimagem imutável por digest"]
+    A --> C["Job canário\nsem entrega"]
+    C --> P["Job de produção\ncorte autorizado"]
+    S["Cloud Scheduler\nfrequência"] --> P
+    P --> D["GCS\nestado e sessão"]
+    P --> W["WhatsApp\nsomente com gate"]
+    P -.-> M["Secret Manager\nsegredos"]
+    I["IAM\nidentidade mínima"] -.-> B
+    I -.-> P
+    I -.-> D
+    I -.-> M
 ```
 
-O caminho de uma mudança é sempre o mesmo: merge na `main` → build com
-digest registrado → canário sem entrega → corte controlado → observação.
-Rollback é apontar o Job de volta para o digest anterior.
+- **Cloud Build** executa o build remoto a partir do checkout; Docker local é
+  opcional.
+- **Artifact Registry** guarda a imagem produzida. O Job recebe um **digest**,
+  não uma tag mutável.
+- **Cloud Run Job** executa uma rodada finita de Python; ele não é um servidor
+  HTTP sempre ligado.
+- **Cloud Scheduler** apenas dispara o Job na frequência aprovada. Acordar o
+  processo não autoriza uma entrega.
+- **GCS** guarda estado, lease, outbox e, quando configurado, a sessão em um
+  namespace separado e autorizado. O estado é parte da idempotência; não deve
+  ser apagado para “limpar” uma falha.
+- **Secret Manager** fornece segredos ao runtime sem colocá-los em Git, argv,
+  imagem ou logs. No mínimo, o token do Canvas deve seguir esse caminho.
+- **IAM** define qual identidade pode construir, ler segredos, executar o Job e
+  ler/gravar somente os buckets necessários. Use contas de serviço distintas
+  quando a separação de build, canário e produção exigir isso.
 
-### Pré-requisitos na sua máquina
+## Custos: o que pode gerar cobrança
 
-- **`gcloud` CLI (Google Cloud SDK)** — a única ferramenta obrigatória para deploy (o build da imagem é remoto, no Cloud Build). Instale pelo instalador oficial: https://cloud.google.com/sdk/docs/install (no Windows, `winget install Google.CloudSDK` também funciona). Depois: `gcloud init`, `gcloud auth login` e `gcloud config set project <projeto-suricata>`.
-- **Docker local** — **opcional**. Como o build roda no Cloud Build, você só precisa de Docker se quiser testar a imagem na sua máquina antes (ex.: `docker run --rm <imagem> --mode demo`).
-- **Git + acesso ao repo** e a sessão WhatsApp em produção (fora do escopo do deploy; veja o guia).
+Os valores dependem da região, volume e contrato da conta; consulte a tabela de
+preços antes de aprovar o deploy. O mapa de cobrança é:
 
-Antes de qualquer passo de nuvem:
+| Serviço | O que pode custar | Como reduzir surpresa |
+|---|---|---|
+| Cloud Build | tempo de máquina e artefatos/logs conforme a cota e configuração | builds sob demanda, contexto mínimo e retenção de logs definida |
+| Artifact Registry | armazenamento das imagens e operações/transferência aplicáveis | manter apenas tags/digests necessários e política de retenção |
+| Cloud Run Jobs | CPU, memória, duração e execuções do Job | timeout, retries e frequência pequenos e explícitos |
+| Cloud Scheduler | número de jobs e invocações além das cotas aplicáveis | um Scheduler por rotina; conferir frequência e região |
+| Cloud Storage (GCS) | armazenamento, operações, retenção e rede | namespace separado, lifecycle consciente e nunca apagar CAS sem plano |
+| Secret Manager | versões armazenadas, acessos e operações além das cotas aplicáveis | acessar somente no runtime autorizado; não duplicar secrets |
+| IAM | normalmente não há uma linha de cobrança pelo controle de acesso | aplicar menor privilégio; custos indiretos podem vir de auditoria/logs |
 
-- `gcloud` instalado e logado no projeto Suricata — **não** no projeto do Bot
-  pessoal do Telegram;
-- suíte local verde na máquina que vai construir (`python -m compileall -q
-  suricata && python -m pytest -q` e os testes Node);
-- Docker local OU Cloud Build disponível (o que usar, registre qual foi);
-- autorização explícita para qualquer comando com efeito — build e update
-  não são "testes".
+Referências oficiais: [Cloud Build pricing](https://cloud.google.com/build/pricing),
+[Artifact Registry pricing](https://cloud.google.com/artifact-registry/pricing),
+[Cloud Run pricing](https://cloud.google.com/run/pricing),
+[Cloud Scheduler pricing](https://cloud.google.com/scheduler/pricing),
+[Cloud Storage pricing](https://cloud.google.com/storage/pricing) e
+[Secret Manager pricing](https://cloud.google.com/secret-manager/pricing).
 
-E confirme os nomes por read-back antes de usá-los — nunca copie daqui sem
-conferir (o plano histórico chega a mencionar `suricata-sentinela`, que não
-é o nome atual):
+## Pré-requisitos e variáveis do operador
+
+- `gcloud` CLI instalado e autenticado com a conta autorizada: [instalação
+  oficial](https://cloud.google.com/sdk/docs/install).
+- Git e acesso ao repositório.
+- CI local verde antes de qualquer mutação: `python -m compileall -q
+  suricata`, `python -m pytest -q` e os testes Node descritos em
+  [`configuracao.md`](configuracao.md).
+- Docker local **não é obrigatório**; só é necessário para testar uma imagem
+  localmente antes do build remoto.
+- Autorização explícita para cada ação com efeito. Build, execução de canário,
+  update do Job e mudança de Scheduler não são testes inofensivos.
+
+Use variáveis de shell sem valores persistentes no histórico:
 
 ```bash
-PROJECT="suricata-college-20260913"
-REGION="southamerica-east1"
+PROJECT="<projeto-confirmado>"
+REGION="<regiao-confirmada>"
+JOB_CANARY="<job-canario-confirmado>"
+JOB_PROD="<job-producao-confirmado>"
+SCHEDULER="<scheduler-confirmado>"
+REPOSITORY="<url-artifact-registry-confirmada>"
+STATE_URI="gs://<bucket-confirmado>/<prefixo-autorizado>"
+```
 
-gcloud projects describe "$PROJECT" --format='yaml(projectId,lifecycleState)' --quiet
+Os placeholders acima não são valores sugeridos. Antes de qualquer update,
+faça read-back do recurso exato:
+
+```bash
+gcloud projects describe "$PROJECT" \
+  --format='yaml(projectId,lifecycleState)' --quiet
+
 gcloud run jobs list --region "$REGION" --project "$PROJECT" \
-  --format='table(name,latestCreatedExecution,startTime,completionTime)' --quiet
+  --format='table(name,latestCreatedExecution)' --quiet
+
 gcloud scheduler jobs list --location "$REGION" --project "$PROJECT" \
   --format='table(name,state,schedule,timeZone)' --quiet
+
 gcloud artifacts repositories list --location "$REGION" --project "$PROJECT" \
   --format='table(name,format)' --quiet
-gcloud storage ls "gs://${PROJECT}-estado/" --project "$PROJECT"
+
+gcloud storage ls "$STATE_URI/" --project "$PROJECT"
 ```
 
-Para um Job encontrado no read-back, descreva sem executar:
+Se o read-back mostrar recurso ausente, duplicado ou pertencente ao projeto
+errado, pare. Não crie um recurso “parecido” para seguir o tutorial.
 
-```bash
-gcloud run jobs describe NOME_CONFIRMADO --region "$REGION" --project "$PROJECT" \
-  --format='yaml(name,template.template.containers,template.template.timeout,template.template.maxRetries)' --quiet
-```
+## Gate 0 — origem e validação
 
-## Passo 1 — Build por digest
+1. Confirme que o checkout é o commit aprovado e que não há mudanças locais:
 
-Registre a origem antes de construir — commit e árvore limpa:
+   ```bash
+   git rev-parse HEAD
+   git status --short
+   ```
 
-```bash
-git rev-parse HEAD
-git status --short
-```
+2. Registre o commit e a pessoa autorizadora no sistema operacional privado,
+   não neste documento público.
+3. Verifique que nenhum segredo, sessão WhatsApp, QR, JID, token, dump ou
+   banco está no contexto de build.
+4. Confirme que a configuração do canário usa estado separado, entrega
+   desligada, nenhum destino real e retries limitados.
 
-Construa a imagem identificada pelo commit (comando do runbook/estado
-atual; preencha projeto e registry **com os valores do read-back**, nunca de
-memória):
+## Gate 1 — build remoto e digest
+
+O Cloud Build recebe o contexto do repositório, constrói a imagem e publica no
+Artifact Registry. Um exemplo sanitizado:
 
 ```bash
 gcloud builds submit . \
-  --project=<projeto-suricata-confirmado> \
-  --tag=<artifact-registry-suricata-confirmado>/suricata:<commit-curto>
+  --project="$PROJECT" \
+  --tag="$REPOSITORY/suricata:<commit-curto>"
 ```
 
-Depois do build, confirme: status `SUCCESS`; imagem contém somente os
-artefatos esperados (nenhum `auth.json`, `.wa-auth`, QR, token ou banco);
-digest completo registrado em [`interno/STATUS.md`](interno/STATUS.md);
-commit e digest associados.
+Depois, o operador deve conferir no console ou CLI que o build terminou com
+sucesso, que a imagem não contém credenciais e que o digest completo foi
+registrado no controle privado de mudanças. **Sem digest lido de volta não há
+update de Job.** Tags são apenas conveniência humana; o deploy usa o digest.
 
-**Sem digest verificado, não há deploy.** Ponto.
+## Gate 2 — canário sem entrega
 
-## Passo 2 — Canário sem entrega
+O canário valida imagem, dependências, acesso autorizado ao estado e leitura de
+segredos sem enviar WhatsApp.
 
-O canário (`suricata-canario-prod`) existe para validar o caminho real na
-nuvem **sem risco de mensagem**: estado separado, nenhum destino real,
-`SURICATA_ENTREGA=desligada` e `maxRetries=0`.
+1. Atualize somente `<job-canario-confirmado>` para o digest candidato, com
+   `--mode rodada`, `SURICATA_ENTREGA=desligada`, estado separado, ausência de
+   `SURICATA_GRUPO_JID` e `SURICATA_DESTINOS_JSON`, timeout e retries explícitos.
+2. Execute somente o canário, após autorização específica.
+3. Leia execução e logs sanitizados: erro de configuração deve ser visível,
+   mas nunca o valor do segredo, sessão ou destino.
+4. Faça read-back de imagem, args, env não secreto, timeout, retries, identidade
+   e namespace de estado.
 
-1. Atualize **somente o Job canário** para o digest novo (ação com efeito —
-   exige autorização): imagem por digest, `--mode rodada`,
-   `SURICATA_ENTREGA=desligada`, `maxRetries=0`, timeout 300s, estado
-   separado, service account Suricata, **sem** `SURICATA_GRUPO_JID` ou
-   `SURICATA_DESTINOS_JSON`.
-2. Execute **apenas o canário** — nunca o Job de produção, nunca um envio real.
-3. Leia a execução e os logs sanitizados: exigiu-se zero eventos enviados,
-   zero ACK de entrega, nenhum segredo ou destino pessoal.
-4. Faça read-back da imagem/digest/args/env do canário. Qualquer divergência
-   do planejado: pare e corrija o registro.
+`Succeeded` prova que o Job executou. Não prova coleta completa, destino
+correto, autenticação do WhatsApp nem entrega; com `SURICATA_ENTREGA=desligada`,
+entrega deve permanecer fora do caminho.
 
-Canário `Succeeded` prova que o Job roda na nuvem — **não** prova entrega
-WhatsApp (que continua desligada).
+## Gate 3 — corte controlado
 
-## Passo 3 — Corte controlado
+O corte produtivo é uma aprovação separada do canário. Antes de executá-lo,
+confirme: CI verde, clone limpo, digest candidato conhecido, canário aprovado,
+digest anterior anotado para rollback, exatamente um Scheduler e destino
+confirmado por procedimento privado.
 
-O corte troca o digest do Job de produção. Exige autorização explícita
-**separada** do canário. Antes: CI verde, clone limpo verde, imagem por
-digest, canário aprovado, rollback preparado (digest anterior anotado),
-exatamente um Scheduler, destino confirmado por procedimento autorizado.
-
-1. **Registre o digest anterior** — é o seu rollback.
-2. Atualize **somente o Job** de produção (`suricata-rodada`) para o digest
-   novo. Nada mais: sem criar Scheduler novo, sem alterar frequência,
-   secrets ou IAM.
-3. Faça read-back de imagem, args, env, timeout, retries e service account
-   do Job atualizado — o sucesso do comando não prova que o estado desejado
-   foi aplicado.
-4. Observe uma execução completa. `Succeeded` significa execução, não
-   entrega; o que confirma entrega são os contadores `sent`/ACK no relatório
-   — e entrega só liga quando o gate humano autorizar.
-5. Registre o resultado e a janela de observação em
-   [`interno/STATUS.md`](interno/STATUS.md).
+1. Registre o digest anterior.
+2. Atualize somente `<job-producao-confirmado>` para o digest candidato. Não
+   crie Scheduler, não mude frequência, IAM, secrets ou bucket como parte do
+   corte.
+3. Faça read-back de imagem, args, env, timeout, retries e identidade.
+4. Observe uma execução completa e registre o resultado no controle privado.
+   Execução bem-sucedida não equivale a mensagem entregue; entrega exige os
+   sinais de confirmação previstos no contrato e autorização explícita.
+5. Se qualquer read-back divergir do esperado, pare antes da próxima execução.
 
 ## Rollback
 
-Aponte o Job de produção de volta para o **digest anterior conhecido**, faça
-read-back de imagem/args/env/retries/timeout, preserve o estado (não apague
-nada para "limpar") e observe a próxima execução. Não reescreva histórico, não
-delete objetos do bucket, não recrie recursos do zero.
+Rollback é voltar o Job ao **digest anterior conhecido**, não reconstruir a
+imagem nem apagar estado:
 
-## O que NUNCA fazer
+```bash
+# Preencha somente com valores confirmados no procedimento privado.
+PREVIOUS_DIGEST="sha256:<digest-anterior-confirmado>"
+# Use o comando de update aprovado pelo operador e pela política local.
+```
 
-- **Nunca crie um segundo Scheduler.** Existe exatamente um
-  (`suricata-rodada-10min`). Dois Schedulers = duas rodadas simultâneas =
-  mensagens duplicadas. Achou um segundo? Parar e reconciliar antes de tudo.
-- **Nunca aplique um digest sem read-back** — nem o seu, nem o de rollback.
-  Confirme a imagem, args, env e service account **depois** de atualizar.
-- **Nunca trate `Succeeded` como "mensagem entregue"** — sem `sent`/ACK no
-  relatório, houve execução, não entrega.
-- **Nunca ligue `SURICATA_ENTREGA` fora de um corte autorizado**, e nunca
-  como parte de "validação" ou diagnóstico.
-- **Nunca use `gcloud run jobs update`, `gcloud scheduler jobs update`,
-  `gcloud run jobs execute` ou `gcloud builds submit` como "teste"** sem
-  autorização própria para aquele efeito.
-- **Nunca apague ou sobrescreva estado do bucket para "resolver" um
-  problema** — o outbox e a memória são a fonte da idempotência.
-- **Nunca copie sessão, `auth.json` ou QR** para o repo, para a imagem ou
-  para o log.
+Após o update, leia de volta imagem, args, env, timeout, retries, identidade e
+estado. Preserve GCS, outbox, lease e histórico para que a idempotência e a
+investigação não sejam destruídas. Se o problema for segredo, IAM ou Scheduler,
+trate essa causa separadamente; não “resolva” apagando recursos.
 
-## Estado da última execução observada (referência, não verdade)
+## Proibições
 
-Última rodada observada por read-back: coletou 10 ofertas e 36 atividades,
-`eventos=[]`, contadores de entrega zerados (entrega desligada na época).
-Detalhes e datas exatas: [`interno/STATUS.md`](interno/STATUS.md). Se este
-parágrafo e o read-back de agora divergirem, o read-back vence.
+- Não publique ou copie para este repositório projetos, buckets, JIDs, digests,
+  IDs de build, nomes de Jobs, nomes de Scheduler, contas de serviço ou tokens.
+- Não crie um segundo Scheduler para compensar uma falha; duas frequências podem
+  duplicar rodadas e mensagens.
+- Não use `Succeeded` como sinônimo de entrega.
+- Não ligue `SURICATA_ENTREGA` durante diagnóstico ou canário.
+- Não coloque segredos em argv, Dockerfile, imagem, `.env` versionado ou log.
+- Não execute `gcloud run jobs execute`, `gcloud run jobs update`,
+  `gcloud scheduler jobs update` ou `gcloud builds submit` sem autorização
+  própria para o efeito.
+- Não faça deploy a partir de árvore suja nem aceite digest sem read-back.
+
+Este arquivo descreve o método. O estado real, valores preenchidos e evidências
+operacionais pertencem a um controle privado e não são fonte pública.

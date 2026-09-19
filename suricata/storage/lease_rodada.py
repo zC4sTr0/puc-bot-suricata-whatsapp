@@ -15,7 +15,20 @@ from typing import Any
 from .cas import CASConflict
 
 LEASE = "locks/rodada.lock"
-LEASE_MINUTOS = int(os.environ.get("SURICATA_LEASE_MINUTOS", "6"))
+
+
+def _lease_minutos_do_ambiente() -> int:
+    """Converte e valida o TTL do lease antes de iniciar o runtime."""
+    try:
+        minutos = int(os.environ.get("SURICATA_LEASE_MINUTOS", "6"))
+    except ValueError as exc:
+        raise ValueError("SURICATA_LEASE_MINUTOS deve ser inteiro positivo") from exc
+    if minutos < 1:
+        raise ValueError("SURICATA_LEASE_MINUTOS deve ser inteiro positivo")
+    return minutos
+
+
+LEASE_MINUTOS = _lease_minutos_do_ambiente()
 
 
 def _campo_json(dados: bytes, campo: str) -> Any:

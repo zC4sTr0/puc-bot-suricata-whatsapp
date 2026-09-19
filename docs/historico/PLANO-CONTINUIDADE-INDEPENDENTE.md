@@ -1,4 +1,6 @@
 # Plano de continuidade perfeita — Suricata WhatsApp
+> **Histórico — snapshot não normativo.** Preserva decisões e claims de época; não contém identificadores operacionais nem comandos copiáveis.
+
 
 > **Documento executável para um agente sem histórico desta conversa.**
 > Leia este arquivo junto com `README.md`, `docs/PLANO-EXTRACAO-SURICATA.md` e
@@ -48,7 +50,7 @@ A Suricata não deve importar, montar, copiar ou compartilhar:
 - `academico/`, `academico/estado/`;
 - `periodos/`, `.canvas/`, capturas e materiais;
 - `scripts/academico/`;
-- bucket, Job, Scheduler, secret, service account ou estado do Bot Telegram;
+- bucket, Job, Scheduler, secret, <service-account-confirmada> ou estado do Bot Telegram;
 - sessões WhatsApp, QR, `auth.json`, `.wa-auth/`, cookies, tokens, URLs
   assinadas, bancos ou logs sensíveis.
 
@@ -107,7 +109,7 @@ Data da evidência: **2026-09-17**.
 
 - Caminho local: `C:\GIT\suricata-whatsapp`.
 - Branch atual: `migration/suricata-extraction`.
-- Commit inicial: `dfb5220 feat: extract Suricata WhatsApp runtime`.
+- Commit inicial: `<id-nao-versionado> feat: extract Suricata WhatsApp runtime`.
 - Árvore do novo repo: limpa após o commit.
 - O GitHub ainda não foi configurado para este repo.
 - `AGENTS.md` é obrigatório, mas a criação foi bloqueada pelo mecanismo de
@@ -147,15 +149,15 @@ intocada até uma etapa de limpeza explicitamente autorizada.
 
 Read-back somente leitura confirmou:
 
-- projeto GCP Suricata ativo: `suricata-college-20260913`;
+- projeto GCP Suricata ativo: `<projeto-suricata-confirmado>`;
 - região: `southamerica-east1`;
-- Cloud Run Job: `suricata-rodada`, uma task, `maxRetries=1`;
-- Scheduler: `suricata-rodada-10min`, `ENABLED`, `*/10 * * * *`, timezone
+- Cloud Run Job: `<job-suricata-confirmado>`, uma task, `maxRetries=1`;
+- Scheduler: `<scheduler-suricata-confirmado>`, `ENABLED`, `*/10 * * * *`, timezone
   `America/Sao_Paulo`;
 - bucket de estado Suricata existente;
-- service account Suricata existente;
+- <service-account-suricata-confirmada> existente;
 - imagem atualmente observada por digest
-  `sha256:9622db22436d366a2b1b6224479eb5b3b6c5a66da4f5a8fe5da468216de763c3`;
+  `sha256:<digest-anterior-nao-versionado>`;
 - últimas execuções observadas concluídas com sucesso;
 - última rodada observada coletou 10 ofertas e 36 atividades;
 - nessa última rodada, `eventos=[]` e contadores de entrega zerados: isso não
@@ -233,7 +235,7 @@ pode tocar e qual é o próximo passo sem inventar contexto.
 ### Fase B — Revalidar o clone independente
 
 1. Criar clone local limpo a partir do commit/branch de migração.
-2. Instalar Node com `npm ci --prefix suricata/whatsapp --ignore-scripts`.
+[comando operacional omitido; procedimento histórico não executável por cópia]
 3. Executar:
 
 ```bash
@@ -291,7 +293,7 @@ git status --short
 Build:
 
 ```bash
-gcloud builds submit . \
+[comando de nuvem omitido: somente leitura com projeto, região e recurso obtidos por read-back autorizado]
   --project=<projeto-suricata-confirmado> \
   --tag=<artifact-registry-suricata-confirmado>/suricata:<commit-curto>
 ```
@@ -343,7 +345,7 @@ Procedimento:
 1. registrar digest anterior;
 2. atualizar somente o Job Suricata para o digest novo;
 3. manter o Scheduler único, sem criar outro;
-4. fazer read-back de imagem, args, env, timeout, retries e service account;
+4. fazer read-back de imagem, args, env, timeout, retries e <service-account-confirmada>;
 5. observar uma execução sem assumir que `Succeeded` significa mensagem;
 6. só ligar entrega quando o gate humano estiver satisfeito;
 7. observar logs e relatório sem expor payload, token, JID ou sessão;

@@ -1,4 +1,6 @@
 # Operações
+> **Interno — não normativo para lançamento público.** Contém contratos e orientação operacional genérica; valores reais exigem read-back autorizado.
+
 
 1. Ler `AGENTS.md`, `docs/historico/PLANO-EXTRACAO-SURICATA.md` e `docs/interno/STATUS.md`.
 2. Conferir branch, status, diff e testes.

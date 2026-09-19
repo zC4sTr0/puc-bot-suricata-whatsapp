@@ -1,172 +1,133 @@
-# Arquitetura — como a Suricata funciona por dentro
+# Arquitetura — como a Suricata funciona
 
-Uma frase antes dos diagramas: **Python é dono de todo o estado e de todo o
-contrato; o Node só executa o envio.** Guarde isso e o resto do arquivo é
-detalhe organizado.
+## A ideia em uma frase
 
-## O fluxo de uma rodada
+A Suricata lê o Canvas, prepara lembretes para a turma e só tenta entregar uma mensagem quando as regras de horário, configuração, destino e confirmação permitem. **Python decide e guarda o estado; Node apenas conversa com o WhatsApp.**
 
-A cada 10 minutos, o Cloud Scheduler dispara um Cloud Run Job. O Job roda
-`python -m suricata --mode rodada`, que percorre o caminho abaixo — do Canvas
-ao ACK, sem atalhos:
+O Canvas é a fonte oficial dos prazos e tipos. A agenda manual só complementa uma informação ausente; ela não corrige nem substitui o Canvas.
+
+## O caminho completo, sem jargão
+
+Na nuvem, um agendador acorda um job a cada 10 minutos. O job executa `python -m suricata --mode rodada`. Ele consulta o Canvas em modo somente leitura, monta os avisos, salva o que precisa ser lembrado e, quando todos os gates estão abertos, chama a ponte WhatsApp.
 
 ```mermaid
 flowchart LR
-    S["☁️ Cloud Scheduler<br/>a cada 10 min"] --> J["⚙️ Cloud Run Job<br/><code>suricata-rodada</code>"]
-    J -->|"GET apenas leitura"| C["📚 Canvas<br/>dados públicos"]
-    C --> P["🧠 planejamento<br/>novidades por destino"]
-    P --> E[("🗄️ estado<br/>memória · outbox · lease")]
-    E -->|"somente se entrega ligada<br/>e dentro da janela BRT"| B["🌉 ponte Node<br/>Baileys"]
-    B --> W["💬 WhatsApp<br/>grupo da turma"]
-    W -->|"✅ ACK"| E
+    A[Agendador<br/>a cada 10 min] --> B[Job Python]
+    B --> C[Canvas<br/>fonte oficial]
+    C --> D[Decide os avisos]
+    D --> E[Estado seguro]
+    E --> F[Ponte WhatsApp]
+    F --> G[Grupo da turma]
+    G -->|confirmação| E
 ```
 
-Os passos em palavras:
+Acordar o job não autoriza envio. O horário de Brasília é aplicado dentro do job: 07:00 reabre a manhã, 12:00 permite o aviso extra de prova/quiz da véspera, 18:00 prepara o lembrete principal e 21:00 fecha o envio. Depois do corte, o item fica para uma janela posterior ou expira quando já não fizer sentido.
 
-1. **Coleta** — o bot consulta o Canvas com `GET` (nunca escreve lá) e
-   normaliza as atividades públicas de cada oferta.
-2. **Planejamento** — regras puras decidem, para cada destino, o que é
-   novidade e vira aviso, com o texto final já pronto.
-3. **Estado** — a novidade entra no outbox (`pending`), a memória registra o
-   que já foi avisado e o lease trava a rodada para um executor por vez.
-4. **Corte** — o relógio em `America/Sao_Paulo` é revalidado: depois das
-   21:00, nada é reivindicado nem enviado.
-5. **Entrega** — se (e só se) `SURICATA_ENTREGA=ligada` e a janela estiver
-   aberta, a ponte Node envia a mensagem e devolve o ACK do servidor.
-6. **Confirmação** — sem ACK válido, a mensagem não vira `sent`.
+### Passo a passo
 
-O corte das 21:00 é absoluto: um evento novo que aparece às 20:55 pode sair;
-às 21:05, espera o amanhecer. Acordar por Scheduler não autoriza envio nenhum.
+1. **Ler:** o cliente faz `GET` no Canvas e usa somente dados públicos das ofertas. Nunca busca notas, submissões, tentativas ou respostas.
+2. **Classificar:** cada atividade vira prova, quiz ou tarefa conforme os dados do Canvas e regras explícitas de classificação.
+3. **Planejar:** o domínio decide o que é novidade, o que já foi avisado e qual horário faz sentido. O texto final nasce aqui.
+4. **Guardar:** o plano é colocado no estado local ou no bucket configurado. Isso permite retomar após uma queda sem esquecer o que estava pendente.
+5. **Verificar:** a rodada precisa de uma trava de execução, configuração de entrega ligada, destino confirmado e janela BRT aberta.
+6. **Entregar:** Python manda um lote para Node. Node envia ao WhatsApp e devolve uma confirmação sanitizada.
+7. **Confirmar:** só uma confirmação válida transforma o item em `sent`. Timeout, logout ou resposta inválida não viram sucesso.
 
-## Por que existe um outbox
+## As regras visíveis para estudantes
 
-O problema clássico de "enviar mensagem" é o meio do caminho: o processo
-enviou, crashou **antes** de marcar como enviado — e, ao reiniciar, envia de
-novo. Duplicata no grupo. O outbox separa as duas decisões que costumam ser
-uma só: "devo enviar isso" (gravada no estado, de forma durável, com um
-`message_id` determinístico) e "enviei mesmo" (só após ACK). Como o
-`message_id` é derivado do conteúdo, um reenvio após crash chega ao WhatsApp
-com a mesma identidade e é detectado como duplicata, não como novidade.
+- **Prova:** aviso extra pode sair às 12:00 da véspera; o lembrete geral pode sair às 18:00.
+- **Quiz:** segue a mesma lógica e pode receber lembrete perto da abertura quando for um quiz curto.
+- **Tarefa:** o aviso usa a data de entrega e pode aparecer no lembrete da véspera ou com antecedência para atividades relevantes.
+- **Agenda manual:** é uma entrada complementar (`agenda/manual.json`). Um item de prova/quiz não duplica o que o Canvas já registra no mesmo curso e dia.
+- **Silêncio:** nada é reivindicado ou enviado a partir de 21:00. A manhã começa às 07:00.
 
-## Por que CAS (compare-and-swap)
+Essas regras são políticas do planejador, não garantias de que todo item será anunciado. Coleta parcial, falta de data, duplicidade e falta de contexto podem resultar em silêncio; nesses casos, o Canvas deve ser consultado.
 
-Duas rodadas nunca deveriam escrever no mesmo estado ao mesmo tempo — mas
-equipamento reinicia, Scheduler dispara cedo, humano executa manualmente.
-Toda escrita de estado carrega uma *geração* lida antes; gravar só funciona
-se a geração não mudou. Se mudou, alguém escreveu no meio e a operação falha
-fechado em vez de sobrescrever silenciosamente. É o mesmo mecanismo que
-protege a sessão do WhatsApp (`auth.json`): materializada temporariamente,
-persistida por CAS e read-back, nunca copiada para o repositório.
+## A parte técnica, explicada
 
-## Por que lease
+Esta seção define os mecanismos que protegem o estado. Eles não são necessários para o primeiro contato, mas são contratos de manutenção.
 
-O lease é a trava da rodada: antes de qualquer efeito, o executor pega o
-lock `locks/rodada.lock` com prazo (padrão observado: 6 minutos, via
-`SURICATA_LEASE_MINUTOS`). Sem lease, duas execuções simultâneas planejariam
-sobre a mesma memória e enviariam em dobro. Com lease vencido (executor
-morreu), a próxima rodada assume — payload ilegível é abandonado, nunca um
-lease preso. O lease também serve de *fencing*: uma execução que perdeu a
-trava não consegue gravar estado como se ainda a tivesse.
+### ACK: confirmação de entrega
 
-O contrato de vida de uma mensagem resume tudo isso:
+ACK é a confirmação devolvida pelo servidor do WhatsApp depois que a ponte tenta enviar. A Suricata não marca `sent` só porque o subprocesso terminou sem erro. Sem ACK compatível, permanece pendente ou volta a ser tentado conforme o contrato.
+
+### Outbox: fila durável
+
+O outbox separa “decidi enviar” de “o servidor confirmou”. Cada item pendente tem um `message_id` determinístico. Se o processo cair entre o envio e o registro, a retomada reconhece a mesma identidade em vez de criar uma novidade silenciosa.
 
 ```mermaid
 stateDiagram-v2
-    [*] --> pending : planejada no outbox
-    pending --> in_flight : claim (dentro do lease, antes do corte)
+    [*] --> pending : planejado
+    pending --> in_flight : reivindicado na janela
     in_flight --> sent : ACK válido
-    in_flight --> pending : falha / timeout / logout
-    pending --> expirado : corte das 21h
+    in_flight --> pending : falha ou timeout
+    pending --> expirado : já passou o corte útil
     sent --> [*]
     expirado --> [*]
 ```
 
-`sent` só existe com ACK; falha devolve a mensagem ao ponto de partida, com o
-mesmo `message_id` — por isso o reenvio nunca duplica. `sent` e `expirado`
-são terminais.
+`sent` e `expirado` são estados finais. O corte noturno não é um envio atrasado: ele impede a reivindicação naquele horário.
 
-## A fronteira Python → Node
+### CAS: não sobrescrever trabalho concorrente
 
-A ponte é um subprocesso com contrato mínimo e verificável:
+CAS (*compare-and-swap*) significa “grave somente se a versão ainda for a que li”. Toda escrita carrega uma geração. Se outra rodada gravou antes, a geração mudou e a operação falha fechada, em vez de apagar silenciosamente a atualização alheia. O mesmo cuidado vale para a sessão WhatsApp temporária, que nunca deve ir para o repositório.
 
-- Python envia **um lote JSON pelo stdin**;
-- o Node (Baileys) envia as mensagens e responde **um JSON sanitizado pelo
-  stdout** (resultado por `message_id`, com ACK);
-- o Node **não tem estado de negócio**: não decide elegibilidade, não conhece
-  o outbox, não persiste nada do domínio;
-- stderr não carrega sessão, token, QR, JID nem payload pessoal;
-- timeout, logout ou resposta inválida **nunca** são tratados como sucesso.
+### Lease: uma rodada por vez
 
-Esse contrato é testável sem rede: o stub offline
-[`suricata/tests/fixtures/bridge_stub.mjs`](../suricata/tests/fixtures/bridge_stub.mjs)
-lê um lote e devolve resultados com ACK, aceitando cenários (sucesso,
-timeout, crash) pela variável `SURICATA_STUB_SCENARIO`. Os testes E2E usam
-exatamente esse stub.
+Lease é uma trava com prazo em `locks/rodada.lock`. O executor precisa adquiri-la antes de produzir efeitos. Se morrer, o prazo permite que uma rodada futura assuma; se perder a trava, não pode gravar como se ainda fosse dona. O valor padrão observado é de 6 minutos, ajustável por `SURICATA_LEASE_MINUTOS`.
+
+## Contrato Python → Node
+
+A ponte é um subprocesso pequeno:
+
+- Python envia um lote JSON pelo `stdin`;
+- Node usa Baileys para enviar e responde JSON sanitizado no `stdout`, por `message_id`;
+- Node não decide elegibilidade, não conhece o outbox e não persiste estado de negócio;
+- `stderr` não recebe sessão, token, QR, JID ou payload pessoal;
+- timeout, logout e resposta inválida nunca significam sucesso.
+
+O stub offline [`suricata/tests/fixtures/bridge_stub.mjs`](../suricata/tests/fixtures/bridge_stub.mjs) exercita esse formato nos testes sem rede. Isso prova o contrato local da ponte, não a entrega de uma conta real.
 
 ## Os três modos
 
-| Modo | O que faz | Envia? |
-|---|---|---:|
-| `shadow` | Probe local: emite `{"mode":"shadow","status":"ok","adapter":"none"}` e termina. Zero-config, usada pelo CI e pelo Docker. | Não |
-| `demo` | Rodada offline com fixtures congeladas e relógio fixo; planeja e imprime, sem Canvas/estado/entrega. | Não |
-| `rodada` | Caminho canônico de produção: Canvas → planejamento → estado → entrega condicionada. | Só com os 3 gates |
+| Modo | Uso | Efeito externo |
+|---|---|---|
+| `shadow` | Verificar que o pacote responde. | Nenhum. |
+| `demo` | Mostrar o planejamento com fixture e relógio fixos. | Nenhum; mensagens são planejadas, não enviadas. |
+| `rodada` | Caminho de produção: Canvas, planejamento, estado e entrega condicionada. | Só com todos os gates. |
 
-O `Dockerfile` fixa `ENTRYPOINT ["python3", "-m", "suricata"]` e
-`CMD ["--mode", "shadow"]` — um container sem sobrescrita apenas reporta
-saúde. A configuração **não** tem arquivo: tudo vem do ambiente do processo
-(ou do Secret Manager, que materializa o ambiente no Job). As variáveis e
-suas semânticas estão em [`interno/CONFIGURATION.md`](interno/CONFIGURATION.md)
-e no [`.env.example`](../.env.example) comentado.
+A fixture da demo contém dados sintéticos. Exemplos e relatórios da demo são **saída esperada**, não “saída real” do Canvas ou do WhatsApp.
+
+## Fluxo cloud e configuração
+
+O Cloud Scheduler dispara o Cloud Run Job. O job recebe configuração do ambiente do processo (em produção, materializada pelo Secret Manager), executa a rodada e termina. O `Dockerfile` usa `python3 -m suricata` com `shadow` como padrão; um container sem sobrescrita apenas reporta saúde.
+
+O armazenamento pode ser um diretório local quando `SURICATA_ESTADO_URI` não usa `gs://`, ou um bucket quando usa `gs://`. O Docker não deve conter `auth.json`, QR, sessão ou segredo. O procedimento de publicação está em [`deploy-gcp.md`](deploy-gcp.md); as variáveis e seus significados estão em [`interno/CONFIGURATION.md`](interno/CONFIGURATION.md) e [`.env.example`](../.env.example).
 
 ## Mapa das pastas
 
 ```text
 suricata/
-├── __main__.py, entrypoint.py   porta de entrada e roteador CLI
+├── __main__.py, entrypoint.py   entrada e roteador CLI
 ├── demo.py                      rodada offline com fixtures
-├── rodada/                       orquestração: compõe runtime, coleta, agenda manual, config
-├── dominio/                      regras puras sem I/O: planejamento, calendário, textos, corte 21h
-├── integracao/                   adaptadores de efeito externo: cliente Canvas e a ponte Node
-├── storage/                      persistência e concorrência: outbox, lease, CAS, GCS/local
-├── whatsapp/                     ponte Node/Baileys: parear, enviar, verificar (sem estado de negócio)
-├── infra/                         inventário declarativo de isolamento
-└── tests/                         suíte de contratos (pytest, unittest, node --test)
+├── rodada/                      coordenação, coleta e agenda manual
+├── dominio/                     regras sem rede nem disco
+├── integracao/                  Canvas e ponte para efeitos externos
+├── storage/                     estado, outbox, lease, CAS e GCS/local
+├── whatsapp/                    ponte Node/Baileys e pareamento
+├── infra/                       isolamento declarativo
+└── tests/                       contratos Python e Node
 ```
 
-Uma linha por pasta, a regra de ouro: `dominio/` não conhece rede nem disco;
-`integracao/` e `storage/` são as únicas áreas autorizadas a conhecer efeitos
-externos; `rodada/` coordena sem assumir detalhes de Canvas, GCS ou
-subprocesso.
-
-## Fronteiras que não se cruzam
-
-- **Canvas → domínio:** somente dados públicos; nunca `submission`, nota,
-  quiz aberto ou tentativa iniciada.
-- **Python → Node:** lote JSON por stdin, resposta por stdout, Node sem
-  estado — como descrito acima.
-- **Node → WhatsApp:** único efeito externo de mensagem; só ACK compatível
-  autoriza `sent`.
-- **Local → imagem:** o Docker copia o contexto `suricata/` e instala as
-  dependências Node pelo lockfile; nada de `auth.json`, QR, sessão ou segredo.
+A regra de ownership é simples: `dominio/` não conhece rede nem disco; `integracao/` e `storage/` concentram efeitos; `rodada/` coordena sem assumir detalhes de Canvas, GCS ou subprocesso.
 
 ## Limites de manutenção
 
-1. A família legada (`sentinela`, `application`, `domain`, `adapter`,
-   `estado`, `grupo`, `delivery`, lease legado, `notifiers/`, `legacy/`) foi
-   removida em 2026-09-18, quando o CLI foi reduzido a
-   `shadow`/`demo`/`rodada`. O histórico vive no git; não reintroduza esses
-   módulos nem fachadas de compatibilidade.
-2. `shadow`, `demo` e `rodada` são três contratos diferentes: não transforme
-   `shadow` em alias funcional de `demo`.
-3. Configuração é ambiente de processo; não crie arquivo de configuração.
-4. Fail-closed é regra: falta de configuração, estado, lease ou ACK derruba a
-   execução — nunca degrada para "sucesso".
-5. CAS e outbox são contratos de concorrência: qualquer mudança neles exige
-   prova de equivalência antes.
-6. Teste verde offline prova o contrato local — não prova IAM, build, digest
-   implantado, Canvas ao vivo ou entrega WhatsApp.
+1. `shadow`, `demo` e `rodada` são contratos diferentes; não transforme um no outro.
+2. Configuração vem do ambiente do processo; não crie um arquivo de configuração alternativo.
+3. Fail-closed é obrigatório: falta de configuração, estado, lease ou ACK não pode virar sucesso.
+4. Canvas fornece a fonte oficial. A agenda manual é complementar e não deve duplicar prova/quiz já presente.
+5. Não reintroduza a família legada removida (`sentinela`, `application`, `domain`, `adapter`, `estado`, `grupo`, `delivery`, `notifiers/` e `legacy/`) nem fachadas de compatibilidade sem contrato explícito.
+6. Teste verde offline não prova IAM, build, digest implantado, Canvas ao vivo, sessão ou entrega WhatsApp.
 
-Os contratos exatos que uma refatoração deve preservar estão em
-[`interno/CONTRACTS.md`](interno/CONTRACTS.md); o mapa módulo a módulo, em
-[`interno/MAPA.md`](interno/MAPA.md). Para por onde começar na prática, o
-tutorial é [`guia.md`](guia.md).
+Os contratos exatos estão em [`interno/CONTRACTS.md`](interno/CONTRACTS.md); o mapa módulo a módulo, em [`interno/MAPA.md`](interno/MAPA.md). O tutorial de uso é [`guia.md`](guia.md).
