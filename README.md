@@ -19,7 +19,7 @@
 
 ## ✨ O que é
 
-A Suricata consulta **atividades públicas** do Canvas (provas, listas, quizzes), identifica o que é novidade para a turma e envia **avisos coletivos** no grupo autorizado do WhatsApp. Mensagens só são marcadas como enviadas **depois** do ACK do servidor — reenvio nunca duplica. Nunca publica notas, frequência ou qualquer situação individual.
+A Suricata consulta **atividades públicas** do Canvas (provas, listas, quizzes), identifica o que é novidade para a turma e envia **avisos coletivos** no grupo autorizado do WhatsApp. Se o WhatsApp não confirma a entrega, o bot reenvia com o mesmo identificador — o grupo nunca vê aviso duplicado. Nunca publica notas, frequência ou qualquer situação individual.
 
 ## 🚀 Quickstart
 
@@ -50,37 +50,37 @@ python scripts/bootstrap.py
 
 ## 🧠 Como funciona
 
+O coração do bot é a **rodada**: uma volta completa do ciclo de avisos. A cada **10 minutos** (em produção, via agendador do Google Cloud), a rodada acorda, dá uma olhada no Canvas da turma, descobre o que é novidade (prova marcada, lista liberada, quiz abrindo), decide **se vale avisar e quando** — e grava tudo num estado durável antes de qualquer envio. Só depois de tudo conferido a mensagem sai, e ela só conta como enviada quando o **WhatsApp confirma a entrega**.
+
 ```mermaid
 flowchart LR
-    A["☁️ Cloud Scheduler<br/>a cada 10 min"] --> B["⚙️ rodada<br/><code>python -m suricata --mode rodada</code>"]
-    B -->|"GET apenas leitura"| C["📚 Canvas<br/>dados públicos"]
-    C --> D["🧠 planejamento<br/>novidades · janelas BRT · corte 21h"]
-    D --> E[("🗄️ estado<br/>memória · lease · outbox")]
-    E --> F["🌉 ponte Node<br/>Baileys"]
+    A["☁️ Agendador<br/>a cada 10 min"] --> B["⚙️ rodada<br/><code>python -m suricata --mode rodada</code>"]
+    B -->|"só leitura"| C["📚 Canvas<br/>dados públicos da turma"]
+    C --> D["🧠 decide<br/>o que avisar · quando · para quem"]
+    D --> E[("🗄️ estado<br/>fila de avisos + memória")]
+    E --> F["🌉 envio<br/>ponte Node/Baileys"]
     F --> G["💬 WhatsApp<br/>grupo da turma"]
-    G -->|"✅ ACK"| E
+    G -->|"✅ confirma entrega"| E
 ```
 
-**O ciclo acima é a "rodada"**: a rodada é uma volta completa do bot — acorda, consulta o Canvas, decide o que é novidade, grava no estado e (só se tudo estiver liberado) envia. Ela roda a cada 10 minutos em produção e também localmente com `--mode rodada`. É o único caminho que envia mensagens.
+### ⏰ Quando ele roda?
+
+- A rodada **acorda a cada 10 minutos, todos os dias — inclusive fim de semana e feriado** (vai ao Canvas, prepara tudo).
+- Os avisos, porém, só saem nas **janelas da manhã** (07:00), **meio-dia** (12:00) e **véspera** (18:00, para o que vence no dia seguinte). Entre 23:00 e 07:00 é **silêncio total**.
+- O **calendário letivo é respeitado**: véspera não dispara para fim de semana ou feriado (só para dia de aula), e qualquer mensagem é cortada a partir das 21:00 da noite.
+- Resumo: a máquina roda 24/7, mas **mensagem no grupo só na hora certa, para o dia de aula certo**.
+
+### 🛡️ Por que ele nunca manda besteira
+
 
 Três invariantes de segurança que o código inteiro respeita:
 
-| Invariante | Como |
+| Garantia | Como |
 |---|---|
-| **fail-closed** | Sem config, estado, lease ou ACK → nada é enviado. `SURICATA_ENTREGA` só envia com o valor exato `ligada` |
-| **ACK antes de `sent`** | Sem ACK do servidor a mensagem volta para `pending` e é reenviada com o **mesmo** `message_id` (idempotência) |
-| **só dados coletivos** | A fronteira Canvas admite apenas campos públicos; notas e dados individuais nunca atravessam |
+| **Nada sai por acidente** | Sem configuração, estado ou confirmação → nada é enviado. O envio precisa estar **expressamente ligado** |
+| **Nunca duplica aviso** | Cada aviso espera a **confirmação do WhatsApp**; se ela não vier, o aviso volta para a fila e reenvia com o mesmo identificador — o grupo vê 1 vez |
+| **Só fala o que é coletivo** | Olha apenas dados públicos do Canvas; notas, faltas e situações individuais nunca chegam perto do texto |
 
-```mermaid
-stateDiagram-v2
-    [*] --> pending
-    pending --> in_flight : claim (antes do envio)
-    in_flight --> sent : ACK válido
-    in_flight --> pending : falha/timeout/logout
-    pending --> expirado : corte 21h
-    sent --> [*]
-    expirado --> [*]
-```
 
 ## 💬 Sincronizando com o WhatsApp
 
@@ -125,6 +125,10 @@ flowchart TB
 ```
 
 O passo a passo completo (build, canário sem entrega, corte controlado, rollback por digest) está em [`docs/deploy-gcp.md`](docs/deploy-gcp.md).
+
+**Pré-requisitos para mexer no deploy:** só o **`gcloud` CLI** (Google Cloud SDK) — o build da imagem acontece remotamente no Cloud Build, então **Docker local é opcional**. Instalação e configuração: [`docs/deploy-gcp.md`](docs/deploy-gcp.md) §Pré-requisitos.
+
+> **Nota:** os últimos commits desta `main` (modernização + padronização) ainda **não foram deployados** — a imagem de produção é de um snapshot anterior. Deploy é um passo que custa (Cloud Build) e exige autorização expressa; o procedimento está documentado e testado.
 
 ## 📣 Quero avisar algo que não está no Canvas
 

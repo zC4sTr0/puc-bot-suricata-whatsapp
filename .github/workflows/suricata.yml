@@ -2,9 +2,9 @@ name: Suricata CI
 
 on:
   push:
-    paths: ['suricata/**', 'Dockerfile', '.dockerignore', '.gcloudignore', 'pyproject.toml', 'ruff.toml', 'deploy/**', 'docs/**', '.github/**']
+    paths: ['suricata/**', '*.md', 'Dockerfile', '.dockerignore', '.gcloudignore', 'pyproject.toml', 'ruff.toml', 'deploy/**', 'docs/**', '.github/**', '.gitattributes', '.editorconfig']
   pull_request:
-    paths: ['suricata/**', 'Dockerfile', '.dockerignore', '.gcloudignore', 'pyproject.toml', 'ruff.toml', 'deploy/**', 'docs/**', '.github/**']
+    paths: ['suricata/**', '*.md', 'Dockerfile', '.dockerignore', '.gcloudignore', 'pyproject.toml', 'ruff.toml', 'deploy/**', 'docs/**', '.github/**', '.gitattributes', '.editorconfig']
   workflow_dispatch:
 
 permissions:
