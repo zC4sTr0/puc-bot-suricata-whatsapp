@@ -2,6 +2,10 @@
 
 Última verificação: **2026-09-17**, read-back GitHub/GCP e execução controlada do Job.
 
+## Simplificação do CLI e subpastas (2026-09-18, PR #11)
+
+Decisão do titular: CLI reduzido a `shadow`/`demo`/`rodada` — sentinela, teste-envio e grupos removidos com a família inteira (19 arquivos de produção + 14 de teste, `whatsapp/grupos.mjs` órfão). Runtime reorganizado em subpastas (`rodada/`, `dominio/`, `integracao/`, `storage/` consolidado) com `suricata/rodada` como pacote-fachada. Verificado localmente: matriz idêntica antes/depois (pytest `285+75`, unittest `283`, node `39/39`), clone limpo reproduzível (incl. `npm ci` do cache), shadow/demo exit 0, rodada sem env exit 5, modos removidos exit 2. Merge squash em `01daec2` com revisão independente do bot no SHA `049c7c4`; CI verde no branch e na `main` pós-merge.
+
 ## Modernização open-source plug-and-play — evidência local (2026-09-18)
 
 ### Simplificação de modos (2026-09-18, decisão do titular)
