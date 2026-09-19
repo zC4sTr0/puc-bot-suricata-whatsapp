@@ -1,0 +1,40 @@
+name: Bug report
+description: Algo não funcionou como documentado
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Obrigado por reportar. O bot nunca deve enviar nada fora das janelas contratuais — se você recebeu mensagem indevida, marque isso com urgência no título.
+  - type: textarea
+    id: o-que-aconteceu
+    attributes:
+      label: O que aconteceu
+      description: Comportamento observado vs. esperado
+    validations:
+      required: true
+  - type: textarea
+    id: reproduzir
+    attributes:
+      label: Como reproduzir
+      description: Passos e comandos (ex. `python -m suricata --mode demo`)
+    validations:
+      required: true
+  - type: dropdown
+    id: modo
+    attributes:
+      label: Modo
+      options:
+        - demo (offline)
+        - shadow (probe)
+        - rodada (produção local com entrega desligada)
+        - testes (pytest/unittest/node)
+        - outro
+    validations:
+      required: true
+  - type: textarea
+    id: ambiente
+    attributes:
+      label: Ambiente
+      description: SO, versão de Python e Node
+    validations:
+      required: true

@@ -1,0 +1,23 @@
+name: Melhoria
+description: Sugestão de melhoria no bot, nos testes ou na documentação
+labels: [melhoria]
+body:
+  - type: textarea
+    id: proposta
+    attributes:
+      label: Proposta
+      description: O que melhorar e por quê
+    validations:
+      required: true
+  - type: textarea
+    id: contrato
+    attributes:
+      label: Contratos afetados
+      description: Quais comportamentos observáveis podem mudar (exit codes, mensagens, JSON, janelas)? Lembre do fail-closed.
+  - type: checkboxes
+    id: limites
+    attributes:
+      label: Limites
+      options:
+        - label: A proposta não envia nada fora das janelas contratuais (corte 21h BRT)
+        - label: A proposta não exige dependências novas de runtime (stdlib pura)
