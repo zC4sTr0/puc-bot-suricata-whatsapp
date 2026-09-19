@@ -2,13 +2,13 @@
 
 Última verificação: **2026-09-19**, read-back GCP, build Cloud Build e canário controlado.
 
-## Release candidata `parity-20260919-104329` — deploy verificado (2026-09-19)
+## Release candidata `8ca7a51` — deploy verificado (2026-09-19)
 
 A fonte foi validada localmente com pytest `350 passed, 90 subtests`, unittest `348 OK`, Node `39/39`, Ruff, `compileall`, `shadow` e `git diff --check`. O runtime deixou de possuir fallback para bucket real: `SuricataSessionStorage` exige `session_object` ou `SURICATA_WA_SESSION_OBJECT`; testes usam apenas URI sintética `.invalid`.
 
-O Cloud Build `c4236fa0-beb1-414d-9b88-918379e878c8` terminou `SUCCESS` e publicou o digest `sha256:564bff747f777678b0e4618a09b005f50c7ac7e99ec3440e6f3bbd416f6bcdf4`. O canário `suricata-canario-prod` foi atualizado somente para esse digest, mantendo estado separado, `--mode rodada`, `SURICATA_ENTREGA=desligada`, `maxRetries=0`, timeout `300s` e service account Suricata. A execução `suricata-canario-prod-wfkt7` terminou `succeededCount=1`; logs sanitizados registraram somente saída normal e `exit(0)`, sem envio/ACK.
+O Cloud Build `8d81e9ca-59e9-43d2-ae19-2a9598aa6a20` terminou `SUCCESS` e publicou o digest `sha256:cd2de3518f28296a0d2ccfdbac3c96a18451da48bc9982a85531f3ff87e8db77`. O canário `suricata-canario-prod` foi atualizado somente para esse digest, mantendo estado separado, `--mode rodada`, `SURICATA_ENTREGA=desligada`, `maxRetries=0`, timeout `300s` e service account Suricata. A execução `suricata-canario-prod-rcblw` terminou `succeededCount=1`; logs sanitizados registraram somente saída normal e `exit(0)`, sem envio/ACK.
 
-Após o canário, o Job produtivo `suricata-rodada` foi atualizado somente para o mesmo digest, na geração `26`. Read-back confirmou `--mode rodada`, estado `gs://suricata-college-20260913-estado`, entrega ligada, secret Canvas, destinos existentes, uma task, `maxRetries=1`, timeout `240s` e service account Suricata. O Scheduler único `suricata-rodada-10min` continua `ENABLED`, `*/10 * * * *`, `America/Sao_Paulo`, apontando para esse Job. Não houve execução manual do Job produtivo.
+Após o canário, o Job produtivo `suricata-rodada` foi atualizado somente para o mesmo digest, na geração `27`. Read-back confirmou `--mode rodada`, estado `gs://suricata-college-20260913-estado`, entrega ligada, secret Canvas, destinos existentes, uma task, `maxRetries=1`, timeout `240s` e service account Suricata. O Scheduler único `suricata-rodada-10min` continua `ENABLED`, `*/10 * * * *`, `America/Sao_Paulo`, apontando para esse Job. Não houve execução manual do Job produtivo.
 
 ## Padronização GitHub, lint, e2e e dead-letter (2026-09-18, PRs #13-#16)
 
