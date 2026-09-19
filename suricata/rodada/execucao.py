@@ -36,6 +36,7 @@ from ..storage.persistencia_rodada import OutboxSincronizado
 from . import agenda_manual
 from .coleta import Coleta, ColetaIndisponivel, coletar
 from .config import Destino
+from .falhas import registrar_falhas
 
 
 def _todos(fila: OutboxSincronizado) -> list[dict[str, Any]]:
@@ -85,12 +86,16 @@ def _reivindicar_pendentes(outbox: Any, atual: datetime) -> list[dict[str, Any]]
 
 
 def _reconciliar_ack(outbox: Any, envios: list[dict[str, Any]],
-                     resposta: Any, resumo: dict[str, Any]) -> None:
-    """Confirma ``sent`` somente com ACK válido; qualquer dúvida volta a ``pending``."""
+                     resposta: Any, resumo: dict[str, Any]) -> list[str]:
+    """Confirma ``sent`` somente com ACK válido; qualquer dúvida volta a ``pending``.
+
+    Devolve os ``event_id`` dos envios que ficaram sem ACK (rastro da dead-letter).
+    """
     resumo["sessao"] = resposta.get("sessao") if isinstance(resposta, dict) else "erro"
     if isinstance(resposta, dict) and (resposta.get("erro") or resposta.get("detalhe")):
         resumo["erro"] = str(resposta.get("detalhe") or resposta.get("erro"))[:400]
     itens = {r.get("event_id"): r for r in (resposta.get("resultados") or [])} if isinstance(resposta, dict) else {}
+    sem_ack: list[str] = []
     for envio in envios:
         item = itens.get(envio["event_id"]) or {}
         ack = (resumo["sessao"] == "ok" and item.get("message_id") == envio["message_id"]
@@ -100,6 +105,9 @@ def _reconciliar_ack(outbox: Any, envios: list[dict[str, Any]],
                                      message_id=claim["message_id"], ack=ack,
                                      status=item.get("status") if ack else None)
             resumo["sent" if ack else "sem_ack"] += 1
+        if not ack:
+            sem_ack.append(envio["event_id"])
+    return sem_ack
 
 
 def entregar(fila: OutboxSincronizado, ponte: Any, grupo_jid: str, eventos: list[Evento],
@@ -174,7 +182,13 @@ def entregar(fila: OutboxSincronizado, ponte: Any, grupo_jid: str, eventos: list
                                                  for e in envios])
     except Exception as exc:  # noqa: BLE001 - nada vira sent sem ACK
         resposta = {"sessao": "erro", "resultados": [], "erro": f"{type(exc).__name__}: {exc}"[:400]}
-    _reconciliar_ack(outbox, envios, resposta, resumo)
+    sem_ack_ids = _reconciliar_ack(outbox, envios, resposta, resumo)
+    if sem_ack_ids:
+        # Rastro durável da falha (dead-letter): nunca derruba a rodada.
+        registrar_falhas(getattr(fila, "objetos", None),
+                         [{"etapa": "entrega", "event_id": event_id,
+                           "erro": resumo.get("erro") or f"sessao={resumo.get('sessao')}"}
+                          for event_id in sem_ack_ids], momento)
     fila.publicar()
     return resumo
 
@@ -281,6 +295,9 @@ def executar(*, objetos: Any, canvas: CanvasClient, entrega_ligada: bool, grupo_
             "falhas": list(coleta.falhas),
             "anuncios_determinaveis": coleta.anuncios is not None,
         }
+        if coleta.falhas:
+            registrar_falhas(objetos, [{"etapa": "coleta", "erro": str(f)} for f in coleta.falhas],
+                             _agora_vivo(agora))
 
         carregado = _carregar_memoria(objetos, memoria_nome, relatorio)
         if carregado is None:
