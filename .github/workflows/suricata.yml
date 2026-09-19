@@ -2,13 +2,17 @@ name: Suricata CI
 
 on:
   push:
-    paths: ['suricata/**', 'Dockerfile', '.dockerignore', '.gcloudignore', 'pyproject.toml', 'deploy/**', 'docs/**', '.github/workflows/suricata.yml']
+    paths: ['suricata/**', 'Dockerfile', '.dockerignore', '.gcloudignore', 'pyproject.toml', 'ruff.toml', 'deploy/**', 'docs/**', '.github/**']
   pull_request:
-    paths: ['suricata/**', 'Dockerfile', '.dockerignore', '.gcloudignore', 'pyproject.toml', 'deploy/**', 'docs/**', '.github/workflows/suricata.yml']
+    paths: ['suricata/**', 'Dockerfile', '.dockerignore', '.gcloudignore', 'pyproject.toml', 'ruff.toml', 'deploy/**', 'docs/**', '.github/**']
   workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   lint:
@@ -41,6 +45,13 @@ jobs:
       - run: python -m compileall -q suricata
       - run: node --test suricata/tests/*.mjs suricata/whatsapp/tests/*.mjs
       - run: python -m suricata --mode shadow
+
+  build:
+    needs: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - name: Build container without publishing
         run: docker build --pull --tag suricata-ci:${{ github.sha }} .
       - name: E2E de imagem (demo offline dentro do container)
