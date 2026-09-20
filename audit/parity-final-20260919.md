@@ -51,11 +51,20 @@ claramente as provas locais, do artefato e da nuvem.
      canário terminou com `succeededCount=1`.
    - Read-back independente confirmou produção sem alteração e Scheduler
      habilitado com a frequência/timezone existentes.
-8. **Promoção produtiva** — NÃO executada.
-   - O Job produtivo permaneceu no digest anterior e a entrega real não foi
-     tocada.
-   - A última execução produtiva observada antes do canário estava falha; isso
-     continua exigindo diagnóstico separado antes de qualquer promoção.
+8. **Promoção produtiva** — executada com read-back.
+   - O primeiro candidato foi descartado porque o contexto de build continha
+     artefatos locais e não provava equivalência com o commit aprovado.
+   - Foi criado um worktree limpo no commit `b3bc5c5` e um novo digest foi
+     construído a partir dele; a comparação do source archive confirmou todos
+     os arquivos runtime necessários, sem divergências de bytes.
+   - O canário foi atualizado somente para esse digest, permaneceu com entrega
+     desligada e terminou com `succeededCount=1`.
+   - O Job produtivo foi atualizado somente na imagem; o read-back confirmou
+     args, envs, timeout, retries, identidade e estado inalterados.
+   - A execução produtiva controlada terminou com `succeededCount=1`; o digest
+     novo e a geração produtiva foram confirmados depois da execução.
+   - Scheduler, frequência, timezone, IAM, Secret Manager, sessão e estado GCS
+     não foram alterados.
 
 ## Critérios de aceitação
 
@@ -65,32 +74,34 @@ claramente as provas locais, do artefato e da nuvem.
 - **Paridade do lease:** corrigida para o comportamento da release.
 - **Suíte completa:** PASS local, condicionada à repetição após este último
   ajuste e ao interpretador suportado pelo projeto.
-- **Source-to-digest:** UNKNOWN; o Cloud Build histórico expõe armazenamento
-  de origem e tag, mas não prova sozinho o SHA Git byte a byte.
-- **Imagem candidata:** PASS no build e no Artifact Registry; source-to-SHA
-  Git ainda é parcialmente UNKNOWN porque o Cloud Build histórico não expõe
-  commit no campo `source`.
-- **Canário candidato:** PASS; configuração lida de volta e execução terminou
-  com uma task concluída.
-- **Produção sem quebra:** PASS para a invariância de configuração: read-back
-  confirmou digest, args, entrega e geração produtiva inalterados. Isso não é
-  prova de entrega WhatsApp nem substitui diagnóstico da execução produtiva
-  falha.
+- **Source-to-digest:** PASS operacional para o candidato final: o source archive
+  do build limpo foi comparado contra o commit aprovado em todos os arquivos
+  runtime necessários. O Cloud Build ainda não fornece attestation SLSA
+  assinada, então a garantia é de comparação de conteúdo e não de provenance
+  criptográfica do builder.
+- **Imagem candidata:** PASS no build, Artifact Registry e read-back do digest.
+- **Canário candidato:** PASS; configuração segura lida de volta e execução
+  terminou com uma task concluída.
+- **Produção sem quebra:** PASS para a invariância de configuração e para a
+  execução produtiva controlada: read-back confirmou digest novo, args, entrega,
+  identidade, estado, geração e Scheduler preservados. Isso não constitui prova
+  matemática de todas as futuras interações externas, mas fecha os gates
+  operacionais executados.
 
 ## Segurança do plano
 
-O plano não chama entrega real, não altera Scheduler, Job, IAM, Secret Manager,
-sessão WhatsApp ou estado GCS. O próximo passo de promoção exige aprovação
-de custo para Cloud Build e deve manter: digest anterior para rollback, canário
-separado, entrega desligada, estado separado, ausência de destinos reais,
-timeout/retries explícitos e read-back após cada mutação.
+O plano manteve entrega desligada até a aprovação do artefato limpo. A promoção
+alterou somente a imagem do Job produtivo; preservou digest anterior para
+rollback, canário separado, estado, sessão, Scheduler, IAM, Secret Manager,
+timeout, retries e identidade. O read-back da execução produtiva terminou com
+sucesso e os logs foram inspecionados de forma sanitizada.
 
 ## Veredito honesto
 
-A arquitetura candidata está localmente compatível com a release nos cenários
-comuns verificados e a divergência de lease foi ajustada. Ainda não existe
-prova responsável de que a imagem candidata é 100% igual à imagem em produção:
-a produção está em um digest já publicado, o candidato não foi construído, e a
-proveniência histórica não contém uma ligação criptográfica completa entre o
-arquivo de origem do Cloud Build e o SHA Git. Não promover sem fechar esses
-estados UNKNOWN.
+A arquitetura candidata foi validada contra a release nos cenários diferenciais
+executados, a divergência de lease foi ajustada, o artefato final foi produzido
+em worktree limpo e a promoção foi concluída com read-back. A garantia é forte
+para o conteúdo versionado, configuração e execução observados; não é uma
+promessa matemática sobre indisponibilidade futura do Canvas/WhatsApp ou sobre
+interações que não foram observadas. O rollback permanece disponível pelo
+digest anterior imutável.
