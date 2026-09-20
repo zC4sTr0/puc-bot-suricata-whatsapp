@@ -1,21 +1,18 @@
-# Documentação do PUC Bot da Suricata
+# Documentação
 
-O PUC Bot da Suricata é independente e não oficial da PUC Minas. Esta documentação descreve o projeto técnico; para prazos e regras acadêmicas, use o Canvas e os canais oficiais da sua disciplina.
+A Suricata é um bot independente que prepara avisos acadêmicos coletivos a partir de dados públicos do Canvas.
 
-## Comece por aqui
+## Comece aqui
 
-- [`../README.md`](../README.md) — visão geral para estudantes, limites do modelo coletivo e demo offline.
-- [`guia.md`](guia.md) — tutorial progressivo: testar localmente e entender a origem dos avisos.
-- [`privacidade.md`](privacidade.md) — dados usados, dados que não devem ser coletados e limites da proteção.
-- [`glossario.md`](glossario.md) — Canvas, prova, quiz, tarefa, rodada, origem do aviso e outros termos.
+- [`../README.md`](../README.md) — visão geral e demo.
+- [`guia.md`](guia.md) — executar localmente, sem envio.
+- [`privacidade.md`](privacidade.md) — limites e dados protegidos.
 
-## Para aprofundar
+## Para manter e operar
 
-- [`arquitetura.md`](arquitetura.md) — funcionamento interno, armazenamento e fronteiras técnicas.
-- [`deploy-gcp.md`](deploy-gcp.md) — referência de deploy no Google Cloud para operadores autorizados; não é necessário para executar o demo.
-- [`cloud.md`](cloud.md) — explicação humana da camada cloud, separando demo/local, operação autorizada, canário, rollback, custos e limites.
-- [`troubleshooting.md`](troubleshooting.md) — problemas locais, configuração, ponte WhatsApp e limites de cloud.
+- [`arquitetura.md`](arquitetura.md) — fluxo e contratos principais.
+- [`configuracao.md`](configuracao.md) — variáveis do runtime.
+- [`troubleshooting.md`](troubleshooting.md) — problemas comuns.
+- [`deploy-gcp.md`](deploy-gcp.md) — deploy autorizado no Google Cloud.
 
-## Limites de leitura
-
-Documentação não substitui a confirmação no recurso real. Nenhuma página pública deve conter token, QR, sessão, JID real, payload de produção ou dado identificável de estudante. Avisos do bot são informativos: confirme o conteúdo diretamente na fonte oficial.
+A documentação pública não contém tokens, sessões, JIDs, buckets, nomes reais de recursos ou evidências de produção. Confirme prazos e regras no Canvas e nos canais oficiais da disciplina.

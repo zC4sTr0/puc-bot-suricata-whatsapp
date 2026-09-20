@@ -1,53 +1,31 @@
-# Troubleshooting público
+# Troubleshooting
 
-Este guia cobre problemas locais e de primeira configuração. Não peça nem
-publique token Canvas, QR code, sessão WhatsApp, JID real, log de produção ou
-configuração de cloud.
+Não publique token Canvas, QR, sessão, JID, log de produção ou configuração real.
 
-## O demo não inicia
-
-Confirme Python 3.11+ e execute:
+## Demo ou shadow falha
 
 ```bash
 python -m compileall -q suricata
+python -m suricata --mode shadow
 python -m suricata --mode demo
 ```
 
-O demo usa fixtures sintéticas, relógio controlado e entrega desligada. Ele não
-prova acesso ao Canvas, GCP ou WhatsApp.
-
-## O modo `shadow` falha
-
-Execute:
-
-```bash
-python -m suricata --mode shadow
-```
-
-O resultado esperado é JSON com `mode=shadow`, `status=ok`, `adapter=none` e
-código de saída zero. Esse modo não consulta rede, não grava estado persistente
-e não chama Node.
+Use Python 3.11 ou superior. A demo é offline e não prova acesso a serviços externos.
 
 ## A rodada recusa a configuração
 
-Leia [`configuracao.md`](configuracao.md) e confira, sem colar valores reais em
-issues:
+Confira:
 
-- `SURICATA_CANVAS_TOKEN` está disponível somente no ambiente autorizado;
-- `SURICATA_ESTADO_URI` aponta para um diretório local descartável ou namespace
-  GCS confirmado;
-- `SURICATA_LEASE_MINUTOS` é inteiro positivo;
-- destinos JSON são válidos e os JIDs têm formato de grupo;
-- `SURICATA_ENTREGA` permanece `desligada` durante testes;
-- sessões WhatsApp ficam fora do clone.
+- `SURICATA_CANVAS_TOKEN` no ambiente autorizado;
+- `SURICATA_ESTADO_URI` apontando para estado local descartável ou namespace GCS correto;
+- `SURICATA_LEASE_MINUTOS` como inteiro positivo;
+- destinos JSON válidos e JIDs de grupo;
+- `SURICATA_ENTREGA=desligada` durante testes;
+- sessão WhatsApp fora do clone.
 
-Não corrija uma falha removendo o estado ou trocando o bucket sem entender a
-causa. Configuração ambígua deve falhar fechada.
+Não apague estado nem troque bucket para contornar uma falha.
 
 ## A ponte WhatsApp não instala
-
-A ponte Node vive em [`../suricata/whatsapp/README.md`](../suricata/whatsapp/README.md).
-Use o lockfile versionado:
 
 ```bash
 cd suricata/whatsapp
@@ -55,32 +33,23 @@ npm ci --ignore-scripts
 node --test
 ```
 
-O pareamento é local e interativo. Nunca execute pareamento em CI ou cloud,
-nunca salve a sessão no Git e nunca publique QR/código.
+Use o lockfile. Pareamento é local e interativo; nunca ocorre em CI ou Cloud Run.
 
 ## A mensagem não foi enviada
 
-Ausência de mensagem não significa ausência de atividade. Verifique primeiro:
+Verifique, nesta ordem:
 
 1. a fonte oficial no Canvas;
 2. se a coleta foi completa;
-3. a janela BRT e o corte noturno;
+3. janela BRT e corte das 21:00;
 4. estado, lease e outbox;
-5. autorização explícita de entrega;
+5. autorização de entrega;
 6. confirmação técnica do WhatsApp.
 
-Um ACK confirma o contrato técnico de envio; não confirma leitura humana nem
-substitui o Canvas.
+Ausência de mensagem não prova ausência de atividade.
 
-## Problema em cloud
+## Cloud
 
-Não tente “consertar” produção por tentativa. Pare a entrega, registre somente
-logs sanitizados e consulte [`cloud.md`](cloud.md) e
-[`deploy-gcp.md`](deploy-gcp.md). Qualquer mudança de Job, Scheduler, IAM,
-Secret Manager, GCS ou imagem exige autorização do titular e read-back.
+Não altere produção por tentativa. Pare, preserve o estado e consulte [`deploy-gcp.md`](deploy-gcp.md). Mudanças de Job, Scheduler, IAM, Secret Manager, GCS ou imagem exigem autorização e read-back.
 
-## Como reportar
-
-Abra uma issue com fixture sintética, versão/commit e saída sanitizada. Para
-vulnerabilidades, siga [`../SECURITY.md`](../SECURITY.md). Não inclua dados de
-estudantes, nomes de grupos, tokens, sessões ou URLs assinadas.
+Para reportar um problema, use fixture sintética, commit e saída sanitizada. Vulnerabilidades devem seguir [`../SECURITY.md`](../SECURITY.md).
