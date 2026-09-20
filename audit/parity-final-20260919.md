@@ -41,10 +41,21 @@ claramente as provas locais, do artefato e da nuvem.
    - Matriz focal comum: release **145 passed**; candidato final **147 passed**.
    - Com a mesma fixture sintética nos dois trees, `demo` terminou com stdout
      idêntico.
-7. **Build/canário/promoção** — bloqueado por gate de custo e segurança.
-   - Cloud Build, Docker remoto, canário ou update do Job não foram executados.
-   - A última execução produtiva lida durante a auditoria estava falha; isso
-     exige diagnóstico separado antes de qualquer promoção.
+7. **Build e canário sem entrega** — PASS.
+   - Cloud Build autorizado executou a partir da árvore limpa em `b3bc5c5` e
+     publicou um digest imutável; o digest foi confirmado novamente no Artifact
+     Registry.
+   - O canário existente foi atualizado somente na imagem, mantendo estado
+     separado, `--mode rodada`, entrega desligada, retries 0 e timeout 300 s.
+   - Read-back pós-update confirmou a configuração segura; a execução do
+     canário terminou com `succeededCount=1`.
+   - Read-back independente confirmou produção sem alteração e Scheduler
+     habilitado com a frequência/timezone existentes.
+8. **Promoção produtiva** — NÃO executada.
+   - O Job produtivo permaneceu no digest anterior e a entrega real não foi
+     tocada.
+   - A última execução produtiva observada antes do canário estava falha; isso
+     continua exigindo diagnóstico separado antes de qualquer promoção.
 
 ## Critérios de aceitação
 
@@ -56,11 +67,15 @@ claramente as provas locais, do artefato e da nuvem.
   ajuste e ao interpretador suportado pelo projeto.
 - **Source-to-digest:** UNKNOWN; o Cloud Build histórico expõe armazenamento
   de origem e tag, mas não prova sozinho o SHA Git byte a byte.
-- **Imagem candidata:** UNKNOWN; não houve build novo.
-- **Canário candidato:** UNKNOWN; não houve execução.
-- **Produção sem quebra:** NÃO pode ser afirmado como 100% enquanto os gates
-  remotos acima não forem realizados e enquanto a falha da última execução
-  produtiva não for entendida.
+- **Imagem candidata:** PASS no build e no Artifact Registry; source-to-SHA
+  Git ainda é parcialmente UNKNOWN porque o Cloud Build histórico não expõe
+  commit no campo `source`.
+- **Canário candidato:** PASS; configuração lida de volta e execução terminou
+  com uma task concluída.
+- **Produção sem quebra:** PASS para a invariância de configuração: read-back
+  confirmou digest, args, entrega e geração produtiva inalterados. Isso não é
+  prova de entrega WhatsApp nem substitui diagnóstico da execução produtiva
+  falha.
 
 ## Segurança do plano
 
