@@ -19,14 +19,10 @@ reporta saúde.
 ## Por onde andar
 
 - Tutorial progressivo, sem efeitos: [`docs/guia.md`](../docs/guia.md)
+- Operação, configuração e deploy: [`docs/operacao.md`](../docs/operacao.md)
 - Como contribuir: [`CONTRIBUTING.md`](../CONTRIBUTING.md)
-- Índice geral da documentação: [`docs/README.md`](../docs/README.md)
-- Arquitetura e contratos: [`docs/arquitetura.md`](../docs/arquitetura.md) e
-  [`tests/README.md`](tests/README.md)
+- Índice geral: [`docs/README.md`](../docs/README.md)
 - Ponte Node/WhatsApp: [`whatsapp/README.md`](whatsapp/README.md)
 - Fronteira de infraestrutura: [`infra/README.md`](infra/README.md)
 
-A configuração vem do ambiente do processo (variáveis `SURICATA_*`,
-documentadas em [`docs/configuracao.md`](../docs/configuracao.md)
-e no [`.env.example`](../.env.example) da raiz); não existe arquivo de
-configuração.
+A configuração vem do ambiente do processo (variáveis `SURICATA_*`); não existe arquivo de configuração.

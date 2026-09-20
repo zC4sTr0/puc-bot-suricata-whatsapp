@@ -60,15 +60,13 @@ O processo pode ser acordado regularmente e ainda assim ficar em silêncio por f
 - Canvas continua sendo a fonte oficial.
 - Uma suíte verde não prova acesso ao Canvas, Cloud Run, WhatsApp ou entrega real.
 
-Leia [privacidade](docs/privacidade.md) e [configuração](docs/configuracao.md) antes de operar uma instância.
+Leia [privacidade](docs/privacidade.md) e [operação](docs/operacao.md) antes de operar uma instância.
 
 ## Documentação
 
 - [Guia](docs/guia.md)
-- [Arquitetura](docs/arquitetura.md)
-- [Configuração](docs/configuracao.md)
-- [Troubleshooting](docs/troubleshooting.md)
-- [Deploy autorizado](docs/deploy-gcp.md)
+- [Operação](docs/operacao.md)
+- [Privacidade](docs/privacidade.md)
 
 ## Contribuir
 

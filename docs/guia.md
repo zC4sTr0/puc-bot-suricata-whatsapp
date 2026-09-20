@@ -64,4 +64,4 @@ Uma operação real exige token do Canvas, estado protegido, destino confirmado,
 
 Nunca faça pareamento em CI ou Cloud Run e nunca publique QR, sessão, token ou JID.
 
-Para configuração detalhada, leia [`configuracao.md`](configuracao.md). Para operação em nuvem, leia [`deploy-gcp.md`](deploy-gcp.md).
+Para configuração e operação, leia [`operacao.md`](operacao.md).
