@@ -6,7 +6,7 @@ Este repositório contém somente a Suricata: o bot público de avisos acadêmic
 
 ## Antes de alterar
 
-1. Leia `README.md`, `docs/guia.md`, `docs/arquitetura.md`, `docs/configuracao.md` e `docs/troubleshooting.md`.
+1. Leia `README.md`, `docs/guia.md`, `docs/operacao.md` e `docs/privacidade.md`.
 2. Preserve os contratos em `suricata/tests/` e `suricata/whatsapp/tests/`.
 3. Nunca copie `academico/`, `periodos/`, `.canvas/`, `scripts/academico/`, capturas, materiais, logs, bases, QR, cookies, tokens, `auth.json` ou `.wa-auth/`.
 4. Nunca introduza imports, caminhos, buckets, jobs, secrets ou destinos do Bot Telegram ou do repositório acadêmico.
