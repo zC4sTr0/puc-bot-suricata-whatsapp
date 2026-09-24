@@ -33,7 +33,7 @@ from ..storage.cas import CASConflict, StorageError
 from ..storage.lease_rodada import Lease
 from ..storage.outbox import OutboxError
 from ..storage.persistencia_rodada import OutboxSincronizado
-from . import agenda_manual
+from . import agenda_manual, rodape
 from .coleta import Coleta, ColetaIndisponivel, coletar
 from .config import Destino
 from .falhas import registrar_falhas
@@ -192,6 +192,9 @@ def entregar(fila: OutboxSincronizado, ponte: Any, grupo_jid: str, eventos: list
         resumo.update({"silencio": True, "pendentes_enviados": 0, "expirados": corte["expirados"], "sessao": None})
         return resumo
     envios = agrupar_envios(claims, grupo_jid)
+    # O rodapé muda só o texto enviado, nunca o registro do outbox.
+    objetos = getattr(fila, "objetos", None)
+    contexto_rodape = rodape.anexar(objetos, getattr(fila, "nome", ""), envios, atual)
     try:
         resposta = ponte.enviar_lote(grupo_jid, [{k: e[k] for k in ("event_id", "message_id", "texto")}
                                                  for e in envios])
@@ -207,9 +210,10 @@ def entregar(fila: OutboxSincronizado, ponte: Any, grupo_jid: str, eventos: list
                 "duration_ms", "returncode", "signal", "stdout_bytes", "stdout_linhas", "stderr_bytes"
             ) if campo in metadados})
     sem_ack_ids = _reconciliar_ack(outbox, envios, resposta, resumo)
+    rodape.confirmar(objetos, contexto_rodape, sem_ack_ids)
     if sem_ack_ids:
         # Rastro durável da falha (dead-letter): nunca derruba a rodada.
-        registrar_falhas(getattr(fila, "objetos", None),
+        registrar_falhas(objetos,
                          [{"etapa": "entrega", "event_id": event_id,
                            "erro": resumo.get("erro") or f"sessao={resumo.get('sessao')}",
                            **{campo: resumo[campo] for campo in (

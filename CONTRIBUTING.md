@@ -11,7 +11,8 @@ dados pessoais ficam fora daqui.
 
 - Python 3.11+ (o pacote instala `tzdata` para garantir `America/Sao_Paulo`
   também em Windows e instalações mínimas).
-- Node.js para a ponte WhatsApp e os testes `.mjs`.
+- Node.js 20+ para a ponte WhatsApp e os testes `.mjs`.
+- Instale o pacote e o `pytest`: `python -m pip install -e . pytest`.
 
 A ponte Node é testada por `node --test`; instale as dependências dela antes,
 sem executar scripts de instalação:

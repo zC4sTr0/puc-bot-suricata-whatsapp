@@ -46,6 +46,9 @@ def _parse_args(argv: Sequence[str]) -> tuple[str | None, str | None]:
 
 def main(argv: Sequence[str] | None = None) -> int:
     argumentos = list(sys.argv[1:] if argv is None else argv)
+    # Windows com saída redirecionada (Git Bash, pipes) cai em cp1252 e quebra no emoji.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     if {"--help", "-h"} & set(argumentos):
         print(_AJUDA)
         return 0
