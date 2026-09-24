@@ -6,7 +6,7 @@ estado persistido inválido nunca autoriza envio antecipado.
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from .horario import BRASILIA
@@ -57,6 +57,27 @@ def autorizados_persistidos(fila: Any, atividades: list[Atividade], agora: datet
     atuais = {a.chave: a for a in atividades}
     autorizados: set[str] = set()
     for registro in fila.outbox.pendentes():
+        recuperacao = registro.get("recuperacao_07h")
+        if isinstance(recuperacao, dict):
+            event_id = registro.get("event_id")
+            data = recuperacao.get("data")
+            expira_em = recuperacao.get("expira_em")
+            local = agora.astimezone(BRASILIA)
+            alvo = local.date().isoformat()
+            if (registro.get("tipo") == "vespera"
+                    and event_id == f"grupo:vespera:{data}"
+                    and isinstance(data, str)
+                    and isinstance(expira_em, str)
+                    and registro.get("expira_em") == expira_em
+                    and (janela_manha(agora) or corte_21h(agora))):
+                try:
+                    expira = datetime.fromisoformat(expira_em)
+                    data_valida = data == alvo if janela_manha(agora) else data == (local.date() + timedelta(days=1)).isoformat()
+                    if data_valida and expira > agora:
+                        autorizados.add(event_id)
+                        continue
+                except (TypeError, ValueError):
+                    pass
         corte = registro.get("corte_21h")
         if not isinstance(corte, dict):
             continue

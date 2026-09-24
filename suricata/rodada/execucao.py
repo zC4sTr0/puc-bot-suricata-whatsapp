@@ -58,7 +58,7 @@ def _registrar_eventos(fila: OutboxSincronizado, outbox: Any, grupo_jid: str,
     for evento in eventos:
         existentes = {registro["event_id"] for registro in _todos(fila)}
         registro = {"event_id": evento.event_id, "message_id": message_id(grupo_jid, evento.event_id),
-                    "texto": evento.texto}
+                    "texto": evento.texto, "tipo": evento.tipo}
         if evento.disponivel_em:
             registro["disponivel_em"] = evento.disponivel_em
         autorizacao = _autorizacao_corte(evento, momento)
@@ -66,6 +66,16 @@ def _registrar_eventos(fila: OutboxSincronizado, outbox: Any, grupo_jid: str,
             registro["corte_21h"] = autorizacao
         if evento.expira_em:
             registro["expira_em"] = evento.expira_em
+            if evento.tipo == "vespera":
+                # A exceção matinal abre às 07:00 e expira às 07:01; o
+                # minuto extra permite reivindicação no instante de abertura.
+                expira = datetime.fromisoformat(evento.expira_em) + timedelta(minutes=1)
+                registro["expira_em"] = expira.isoformat()
+                registro["recuperacao_07h"] = {
+                    "tipo": "vespera",
+                    "data": expira.astimezone(BRASILIA).date().isoformat(),
+                    "expira_em": expira.isoformat(),
+                }
         try:
             outbox.adicionar(registro, agora=momento)
         except OutboxError:

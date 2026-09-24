@@ -34,7 +34,7 @@ class WhatsAppBridge:
     ) -> None:
         self.storage = storage
         self.node = node
-        self.script = Path(script) if script else Path(__file__).with_name("whatsapp") / "enviar.mjs"
+        self.script = Path(script) if script else Path(__file__).resolve().parent.parent / "whatsapp" / "enviar.mjs"
         self.timeout = timeout
         self._run = run
 
@@ -135,14 +135,19 @@ class WhatsAppBridge:
     @staticmethod
     def _diagnostico(motivo: str, completed: Any, resultado: dict[str, Any] | None = None) -> str:
         """Motivo + código + detalhe do Node + fim do stderr, sem telefone, JID longo nem URL."""
-        partes = [motivo, f"exit={completed.returncode}"]
+        stdout = completed.stdout or b""
+        stderr = completed.stderr or b""
+        linhas_stdout = [linha for linha in stdout.decode("utf-8", errors="replace").splitlines() if linha.strip()]
+        partes = [motivo, f"exit={completed.returncode}",
+                  f"stdout_bytes={len(stdout)}", f"stdout_linhas={len(linhas_stdout)}",
+                  f"stderr_bytes={len(stderr)}"]
         if resultado:
             itens = resultado.get("resultados") or []
             partes.append("detalhe=" + str(resultado.get("detalhe") or resultado.get("erro") or ""))
             if itens:
                 partes.append("acks=" + ",".join(f"{i.get('ack')}/{i.get('status')}/{i.get('timeout')}/{i.get('erro')}"
                                                  for i in itens if isinstance(i, dict)))
-        cauda = (completed.stderr or b"").decode("utf-8", errors="replace").strip().splitlines()[-2:]
+        cauda = stderr.decode("utf-8", errors="replace").strip().splitlines()[-2:]
         if cauda:
             # stderr é texto livre: valores após "=" ou ":" com cara de credencial ficam de fora.
             linhas = [re.sub(r"(?i)(token|key|secret|cookie|auth|senha)\S*", "<omitido>", re.sub(r"=\S+", "=<omitido>", linha))

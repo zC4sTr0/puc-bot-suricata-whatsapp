@@ -19,6 +19,10 @@ class BridgeTests(unittest.TestCase):
     def completed(payload, returncode=0):
         return Mock(stdout=json.dumps(payload).encode(), stderr=b"secret=must-not-leak", returncode=returncode)
 
+    def test_script_padrao_existe(self):
+        # Os demais testes injetam script=; este protege o caminho real usado em produção.
+        self.assertTrue(WhatsAppBridge(self.storage).script.is_file())
+
     def test_sessao_ausente_nao_inicia_subprocesso(self):
         self.storage.read_auth.return_value = AuthSnapshot(None, None)
         run = Mock()
@@ -32,6 +36,13 @@ class BridgeTests(unittest.TestCase):
             WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote("1-2@g.us", [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}])
         self.assertEqual(str(raised.exception), "falha ou timeout no processo WhatsApp")
         self.assertNotIn("secret", str(raised.exception))
+
+    def test_resposta_invalida_registra_tamanho_e_linhas_do_stdout(self):
+        run = Mock(return_value=Mock(stdout=b"", stderr=b"node warning", returncode=1))
+        with self.assertRaisesRegex(BridgeError, r"stdout_bytes=0 \| stdout_linhas=0"):
+            WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote(
+                "1-2@g.us", [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}]
+            )
 
     def test_ack_falso_em_sessao_ok_e_rejeitado_com_falha_sanitizada(self):
         run = Mock(return_value=self.completed({"sessao": "ok", "resultados": [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "ack": False, "timeout": True, "erro": None}]}))
