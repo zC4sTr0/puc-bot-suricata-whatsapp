@@ -8,6 +8,8 @@ from unittest.mock import Mock, patch
 from suricata.integracao.bridge import BridgeError, WhatsAppBridge
 from suricata.storage.cas import AuthSnapshot
 
+JID_FAKE = "1-2@g.us"  # destino fake de teste
+
 
 class BridgeTests(unittest.TestCase):
     def setUp(self):
@@ -26,21 +28,21 @@ class BridgeTests(unittest.TestCase):
     def test_sessao_ausente_nao_inicia_subprocesso(self):
         self.storage.read_auth.return_value = AuthSnapshot(None, None)
         run = Mock()
-        resultado = WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote("1-2@g.us", [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}])
+        resultado = WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote(JID_FAKE, [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}])
         self.assertEqual(resultado, {"sessao": "ausente", "resultados": []})
         run.assert_not_called()
 
     def test_timeout_nao_vaza_stderr(self):
         run = Mock(side_effect=subprocess.TimeoutExpired(["node", "enviar.mjs"], 1))
         with self.assertRaises(BridgeError) as raised:
-            WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote("1-2@g.us", [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}])
+            WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote(JID_FAKE, [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}])
         self.assertEqual(str(raised.exception), "falha ou timeout no processo WhatsApp")
         self.assertNotIn("secret", str(raised.exception))
 
     def test_timeout_e_classificado_com_fase(self):
         run = Mock(side_effect=subprocess.TimeoutExpired(["node", "enviar.mjs"], 1))
         with self.assertRaises(BridgeError) as raised:
-            WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote("1-2@g.us", [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}])
+            WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote(JID_FAKE, [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}])
         self.assertEqual(raised.exception.failure_code, "TIMEOUT")
         self.assertEqual(raised.exception.phase, "subprocess")
 
@@ -48,13 +50,13 @@ class BridgeTests(unittest.TestCase):
         run = Mock(return_value=Mock(stdout=b"", stderr=b"node warning", returncode=1))
         with self.assertRaisesRegex(BridgeError, r"stdout_bytes=0 \\| stdout_linhas=0"):
             WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote(
-                "1-2@g.us", [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}]
+                JID_FAKE, [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}]
             )
 
     def test_stdout_vazio_e_classificado_sem_vazar_stderr(self):
-        run = Mock(return_value=Mock(stdout=b"", stderr=b"token=super-secreto", returncode=1))
+        run = Mock(return_value=Mock(stdout=b"", stderr=b"token=fake-super-secreto", returncode=1))
         with self.assertRaises(BridgeError) as raised:
-            WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote("1-2@g.us", [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}])
+            WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote(JID_FAKE, [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}])
         self.assertEqual(raised.exception.failure_code, "EMPTY_STDOUT")
         self.assertEqual(raised.exception.phase, "parse_response")
         self.assertNotIn("super-secreto", str(raised.exception))
@@ -62,21 +64,21 @@ class BridgeTests(unittest.TestCase):
     def test_saida_por_sinal_e_classificada(self):
         run = Mock(return_value=Mock(stdout=b"", stderr=b"", returncode=-9))
         with self.assertRaises(BridgeError) as raised:
-            WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote("1-2@g.us", [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}])
+            WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote(JID_FAKE, [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}])
         self.assertEqual(raised.exception.failure_code, "SIGNAL_EXIT")
         self.assertEqual(raised.exception.metadata["signal"], 9)
 
     def test_ack_falso_em_sessao_ok_e_rejeitado_com_falha_sanitizada(self):
         run = Mock(return_value=self.completed({"sessao": "ok", "resultados": [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "ack": False, "timeout": True, "erro": None}]}))
         with self.assertRaisesRegex(BridgeError, "resposta de sucesso inconsistente"):
-            WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote("1-2@g.us", [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}])
+            WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote(JID_FAKE, [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}])
         self.storage.write_auth.assert_not_called()
 
     def test_resposta_ok_vazia_e_rejeitada_com_falha_sanitizada(self):
         run = Mock(return_value=self.completed({"sessao": "ok", "resultados": []}))
         with self.assertRaisesRegex(BridgeError, "resposta de sucesso inconsistente"):
             WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote(
-                "1-2@g.us", [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}]
+                JID_FAKE, [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}]
             )
 
     def test_resposta_ok_estrangeira_e_rejeitada_com_falha_sanitizada(self):
@@ -86,7 +88,7 @@ class BridgeTests(unittest.TestCase):
         }))
         with self.assertRaisesRegex(BridgeError, "resposta de sucesso inconsistente"):
             WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote(
-                "1-2@g.us", [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}]
+                JID_FAKE, [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}]
             )
 
     def test_resposta_ok_com_status_invalido_e_rejeitada_com_falha_sanitizada(self):
@@ -96,7 +98,7 @@ class BridgeTests(unittest.TestCase):
         }))
         with self.assertRaisesRegex(BridgeError, "resposta de sucesso inconsistente"):
             WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote(
-                "1-2@g.us", [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}]
+                JID_FAKE, [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}]
             )
 
     def test_resposta_ok_com_message_id_divergente_e_rejeitada(self):
@@ -106,7 +108,7 @@ class BridgeTests(unittest.TestCase):
         }))
         with self.assertRaisesRegex(BridgeError, "resposta de sucesso inconsistente"):
             WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote(
-                "1-2@g.us", [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}]
+                JID_FAKE, [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}]
             )
 
     def test_resposta_ok_persiste_somente_se_sessao_mudou(self):
@@ -115,7 +117,7 @@ class BridgeTests(unittest.TestCase):
             (auth_dir / "creds.json").write_text('{"updated":true}', encoding="utf-8")
             return self.completed({"sessao": "ok", "resultados": [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "ack": True, "status": 2, "timeout": False, "erro": None}]})
 
-        resultado = WhatsAppBridge(self.storage, script=self.script, run=fake_run).enviar_lote("1-2@g.us", [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}])
+        resultado = WhatsAppBridge(self.storage, script=self.script, run=fake_run).enviar_lote(JID_FAKE, [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}])
         self.assertEqual(resultado["sessao"], "ok")
         self.storage.write_auth.assert_called_once_with({"creds.json": '{"updated":true}'}, expected_generation="7")
 
@@ -135,7 +137,7 @@ class BridgeTests(unittest.TestCase):
 
         with patch.dict(os.environ, segredos, clear=False):
             WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote(
-                "1-2@g.us",
+                JID_FAKE,
                 [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}],
             )
 
@@ -148,7 +150,7 @@ class BridgeTests(unittest.TestCase):
         run = Mock()
         with self.assertRaisesRegex(BridgeError, "eventos inválidos"):
             WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote(
-                "1-2@g.us", ["evento inválido"]
+                JID_FAKE, ["evento inválido"]
             )
         run.assert_not_called()
 
@@ -156,7 +158,7 @@ class BridgeTests(unittest.TestCase):
         run = Mock()
         with self.assertRaisesRegex(BridgeError, "eventos inválidos"):
             WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote(
-                "1-2@g.us", [{"event_id": "e", "texto": "x"}]
+                JID_FAKE, [{"event_id": "e", "texto": "x"}]
             )
         run.assert_not_called()
 
@@ -164,7 +166,7 @@ class BridgeTests(unittest.TestCase):
         run = Mock()
         with self.assertRaisesRegex(BridgeError, "eventos inválidos"):
             WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote(
-                "1-2@g.us",
+                JID_FAKE,
                 [{"event_id": "e", "message_id": "não-determinístico", "texto": "x"}],
             )
         run.assert_not_called()

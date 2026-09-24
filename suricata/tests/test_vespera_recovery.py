@@ -12,7 +12,7 @@ from suricata.dominio.planejamento import Evento
 from suricata.rodada.execucao import _registrar_eventos
 from suricata.storage.outbox import Outbox
 
-JID = "120363000000000000-1700000000@g.us"
+JID = "120363000000000000-1700000000@g.us"  # JID fake de teste
 
 
 class TestVesperaRecovery(unittest.TestCase):
