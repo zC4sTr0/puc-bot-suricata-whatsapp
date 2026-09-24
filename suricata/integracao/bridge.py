@@ -6,6 +6,7 @@ import os
 import re
 import subprocess
 import tempfile
+import time
 from collections import Counter
 from collections.abc import Callable, Mapping
 from pathlib import Path
@@ -17,6 +18,13 @@ from ..storage.cas import StorageError, SuricataSessionStorage
 
 class BridgeError(RuntimeError):
     """Falha sanitizada na ponte, sem stdout/stderr externo."""
+
+    def __init__(self, message: str, *, failure_code: str = "BRIDGE_INTERNAL_ERROR",
+                 phase: str = "unknown", metadata: dict[str, Any] | None = None) -> None:
+        super().__init__(message)
+        self.failure_code = failure_code
+        self.phase = phase
+        self.metadata = dict(metadata or {})
 
 
 Runner = Callable[..., subprocess.CompletedProcess[bytes]]
@@ -99,6 +107,7 @@ class WhatsAppBridge:
                 and not any(ord(char) < 32 and char not in permitidos for char in value))
 
     def _executar(self, payload: dict[str, Any]) -> dict[str, Any]:
+        inicio = time.monotonic()
         try:
             # O contrato de enviar.mjs lê SURICATA_WA_AUTH_DIR, mas a ponte
             # fornece auth_dir pelo stdin; nenhum SURICATA_* é necessário no
@@ -113,43 +122,78 @@ class WhatsAppBridge:
                 env=environment,
             )
         except subprocess.TimeoutExpired as exc:
-            raise BridgeError("falha ou timeout no processo WhatsApp") from exc
+            raise BridgeError("falha ou timeout no processo WhatsApp", failure_code="TIMEOUT",
+                              phase="subprocess", metadata={"duration_ms": round((time.monotonic() - inicio) * 1000)}) from exc
         except OSError as exc:
-            raise BridgeError("falha ao iniciar o processo WhatsApp") from exc
-        linhas = [linha for linha in completed.stdout.decode("utf-8", errors="replace").splitlines() if linha.strip()]
+            raise BridgeError("falha ao iniciar o processo WhatsApp", failure_code="SPAWN_ERROR",
+                              phase="spawn", metadata={"duration_ms": round((time.monotonic() - inicio) * 1000)}) from exc
+        stdout = completed.stdout or b""
+        stderr = completed.stderr or b""
+        stdout_text = stdout.decode("utf-8", errors="replace") if isinstance(stdout, bytes) else str(stdout)
+        linhas = [linha for linha in stdout_text.splitlines() if linha.strip()]
+        metricas = {
+            "duration_ms": round((time.monotonic() - inicio) * 1000),
+            "returncode": completed.returncode,
+            "stdout_bytes": len(stdout),
+            "stdout_linhas": len(linhas),
+            "stderr_bytes": len(stderr),
+        }
+        if isinstance(completed.returncode, int) and completed.returncode < 0:
+            metricas["signal"] = -completed.returncode
+            raise BridgeError(self._diagnostico("processo WhatsApp terminou por sinal", completed),
+                              failure_code="SIGNAL_EXIT", phase="process", metadata=metricas)
+        if not linhas:
+            raise BridgeError(self._diagnostico("resposta inválida do processo WhatsApp", completed),
+                              failure_code="EMPTY_STDOUT", phase="parse_response", metadata=metricas)
         try:
             resultado = json.loads(linhas[-1])  # a última linha é o contrato; bibliotecas podem imprimir antes
         except (IndexError, json.JSONDecodeError) as exc:
-            raise BridgeError(self._diagnostico("resposta inválida do processo WhatsApp", completed)) from exc
+            raise BridgeError(self._diagnostico("resposta inválida do processo WhatsApp", completed),
+                              failure_code="INVALID_JSON", phase="parse_response", metadata=metricas) from exc
         if not isinstance(resultado, dict) or resultado.get("sessao") not in {"ok", "logged_out", "timeout", "erro"}:
-            raise BridgeError(self._diagnostico("resposta sem estado de sessão válido", completed))
+            raise BridgeError(self._diagnostico("resposta sem estado de sessão válido", completed),
+                              failure_code="INVALID_SESSION_SCHEMA", phase="validate_response", metadata=metricas)
         entregue = resultado.get("sessao") == "ok" and self._sucesso_valido(payload, resultado)
         # ACK do servidor é a prova de entrega: um crash do Node DEPOIS dele (medido no Cloud Run)
         # não pode transformar envio confirmado em reenvio, nem impedir a gravação das credenciais.
         if completed.returncode != 0 and resultado.get("sessao") not in {"logged_out", "timeout"} and not entregue:
-            raise BridgeError(self._diagnostico("processo WhatsApp falhou", completed, resultado))
+            raise BridgeError(self._diagnostico("processo WhatsApp falhou", completed, resultado),
+                              failure_code="NODE_TRANSPORT_ERROR", phase="transport", metadata=metricas)
         if resultado.get("sessao") == "ok" and not self._sucesso_valido(payload, resultado):
-            raise BridgeError(self._diagnostico("resposta de sucesso inconsistente", completed, resultado))
+            raise BridgeError(self._diagnostico("resposta de sucesso inconsistente", completed, resultado),
+                              failure_code="ACK_INCONSISTENT", phase="validate_ack", metadata=metricas)
+        if resultado.get("sessao") == "erro":
+            resultado = {**resultado, "failure_code": "NODE_TRANSPORT_ERROR", "phase": "transport"}
         return resultado
 
     @staticmethod
     def _diagnostico(motivo: str, completed: Any, resultado: dict[str, Any] | None = None) -> str:
         """Motivo + código + detalhe do Node + fim do stderr, sem telefone, JID longo nem URL."""
-        partes = [motivo, f"exit={completed.returncode}"]
+        stdout = completed.stdout or b""
+        stderr = completed.stderr or b""
+        linhas_stdout = [linha for linha in stdout.decode("utf-8", errors="replace").splitlines() if linha.strip()]
+        partes = [motivo, f"exit={completed.returncode}",
+                  f"stdout_bytes={len(stdout)}", f"stdout_linhas={len(linhas_stdout)}",
+                  f"stderr_bytes={len(stderr)}"]
         if resultado:
             itens = resultado.get("resultados") or []
             partes.append("detalhe=" + str(resultado.get("detalhe") or resultado.get("erro") or ""))
             if itens:
                 partes.append("acks=" + ",".join(f"{i.get('ack')}/{i.get('status')}/{i.get('timeout')}/{i.get('erro')}"
                                                  for i in itens if isinstance(i, dict)))
-        cauda = (completed.stderr or b"").decode("utf-8", errors="replace").strip().splitlines()[-2:]
+        cauda = stderr.decode("utf-8", errors="replace").strip().splitlines()[-2:]
         if cauda:
             # stderr é texto livre: valores após "=" ou ":" com cara de credencial ficam de fora.
             linhas = [re.sub(r"(?i)(token|key|secret|cookie|auth|senha)\S*", "<omitido>", re.sub(r"=\S+", "=<omitido>", linha))
                       for linha in cauda]
             partes.append("stderr=" + " / ".join(linha[:150] for linha in linhas))
         texto = " | ".join(partes)
+        texto = re.sub(r"(?i)\b\d+(?:-\d+)?@(?:g\.us|s\.whatsapp\.net|c\.us)\b", "<jid>", texto)
         texto = re.sub(r"https?://\S+", "<url>", texto)
+        texto = re.sub(
+            r"(?i)\b(token|senha|secret|key|password|passwd|access_token|authorization|cookie|bearer)"
+            r"(?:\s*[:=]\s*|\s+)\S+", r"\1=<omitido>", texto
+        )
         texto = re.sub(r"\d{6,}", "#", texto)
         return texto[:400]
 

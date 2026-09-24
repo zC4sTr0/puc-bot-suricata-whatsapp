@@ -41,6 +41,20 @@ class FalhasPurasTests(unittest.TestCase):
         self.assertEqual(set(linhas[0]), {"momento", "event_id", "etapa", "erro_curto"})
         self.assertEqual(linhas[0]["erro_curto"], "sessao=timeout")
 
+    def test_registra_classificacao_e_metricas_sanitizadas(self):
+        ok = registrar_falhas(self.objetos, [{
+            "etapa": "entrega", "event_id": "e", "erro": "falha",
+            "failure_code": "EMPTY_STDOUT", "phase": "parse_response",
+            "stdout_bytes": 0, "stderr_bytes": 683, "duration_ms": 42,
+        }], AGORA)
+        self.assertTrue(ok)
+        linha = self._linhas()[0]
+        self.assertEqual(linha["failure_code"], "EMPTY_STDOUT")
+        self.assertEqual(linha["phase"], "parse_response")
+        self.assertEqual(linha["stdout_bytes"], 0)
+        self.assertEqual(linha["stderr_bytes"], 683)
+        self.assertEqual(linha["duration_ms"], 42)
+
     def test_sanitizacao_remove_jid_token_e_url(self):
         erro = "falha no envio p/ 120363000000000000-1700000000@g.us token=abc123 https://wa.me/x"
         limpo = sanitizar_erro(erro)
@@ -128,6 +142,20 @@ class FalhasNaRodadaTests(unittest.TestCase):
         self.assertNotIn("@g.us", bruto)
         self.assertNotIn("segredo9", bruto)
         self.assertNotIn("Quiz relâmpago", bruto)  # sem texto de mensagem
+
+    def test_falha_de_ponte_preserva_codigo_e_fase_no_relatorio(self):
+        from suricata.integracao.bridge import BridgeError
+
+        class PonteClassificada:
+            def enviar_lote(self, grupo_jid, eventos):
+                raise BridgeError("resposta inválida", failure_code="EMPTY_STDOUT",
+                                  phase="parse_response", metadata={"stdout_bytes": 0})
+
+        codigo, relatorio = self._rodada(PonteClassificada())
+        self.assertEqual(codigo, 6)
+        self.assertEqual(relatorio["entrega"]["failure_code"], "EMPTY_STDOUT")
+        self.assertEqual(relatorio["entrega"]["phase"], "parse_response")
+        self.assertEqual(relatorio["entrega"]["stdout_bytes"], 0)
 
     def test_sucesso_nao_escreve_nada(self):
         from suricata.tests._fakes import PonteFalsa

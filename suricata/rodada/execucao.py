@@ -58,7 +58,7 @@ def _registrar_eventos(fila: OutboxSincronizado, outbox: Any, grupo_jid: str,
     for evento in eventos:
         existentes = {registro["event_id"] for registro in _todos(fila)}
         registro = {"event_id": evento.event_id, "message_id": message_id(grupo_jid, evento.event_id),
-                    "texto": evento.texto}
+                    "texto": evento.texto, "tipo": evento.tipo}
         if evento.disponivel_em:
             registro["disponivel_em"] = evento.disponivel_em
         autorizacao = _autorizacao_corte(evento, momento)
@@ -66,6 +66,16 @@ def _registrar_eventos(fila: OutboxSincronizado, outbox: Any, grupo_jid: str,
             registro["corte_21h"] = autorizacao
         if evento.expira_em:
             registro["expira_em"] = evento.expira_em
+            if evento.tipo == "vespera":
+                # A exceção matinal abre na ABERTURA (07:30) e expira um minuto
+                # depois, para a rodada do minuto de abertura ainda reivindicar.
+                expira = datetime.fromisoformat(evento.expira_em) + timedelta(minutes=1)
+                registro["expira_em"] = expira.isoformat()
+                registro["recuperacao_manha"] = {
+                    "tipo": "vespera",
+                    "data": expira.astimezone(BRASILIA).date().isoformat(),
+                    "expira_em": expira.isoformat(),
+                }
         try:
             outbox.adicionar(registro, agora=momento)
         except OutboxError:
@@ -94,6 +104,11 @@ def _reconciliar_ack(outbox: Any, envios: list[dict[str, Any]],
     resumo["sessao"] = resposta.get("sessao") if isinstance(resposta, dict) else "erro"
     if isinstance(resposta, dict) and (resposta.get("erro") or resposta.get("detalhe")):
         resumo["erro"] = str(resposta.get("detalhe") or resposta.get("erro"))[:400]
+    if isinstance(resposta, dict):
+        for campo in ("failure_code", "phase", "duration_ms", "returncode", "signal",
+                      "stdout_bytes", "stdout_linhas", "stderr_bytes"):
+            if campo in resposta:
+                resumo[campo] = resposta[campo]
     itens = {r.get("event_id"): r for r in (resposta.get("resultados") or [])} if isinstance(resposta, dict) else {}
     sem_ack: list[str] = []
     for envio in envios:
@@ -182,12 +197,25 @@ def entregar(fila: OutboxSincronizado, ponte: Any, grupo_jid: str, eventos: list
                                                  for e in envios])
     except Exception as exc:  # noqa: BLE001 - nada vira sent sem ACK
         resposta = {"sessao": "erro", "resultados": [], "erro": f"{type(exc).__name__}: {exc}"[:400]}
+        for campo, atributo in (("failure_code", "failure_code"), ("phase", "phase")):
+            valor = getattr(exc, atributo, None)
+            if valor:
+                resposta[campo] = valor
+        metadados = getattr(exc, "metadata", {})
+        if isinstance(metadados, dict):
+            resposta.update({campo: metadados[campo] for campo in (
+                "duration_ms", "returncode", "signal", "stdout_bytes", "stdout_linhas", "stderr_bytes"
+            ) if campo in metadados})
     sem_ack_ids = _reconciliar_ack(outbox, envios, resposta, resumo)
     if sem_ack_ids:
         # Rastro durável da falha (dead-letter): nunca derruba a rodada.
         registrar_falhas(getattr(fila, "objetos", None),
                          [{"etapa": "entrega", "event_id": event_id,
-                           "erro": resumo.get("erro") or f"sessao={resumo.get('sessao')}"}
+                           "erro": resumo.get("erro") or f"sessao={resumo.get('sessao')}",
+                           **{campo: resumo[campo] for campo in (
+                               "failure_code", "phase", "duration_ms", "returncode", "signal",
+                               "stdout_bytes", "stdout_linhas", "stderr_bytes"
+                           ) if campo in resumo}}
                           for event_id in sem_ack_ids], momento)
     fila.publicar()
     return resumo
