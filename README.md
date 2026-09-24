@@ -9,7 +9,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)](pyproject.toml)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-261230?logo=ruff&logoColor=white)](ruff.toml)
 [![Dependencies: 0](https://img.shields.io/badge/dependencies-0-brightgreen?logo=python&logoColor=white)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/tests-285%20passing-brightgreen)](suricata/tests)
+[![Testes](https://github.com/zC4sTr0/puc-bot-suricata-whatsapp/actions/workflows/suricata.yml/badge.svg)](https://github.com/zC4sTr0/puc-bot-suricata-whatsapp/actions/workflows/suricata.yml)
 
 [Começar](#-quickstart) · [Como funciona](#-como-funciona) · [WhatsApp](#-sincronizando-com-o-whatsapp) · [Configuração](#%EF%B8%8F-configuração) · [Deploy](#-deploy-no-google-cloud) · [Trilha do estudante](#-trilha-do-estudante)
 
@@ -23,11 +23,17 @@ A Suricata consulta **atividades públicas** do Canvas (provas, listas, quizzes)
 
 ## 🚀 Quickstart
 
+**Você precisa de:** [Git](https://git-scm.com/downloads), [Python 3.11+](https://www.python.org/downloads/) e, só para os testes da ponte WhatsApp, [Node.js 20+](https://nodejs.org/). Não precisa de conta Google Cloud, token do Canvas nem WhatsApp para rodar nada desta seção.
+
+> No Windows, se `python` não for reconhecido, use `py` no lugar.
+
 ```bash
-git clone https://github.com/zC4sTr0/puc-bot-suricata-whatsapp && cd puc-bot-suricata-whatsapp
+git clone https://github.com/zC4sTr0/puc-bot-suricata-whatsapp
+cd puc-bot-suricata-whatsapp
+python -m pip install -e . pytest   # instala o pacote (+ fuso horário no Windows) e o pytest
 ```
 
-**1. Sem instalar nada** (Python 3.11+ puro, zero `pip install`):
+**1. Veja o bot funcionando** (offline, nada é enviado):
 
 ```bash
 python -m suricata --mode demo
@@ -35,7 +41,7 @@ python -m suricata --mode demo
 
 Saída: as mensagens que *seriam* enviadas, com relatório completo — tudo offline, relógio congelado, entrega desligada. É o bot inteiro funcionando na sua máquina em segundos.
 
-**2. Suíte completa** (o outro comando é só a ponte Node):
+**2. Rode os testes** (o `npm` instala só a ponte Node, sem executar scripts):
 
 ```bash
 npm ci --prefix suricata/whatsapp --ignore-scripts
@@ -103,6 +109,9 @@ Tudo por variáveis de ambiente — veja [`.env.example`](.env.example) comentad
 | `SURICATA_ENTREGA` | — | `ligada` habilita envio; **default: desligada** |
 | `SURICATA_GRUPO_JID` | — | JID do grupo destino (`…@g.us`) |
 | `SURICATA_DESTINOS_JSON` | — | múltiplos destinos com janela própria |
+| `SURICATA_REPO_URL` | — | link `https://` deste repositório para o rodapé discreto (veja abaixo) |
+
+**Rodapé com o link do repo.** Com `SURICATA_REPO_URL` definida, a Suricata acrescenta uma linha discreta — *"A Suricata é código aberto: \<link\>"* — ao fim de um aviso que já ia sair (nunca uma mensagem só para isso). Acontece 7, 21 e 49 dias depois do primeiro envio em cada grupo e depois **para de vez**. Sem a variável, nada muda.
 
 <details>
 <summary><b>Todas as variáveis</b> (lease, auth, destinos)</summary>
@@ -128,7 +137,7 @@ O passo a passo completo (build, canário sem entrega, corte controlado, rollbac
 
 **Pré-requisitos para mexer no deploy:** só o **`gcloud` CLI** (Google Cloud SDK) — o build da imagem acontece remotamente no Cloud Build, então **Docker local é opcional**. Instalação e configuração: [`docs/deploy-gcp.md`](docs/deploy-gcp.md) §Pré-requisitos.
 
-> **Nota:** os últimos commits desta `main` (modernização + padronização) ainda **não foram deployados** — a imagem de produção é de um snapshot anterior. Deploy é um passo que custa (Cloud Build) e exige autorização expressa; o procedimento está documentado e testado.
+> Deploy custa (Cloud Build) e exige autorização expressa do titular; um merge na `main` **não** publica nada sozinho.
 
 ## 📣 Quero avisar algo que não está no Canvas
 
@@ -153,9 +162,22 @@ Progressiva, do zero ao domínio — cada nível diz o que você vê, o que isso
 | 1 · testes verdes | `python -m pytest -q` | contratos congelados |
 | 2 · probe | `python -m suricata --mode shadow` | pacote e entrypoint íntegros |
 | 3 · rodada offline | `python -m suricata --mode demo` | o pipeline inteiro, sem efeitos |
-| 4 · produção local | `SURICATA_ESTADO_URI=./tmp … --mode rodada` | estado real, entrega desligada |
+| 4 · produção local | `SURICATA_ESTADO_URI=./tmp-estado SURICATA_CANVAS_TOKEN=falso python -m suricata --mode rodada` (Git Bash/Linux/macOS) | estado real, entrega desligada |
 
 Guia completo em [`docs/guia.md`](docs/guia.md).
+
+### 📖 Glossário rápido
+
+| Termo | Significa |
+|---|---|
+| **Canvas** | o sistema de disciplinas da faculdade (onde ficam provas, listas e quizzes) |
+| **rodada** | uma execução completa do bot: olha o Canvas, decide, envia |
+| **JID** | o "endereço" de um grupo no WhatsApp, algo como `123…@g.us` |
+| **outbox** | a fila de avisos esperando envio; guardada antes de enviar |
+| **ACK** | a confirmação do WhatsApp de que a mensagem chegou |
+| **ponte** | o pequeno programa em Node.js que conversa com o WhatsApp (biblioteca Baileys) |
+| **lease / CAS** | travas que impedem duas rodadas de mexer no mesmo estado ao mesmo tempo |
+| **shadow / demo** | modos de teste: não tocam Canvas real nem enviam nada |
 
 ## 🧰 Desenvolvimento
 

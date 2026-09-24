@@ -23,7 +23,7 @@ classifiers = [
 ]
 
 [project.urls]
-Repository = "https://github.com/zC4sTr0/suricata-whatsapp"
+Repository = "https://github.com/zC4sTr0/puc-bot-suricata-whatsapp"
 
 [tool.setuptools.packages.find]
 include = ["suricata", "suricata.*"]

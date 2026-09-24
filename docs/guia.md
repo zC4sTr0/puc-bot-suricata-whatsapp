@@ -10,8 +10,8 @@ Se algo falhar, provavelmente não é você: veja
 
 ## Antes de começar
 
-- **Python 3.11 ou superior** — o projeto usa só a biblioteca padrão. Não há
-  `pip install` nenhum para rodar; o `pytest` entra apenas para os testes.
+- **Git** e **Python 3.11 ou superior** — o código usa só a biblioteca padrão.
+  No Windows, se `python` não for reconhecido, use `py`.
 - **Node 20 ou superior (opcional)** — só se você quiser rodar os testes da
   ponte WhatsApp.
 
@@ -20,7 +20,13 @@ Clone e entre na pasta:
 ```bash
 git clone https://github.com/zC4sTr0/puc-bot-suricata-whatsapp
 cd puc-bot-suricata-whatsapp
+python -m pip install -e . pytest
 ```
+
+O `pip` instala o `pytest` (para os testes) e o `tzdata` — o banco de fusos
+horários que o Windows não traz e sem o qual `America/Sao_Paulo` não existe.
+Os exemplos com `VAR=valor comando` funcionam em Git Bash, Linux e macOS; no
+PowerShell, defina antes com `$env:VAR = "valor"`.
 
 ## Nível 1 — A suíte de testes
 
