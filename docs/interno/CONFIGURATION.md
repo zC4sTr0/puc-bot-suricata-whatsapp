@@ -6,6 +6,7 @@
 - `SURICATA_ESTADO_URI`: bucket/prefixo Suricata ou diretório temporário de teste.
 - `SURICATA_ENTREGA`: use `desligada` em testes/canário; `ligada` somente no corte autorizado.
 - `SURICATA_GRUPO_JID` e `SURICATA_DESTINOS_JSON`: ambiente autorizado; nunca versionar valores reais.
+- `SURICATA_REPO_URL` (opcional, `https://`): rodapé discreto com o link do repositório no fim de um aviso normal, 7, 21 e 49 dias após o primeiro envio de cada destino; depois para. Estado em `<destino>/rodape.json`, avança só com ACK; qualquer falha omite o rodapé.
 - `SURICATA_LEASE_MINUTOS`: lease da rodada, com validação fail-closed.
 - `SURICATA_WA_AUTH_DIR`: diretório externo temporário da sessão; nunca dentro do clone.
 
