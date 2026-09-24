@@ -116,6 +116,21 @@ class Corte21hTests(unittest.TestCase):
         self.assertEqual(self.ponte.lotes, [])
         self.assertEqual(self.estados_outbox(), [])
 
+    def test_autorizacao_corte_sobrevive_a_rodada_seguinte_antes_da_meia_noite(self):
+        # Regressão 24/09: quiz descoberto às 23:40 expirava na rodada das 23:50.
+        self.rodar(self.brt(15, 20))
+        inicio, fim = self.brt(16, 10, 10), self.brt(16, 10, 25)
+        self.canvas.assignments["292184"] = [self.quiz(4, inicio, fim)]
+
+        for minuto in (40, 50):
+            self.rodar(self.brt(15, 23, minuto))
+            self.assertEqual([registro["estado"] for registro in self.estados_outbox()], ["pending"])
+        self.assertEqual(self.ponte.lotes, [])
+
+        self.rodar(self.brt(16, 7))
+        self.assertEqual(len(self.ponte.lotes), 1)
+        self.assertEqual(self.estados_outbox()[0]["estado"], "sent")
+
 
 if __name__ == "__main__":
     unittest.main()
