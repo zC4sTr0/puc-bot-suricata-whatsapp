@@ -9,7 +9,8 @@ dados pessoais ficam fora daqui.
 
 ## Pré-requisitos
 
-- Python 3.11+ (o projeto é stdlib puro, sem dependências).
+- Python 3.11+ (o pacote instala `tzdata` para garantir `America/Sao_Paulo`
+  também em Windows e instalações mínimas).
 - Node.js para a ponte WhatsApp e os testes `.mjs`.
 
 A ponte Node é testada por `node --test`; instale as dependências dela antes,

@@ -92,3 +92,14 @@ test('políticas de execução e erros não expõem dados externos', () => {
   assert.doesNotMatch(detalhe, /[@=\/]|\d{6,}/);
   assert.equal(imprimirErro(new Error('https://x.invalid/a?token=1')).detalhe, 'Error: <omitido>');
 });
+
+test('classifica falha segura da ponte com código e fase', () => {
+  const erro = Object.assign(new Error('tempo excedido no envio WhatsApp'), {
+    code: 'TIMEOUT',
+    phase: 'send_message',
+  });
+  const resultado = imprimirErro(erro);
+  assert.equal(resultado.failure_code, 'TIMEOUT');
+  assert.equal(resultado.phase, 'send_message');
+  assert.equal(resultado.sessao, 'timeout');
+});

@@ -4,7 +4,7 @@
 
 **Avisos acadêmicos coletivos no WhatsApp** — o bot que acompanha o Canvas da turma e avisa o grupo na hora certa, sem nunca expor nada pessoal.
 
-[![CI](https://github.com/zC4sTr0/suricata-whatsapp/actions/workflows/suricata.yml/badge.svg)](https://github.com/zC4sTr0/suricata-whatsapp/actions/workflows/suricata.yml)
+[![CI](https://github.com/zC4sTr0/puc-bot-suricata-whatsapp/actions/workflows/suricata.yml/badge.svg)](https://github.com/zC4sTr0/puc-bot-suricata-whatsapp/actions/workflows/suricata.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)](pyproject.toml)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-261230?logo=ruff&logoColor=white)](ruff.toml)
@@ -24,7 +24,7 @@ A Suricata consulta **atividades públicas** do Canvas (provas, listas, quizzes)
 ## 🚀 Quickstart
 
 ```bash
-git clone https://github.com/zC4sTr0/suricata-whatsapp && cd suricata-whatsapp
+git clone https://github.com/zC4sTr0/puc-bot-suricata-whatsapp && cd puc-bot-suricata-whatsapp
 ```
 
 **1. Sem instalar nada** (Python 3.11+ puro, zero `pip install`):

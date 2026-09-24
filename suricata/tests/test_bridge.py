@@ -37,6 +37,35 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(str(raised.exception), "falha ou timeout no processo WhatsApp")
         self.assertNotIn("secret", str(raised.exception))
 
+    def test_timeout_e_classificado_com_fase(self):
+        run = Mock(side_effect=subprocess.TimeoutExpired(["node", "enviar.mjs"], 1))
+        with self.assertRaises(BridgeError) as raised:
+            WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote("1-2@g.us", [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}])
+        self.assertEqual(raised.exception.failure_code, "TIMEOUT")
+        self.assertEqual(raised.exception.phase, "subprocess")
+
+    def test_resposta_invalida_registra_tamanho_e_linhas_do_stdout(self):
+        run = Mock(return_value=Mock(stdout=b"", stderr=b"node warning", returncode=1))
+        with self.assertRaisesRegex(BridgeError, r"stdout_bytes=0 \\| stdout_linhas=0"):
+            WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote(
+                "1-2@g.us", [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}]
+            )
+
+    def test_stdout_vazio_e_classificado_sem_vazar_stderr(self):
+        run = Mock(return_value=Mock(stdout=b"", stderr=b"token=super-secreto", returncode=1))
+        with self.assertRaises(BridgeError) as raised:
+            WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote("1-2@g.us", [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}])
+        self.assertEqual(raised.exception.failure_code, "EMPTY_STDOUT")
+        self.assertEqual(raised.exception.phase, "parse_response")
+        self.assertNotIn("super-secreto", str(raised.exception))
+
+    def test_saida_por_sinal_e_classificada(self):
+        run = Mock(return_value=Mock(stdout=b"", stderr=b"", returncode=-9))
+        with self.assertRaises(BridgeError) as raised:
+            WhatsAppBridge(self.storage, script=self.script, run=run).enviar_lote("1-2@g.us", [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "texto": "x"}])
+        self.assertEqual(raised.exception.failure_code, "SIGNAL_EXIT")
+        self.assertEqual(raised.exception.metadata["signal"], 9)
+
     def test_ack_falso_em_sessao_ok_e_rejeitado_com_falha_sanitizada(self):
         run = Mock(return_value=self.completed({"sessao": "ok", "resultados": [{"event_id": "e", "message_id": "3EB040666CAAA98A84571A", "ack": False, "timeout": True, "erro": None}]}))
         with self.assertRaisesRegex(BridgeError, "resposta de sucesso inconsistente"):

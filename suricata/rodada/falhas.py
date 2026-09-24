@@ -17,10 +17,18 @@ from typing import Any
 NOME_FALHAS = "falhas/falhas.jsonl"
 _LIMITE_ERRO = 200
 _ETAPAS = frozenset({"coleta", "entrega", "memoria", "outbox"})
+_FASES = frozenset({
+    "spawn", "subprocess", "process", "parse_response", "validate_response", "transport",
+    "validate_ack", "open_session", "send_message", "await_ack", "close_session", "runtime",
+})
+_CODIGO = re.compile(r"^[A-Z][A-Z0-9_]{1,40}$")
 
 # Padrões que não podem sobreviver em nenhuma linha: JIDs, segredos, URLs.
 _JID = re.compile(r"\b\d+(?:-\d+)?@(?:g\.us|s\.whatsapp\.net|c\.us)\b")
-_SEGREDO = re.compile(r"(?i)\b(token|senha|secret|key|authorization|cookie)[=:]\S*")
+_SEGREDO = re.compile(
+    r"(?i)\b(token|senha|secret|key|password|passwd|access_token|authorization|cookie|bearer)"
+    r"(?:\s*[:=]\s*|\s+)\S+"
+)
 _URL = re.compile(r"https?://\S+")
 _CONTROLE = re.compile(r"[\x00-\x1f\x7f]")
 
@@ -55,6 +63,16 @@ def registrar_falhas(objetos: Any, falhas: list[dict], agora: datetime) -> bool:
         if falha.get("event_id"):
             registro["event_id"] = sanitizar_erro(falha["event_id"])
         registro["erro_curto"] = sanitizar_erro(falha.get("erro") or falha.get("detalhe"))
+        codigo = falha.get("failure_code")
+        if isinstance(codigo, str) and _CODIGO.fullmatch(codigo):
+            registro["failure_code"] = codigo
+        fase = falha.get("phase")
+        if isinstance(fase, str) and fase in _FASES:
+            registro["phase"] = fase
+        for campo in ("duration_ms", "returncode", "signal", "stdout_bytes", "stdout_linhas", "stderr_bytes"):
+            valor = falha.get(campo)
+            if isinstance(valor, int) and not isinstance(valor, bool) and 0 <= valor <= 10_000_000:
+                registro[campo] = valor
         linhas.append(json.dumps(registro, ensure_ascii=False))
     if not linhas:
         return False

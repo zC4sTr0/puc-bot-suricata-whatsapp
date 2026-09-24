@@ -18,8 +18,8 @@ Se algo falhar, provavelmente não é você: veja
 Clone e entre na pasta:
 
 ```bash
-git clone https://github.com/zC4sTr0/suricata-whatsapp
-cd suricata-whatsapp
+git clone https://github.com/zC4sTr0/puc-bot-suricata-whatsapp
+cd puc-bot-suricata-whatsapp
 ```
 
 ## Nível 1 — A suíte de testes

@@ -8,8 +8,8 @@ import { validarAuthDir as validarAuthDirBase } from './auth-dir.mjs';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
-function erroSeguro(mensagem, code = 'INVALID_INPUT') {
-  return Object.assign(new Error(mensagem), { code, safeMessage: true });
+function erroSeguro(mensagem, code = 'INVALID_INPUT', phase = 'parse_input') {
+  return Object.assign(new Error(mensagem), { code, phase, safeMessage: true });
 }
 
 function validarAuthDir(authDir) {
@@ -118,31 +118,60 @@ function comTimeout(promise, timeoutMs) {
 async function enviarLote(batch, args, dependencies = {}) {
   const connect = dependencies.abrirSessao ?? abrirSessao;
   const close = dependencies.fecharSessao ?? fecharSessao;
-  const sock = await connect(batch.authDir, { timeoutMs: args.timeoutMs });
+  let sock;
+  try {
+    sock = await connect(batch.authDir, { timeoutMs: args.timeoutMs });
+  } catch (error) {
+    const classificado = error instanceof Error ? error : erroSeguro('falha ao abrir a sessão', 'NODE_TRANSPORT_ERROR', 'open_session');
+    if (!classificado.code) classificado.code = 'NODE_TRANSPORT_ERROR';
+    if (!classificado.phase) classificado.phase = 'open_session';
+    throw classificado;
+  }
   try {
     const resultados = [];
     for (const item of batch.mensagens) {
       // O listener vem antes do envio para capturar ACK síncrono.
       const ack = esperarAck(sock, item.messageId, args.timeoutMs);
-      await comTimeout(sock.sendMessage(batch.grupoJid, { text: item.texto }, { messageId: item.messageId }), args.timeoutMs);
+      try {
+        await comTimeout(sock.sendMessage(batch.grupoJid, { text: item.texto }, { messageId: item.messageId }), args.timeoutMs);
+      } catch (error) {
+        const classificado = error instanceof Error ? error : erroSeguro('falha ao enviar a mensagem', 'NODE_TRANSPORT_ERROR', 'send_message');
+        if (!classificado.code) classificado.code = 'NODE_TRANSPORT_ERROR';
+        if (!classificado.phase) classificado.phase = 'send_message';
+        throw classificado;
+      }
       resultados.push({ event_id: item.eventId, message_id: item.messageId, erro: null, ...await ack });
     }
     return { sessao: 'ok', resultados };
   } finally {
-    await close(sock);
+    try {
+      await close(sock);
+    } catch (error) {
+      const classificado = error instanceof Error ? error : erroSeguro('falha ao fechar a sessão', 'NODE_TRANSPORT_ERROR', 'close_session');
+      if (!classificado.code) classificado.code = 'NODE_TRANSPORT_ERROR';
+      if (!classificado.phase) classificado.phase = 'close_session';
+      throw classificado;
+    }
   }
 }
 
 function imprimirErro(error) {
   const mensagem = error?.safeMessage ? String(error.message).slice(0, 160) : 'falha no transporte WhatsApp';
-  const sessao = error?.motivo === 'logged_out' ? 'logged_out' : error?.motivo === 'timeout' ? 'timeout' : 'erro';
+  const sessao = error?.motivo === 'logged_out' ? 'logged_out'
+    : (error?.motivo === 'timeout' || error?.code === 'TIMEOUT') ? 'timeout' : 'erro';
   // Diagnóstico por lista branca: mensagens do Baileys como "Connection Closed" ou "Timed Out"
   // passam; qualquer coisa com '=', '@', '/', dígitos longos etc. vira <omitido>.
   const texto = String(error?.message ?? '');
   const simples = /^[A-Za-zÀ-ú][A-Za-zÀ-ú \-_.,:]{0,60}$/.test(texto) ? texto : '<omitido>';
   const codigo = Number.isInteger(error?.output?.statusCode) ? ` (${error.output.statusCode})` : '';
   const nome = /^[A-Za-z]{1,30}$/.test(String(error?.name ?? '')) ? error.name : 'Error';
-  return { sessao, resultados: [], erro: mensagem, detalhe: `${nome}: ${simples}${codigo}` };
+  const resultado = { sessao, resultados: [], erro: mensagem, detalhe: `${nome}: ${simples}${codigo}` };
+  const failureCode = /^[A-Z][A-Z0-9_]{1,40}$/.test(String(error?.code ?? '')) ? error.code : null;
+  const phase = /^(parse_input|open_session|send_message|await_ack|close_session|runtime)$/.test(String(error?.phase ?? ''))
+    ? error.phase : null;
+  if (failureCode) resultado.failure_code = failureCode;
+  if (phase) resultado.phase = phase;
+  return resultado;
 }
 
 async function main(argv = process.argv.slice(2), input = process.stdin) {
@@ -156,12 +185,18 @@ async function main(argv = process.argv.slice(2), input = process.stdin) {
 
 function sair(resultado, codigo) {
   // stdout em pipe é assíncrono no Node: só encerra depois do flush da linha do contrato.
+  if (contratoEmitido) return;
+  contratoEmitido = true;
   process.stdout.write(`${JSON.stringify(resultado)}` + String.fromCharCode(10), () => process.exit(codigo));
 }
+
+let contratoEmitido = false;
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   // Medido 2026-09-14 no Cloud Run: depois de sock.end() o Baileys rejeita promessas pendentes
   // sem handler, e o Node saía com exit 1 DEPOIS de obter ACKs válidos. O contrato é a linha JSON.
+  // Baileys rejeita promessas depois de sock.end() mesmo com ACKs válidos;
+  // derrubar o processo aqui transformaria entrega confirmada em 'sem ACK' e reenvio.
   process.on('unhandledRejection', (erro) => { process.stderr.write(`rejeicao_ignorada: ${erro?.name ?? 'Error'}` + String.fromCharCode(10)); });
   process.on('uncaughtException', (erro) => { process.stderr.write(`excecao_ignorada: ${erro?.name ?? 'Error'}` + String.fromCharCode(10)); });
   main().then(
