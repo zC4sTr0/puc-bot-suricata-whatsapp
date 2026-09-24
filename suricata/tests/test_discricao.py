@@ -131,7 +131,7 @@ class MadrugadaELoteTests(unittest.TestCase):
         _, rel = self.rodar(brt(15, 3), ponte)
         self.assertEqual((len(rel["eventos"]), ponte.lotes), (3, []))  # decidido, mas nada sai às 3h
         self.assertTrue(rel["entrega"]["silencio"])
-        self.rodar(brt(15, 7, 0), ponte)
+        self.rodar(brt(15, 7, 30), ponte)
         self.assertEqual(len(ponte.lotes), 1)
         (mensagem,) = ponte.lotes[0]
         self.assertTrue(mensagem["texto"].startswith("🚨 🎓 *PUC Bot*: 3 surpresas no Canvas"))
@@ -141,13 +141,13 @@ class MadrugadaELoteTests(unittest.TestCase):
     def test_publicacao_segurada_na_madrugada_nao_gera_lembrete_repetido_as_7h(self):
         ponte = PonteFalsa()
         self.rodar(brt(15, 1), ponte)
-        abre = brt(15, 7, 10)
+        abre = brt(15, 7, 40)
         self.canvas.assignments["292184"] = [{"id": 5, "name": "Quiz cedo", "points_possible": 3, "quiz_id": 5,
                                               "unlock_at": iso(abre.astimezone(timezone.utc)),
                                               "lock_at": iso((abre + timedelta(minutes=15)).astimezone(timezone.utc)),
                                               "due_at": None, "html_url": ""}]
         self.rodar(brt(15, 3), ponte)
-        _, rel = self.rodar(brt(15, 7, 0), ponte)
+        _, rel = self.rodar(brt(15, 7, 30), ponte)
         self.assertEqual([e["tipo"] for e in rel["eventos"]], [])
         self.assertEqual([[m["event_id"].split(":")[1] for m in lote] for lote in ponte.lotes], [["novo"]])
 

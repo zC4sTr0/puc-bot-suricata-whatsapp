@@ -71,7 +71,7 @@ class JanelasNovidadeTests(unittest.TestCase):
         self.canvas.assignments["292185"] = [self.quiz(1435384, self.brt(17, 10, 10), self.brt(17, 10, 25))]
         ponte = PonteFalsa()
 
-        # 07:00–11:59 é novidade útil agora, e não espera o resumo das 18:00.
+        # 07:30–11:59 é novidade útil agora, e não espera o resumo das 18:00.
         self.rodar(self.brt(16, 10), ponte)
         self.assertEqual(len(self.lotes_da_novidade(ponte)), 1)
         self.assertEqual(self.novidade()["estado"], "sent")
@@ -80,7 +80,7 @@ class JanelasNovidadeTests(unittest.TestCase):
         self.rodar(self.brt(16, 18), ponte)
         self.assertEqual([item["event_id"] for lote in ponte.lotes for item in lote],
                          ["grupo:novo:292185:1435384"])
-        self.rodar(self.brt(17, 7), ponte)
+        self.rodar(self.brt(17, 7, 30), ponte)
         self.assertEqual(len(self.lotes_da_novidade(ponte)), 1)
 
     def test_novidade_amanha_descoberta_as_1810_sai_somente_as_07(self):
@@ -93,7 +93,7 @@ class JanelasNovidadeTests(unittest.TestCase):
         self.assertEqual(self.lotes_da_novidade(ponte), [])
         self.assertEqual(self.novidade()["estado"], "pending")
 
-        self.rodar(self.brt(17, 7), ponte)
+        self.rodar(self.brt(17, 7, 30), ponte)
         self.assertEqual(len(self.lotes_da_novidade(ponte)), 1)
         self.assertEqual(self.novidade()["estado"], "sent")
 
@@ -107,7 +107,7 @@ class JanelasNovidadeTests(unittest.TestCase):
         self.assertEqual(self.lotes_da_novidade(ponte), [])
         self.assertEqual(self.novidade()["estado"], "pending")
 
-        self.rodar(self.brt(17, 7), ponte)
+        self.rodar(self.brt(17, 7, 30), ponte)
         self.assertEqual(len(self.lotes_da_novidade(ponte)), 1)
         self.assertEqual(self.novidade()["estado"], "sent")
 
@@ -144,8 +144,8 @@ class JanelasNovidadeTests(unittest.TestCase):
         self.assertIsNotNone(self.novidade())
         self.assertEqual(self.novidade()["estado"], "pending")
 
-        self.rodar(self.brt(17, 7), ponte)
-        self.rodar(self.brt(17, 7, 10), ponte)
+        self.rodar(self.brt(17, 7, 30), ponte)
+        self.rodar(self.brt(17, 7, 40), ponte)
 
         self.assertEqual(len(self.lotes_da_novidade(ponte)), 1)
         self.assertEqual(self.novidade()["estado"], "sent")

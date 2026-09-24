@@ -78,11 +78,11 @@ class Corte21hTests(unittest.TestCase):
         self.assertEqual(self.ponte.lotes, [])
         self.assertEqual([registro["estado"] for registro in self.estados_outbox()], ["pending"])
 
-        self.rodar(self.brt(16, 7))
+        self.rodar(self.brt(16, 7, 30))
         self.assertEqual(len(self.ponte.lotes), 1)
         self.assertEqual(self.estados_outbox()[0]["estado"], "sent")
 
-    def test_novidade_amanha_apos_21h_preserva_evento_para_07h(self):
+    def test_novidade_amanha_apos_21h_preserva_evento_para_0730(self):
         self.rodar(self.brt(15, 12))
         inicio, fim = self.brt(16, 10), self.brt(16, 10, 15)
         self.canvas.assignments["292184"] = [self.quiz(3, inicio, fim)]
@@ -92,7 +92,7 @@ class Corte21hTests(unittest.TestCase):
         self.assertEqual(self.ponte.lotes, [])
         self.assertEqual([registro["estado"] for registro in self.estados_outbox()], ["pending"])
 
-        self.rodar(self.brt(16, 7))
+        self.rodar(self.brt(16, 7, 30))
         self.assertEqual(len(self.ponte.lotes), 1)
         self.assertEqual(self.estados_outbox()[0]["estado"], "sent")
 
@@ -127,7 +127,7 @@ class Corte21hTests(unittest.TestCase):
             self.assertEqual([registro["estado"] for registro in self.estados_outbox()], ["pending"])
         self.assertEqual(self.ponte.lotes, [])
 
-        self.rodar(self.brt(16, 7))
+        self.rodar(self.brt(16, 7, 30))
         self.assertEqual(len(self.ponte.lotes), 1)
         self.assertEqual(self.estados_outbox()[0]["estado"], "sent")
 

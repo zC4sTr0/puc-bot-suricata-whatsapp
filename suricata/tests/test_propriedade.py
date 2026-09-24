@@ -8,7 +8,7 @@ rodada da suíte. Para toda amostra vale:
     privado/token/JID;
 (b) ``message_id`` é estável para o mesmo par (destino, event_id);
 (c) a janela de envio é fechada: todo timestamp em que o envio seria
-    autorizado (fora do silêncio) está dentro de 07:00–20:59 BRT — o corte
+    autorizado (fora do silêncio) está dentro de 07:30–20:59 BRT — o corte
     das 21h nunca autoriza envio fora da janela;
 (d) idempotência: planejar duas vezes o mesmo estado produz o mesmo
     resultado (eventos e memória).
@@ -104,13 +104,13 @@ class PropriedadesPlanejamentoTests(unittest.TestCase):
                 self.assertEqual(message_id(JID, evento.event_id), message_id(JID, evento.event_id))
                 self.assertTrue(message_id(JID, evento.event_id).startswith("3EB0"))
 
-            # (c) janela de envio fechada: autorizado ⇒ 07:00–20:59 BRT;
-            # silêncio (23–06:59) e corte 21h bloqueiam todo o resto da noite.
+            # (c) janela de envio fechada: autorizado ⇒ 07:30–20:59 BRT;
+            # silêncio (23–07:29) e corte 21h bloqueiam todo o resto da noite.
             local = agora.astimezone(BRASILIA)
             if not em_silencio(agora) and not _corte_21h(agora):
-                self.assertGreaterEqual(local.hour, 7)
+                self.assertGreaterEqual((local.hour, local.minute), (7, 30))
                 self.assertLessEqual(local.hour, 20)
-            self.assertTrue((local.hour >= 21 or local.hour < 7)
+            self.assertTrue((local.hour >= 21 or (local.hour, local.minute) < (7, 30))
                             == (_corte_21h(agora) or em_silencio(agora)),
                             f"amostra {indice}: bloqueio desalinhado da janela: {local}")
 

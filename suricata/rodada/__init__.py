@@ -12,7 +12,7 @@ Uma execução do Cloud Run Job (a cada 10 min, 24/7):
 4. decide o que vale falar no grupo (D33–D34, ``tests/test_discricao.py``): publicação e mudança só se
    forem surpresa (hoje, ou amanhã sem véspera pela frente); recado do professor só de prova/quiz de
    hoje/amanhã; ``aviso_prova`` às 12:00 da véspera (só com prova/quiz); ``vespera`` às 18:00 (só se
-   amanhã tem algo); ``lembrete`` ~15 min antes de quiz-relâmpago; nada entre 23:00 e 07:00;
+   amanhã tem algo); ``lembrete`` ~15 min antes de quiz-relâmpago; nada entre 23:00 e 07:30;
 5. com entrega ligada: grava os eventos no outbox **antes** de enviar, envia
    todos os pendentes (inclusive de rodadas anteriores) e só marca ``sent`` com
    ACK do servidor. Sem ACK volta a ``pending`` e sai de novo com o mesmo

@@ -74,13 +74,13 @@ class Corte21hAdversarialTests(unittest.TestCase):
         self.assertEqual(self.ponte.lotes, [])
         self.assertEqual(self.estados()[0]["estado"], "expirado")
 
-    def test_pending_comum_criado_antes_do_corte_nao_e_enviado_as_07h(self):
+    def test_pending_comum_criado_antes_do_corte_nao_e_enviado_as_0730(self):
         """Pendência antiga não pode ser carregada artificialmente para a manhã."""
         criado = self.brt(15, 20, 59, 59)
         self.fila.outbox.adicionar(self.registro("grupo:comum:antes-do-corte", criado), agora=criado)
 
         self.entregar_em(self.brt(15, 21, 0, 1))
-        resumo = self.entregar_em(self.brt(16, 7))
+        resumo = self.entregar_em(self.brt(16, 7, 30))
 
         self.assertEqual(resumo["pendentes_enviados"], 0)
         self.assertEqual(self.ponte.lotes, [])
@@ -94,13 +94,13 @@ class Corte21hAdversarialTests(unittest.TestCase):
         )
 
         self.entregar_em(self.brt(15, 21, 1))
-        resumo = self.entregar_em(self.brt(16, 7))
+        resumo = self.entregar_em(self.brt(16, 7, 30))
 
         self.assertEqual(resumo["pendentes_enviados"], 0)
         self.assertEqual(self.ponte.lotes, [])
         self.assertEqual(self.estados()[0]["estado"], "expirado")
 
-    def test_in_flight_recuperado_as_07h_nao_reabre_pendencia_antiga(self):
+    def test_in_flight_recuperado_as_0730_nao_reabre_pendencia_antiga(self):
         """Crash antes do corte não pode transformar uma pendência antiga em envio matinal."""
         criado = self.brt(15, 20, 59, 59)
         event_id = "grupo:crash:antes-do-corte"
@@ -108,7 +108,7 @@ class Corte21hAdversarialTests(unittest.TestCase):
         self.fila.outbox.reivindicar(event_id, agora=criado)
         self.fila.publicar()
 
-        resumo = self.entregar_em(self.brt(16, 7))
+        resumo = self.entregar_em(self.brt(16, 7, 30))
 
         self.assertEqual(resumo["pendentes_enviados"], 0)
         self.assertEqual(self.ponte.lotes, [])

@@ -11,7 +11,7 @@ from typing import Any
 
 from .horario import BRASILIA
 from .planejamento import Evento, _pode_aguardar_07h
-from .publico import Atividade
+from .publico import ABERTURA, Atividade
 
 
 def corte_21h(agora: datetime) -> bool:
@@ -21,9 +21,9 @@ def corte_21h(agora: datetime) -> bool:
 
 
 def janela_manha(agora: datetime) -> bool:
-    """A exceção só pode ser reivindicada entre 07:00 e 07:00:59 BRT."""
+    """A exceção só pode ser reivindicada entre 07:30 e 07:30:59 BRT."""
     local = agora.astimezone(BRASILIA)
-    return local.hour == 7 and local.minute == 0
+    return (local.hour, local.minute) == ABERTURA
 
 
 def autorizacao_corte(evento: Evento, agora: datetime) -> dict[str, Any] | None:

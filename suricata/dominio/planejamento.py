@@ -8,11 +8,13 @@ from typing import TYPE_CHECKING, Any
 
 from ..storage.persistencia_rodada import RETENCAO
 from .publico import (
+    ABERTURA,
     BRASILIA,
     HORA_AVISO_PROVA,
     HORA_VESPERA,
     SILENCIO,
     Atividade,
+    antes_da_abertura,
     anuncio_de_agora,
     anuncio_relevante,
     decidir,
@@ -144,17 +146,20 @@ def _chaves(valor: Any) -> set[str]:
     return {str(v) for v in valor} if isinstance(valor, list) else set()
 
 
+def _abertura(dia) -> datetime:
+    return datetime.combine(dia, datetime.min.time(), tzinfo=BRASILIA).replace(hour=ABERTURA[0], minute=ABERTURA[1])
+
+
 def _limite_manha(amanha) -> str:
-    limite = datetime.combine(amanha, datetime.min.time(), tzinfo=BRASILIA) + timedelta(hours=7)
-    return limite.astimezone(timezone.utc).isoformat()
+    return _abertura(amanha).astimezone(timezone.utc).isoformat()
 
 
 def _inicio_janela_novidade(atividade: Atividade, agora: datetime) -> datetime | None:
     """Retorna quando uma novidade não urgente pode sair, sempre em BRT.
 
     A data do evento vence a hora da detecção: no próprio dia a novidade é
-    imediata; amanhã, descoberta entre 07:00 e 11:59, também é imediata;
-    nos demais casos aguarda o próximo marco operacional (18:00 ou 07:00).
+    imediata; amanhã, descoberta entre 07:30 e 11:59, também é imediata;
+    nos demais casos aguarda o próximo marco operacional (18:00 ou 07:30).
     O helper é deliberadamente conservador para dados sem datas.
     """
     local = agora.astimezone(BRASILIA)
@@ -163,18 +168,18 @@ def _inicio_janela_novidade(atividade: Atividade, agora: datetime) -> datetime |
     if hoje in dias:
         # Novidade do próprio dia é imediata durante a janela externa. Depois
         # do corte ela continua sendo descartável, não uma novidade matinal.
-        if 7 <= local.hour < 21:
+        if not antes_da_abertura(local) and local.hour < 21:
             return None
-        if local.hour < 7:
-            return datetime.combine(hoje, datetime.min.time(), tzinfo=BRASILIA).replace(hour=7)
+        if antes_da_abertura(local):
+            return _abertura(hoje)
         return None
     amanha = hoje + timedelta(days=1)
     if amanha not in dias:
         return None
     if local.hour >= 18:
-        return datetime.combine(amanha, datetime.min.time(), tzinfo=BRASILIA).replace(hour=7)
-    if local.hour < 7:
-        return datetime.combine(hoje, datetime.min.time(), tzinfo=BRASILIA).replace(hour=7)
+        return _abertura(amanha)
+    if antes_da_abertura(local):
+        return _abertura(hoje)
     if 12 <= local.hour < 18:
         return datetime.combine(hoje, datetime.min.time(), tzinfo=BRASILIA).replace(hour=18)
     return None
@@ -183,17 +188,17 @@ def _inicio_janela_novidade(atividade: Atividade, agora: datetime) -> datetime |
 def janela_novidade(atividade: Atividade, agora: datetime) -> str:
     """Classifica a janela BRT da novidade: imediata, 18h, matinal ou silêncio.
 
-    A hora da descoberta define a janela; 07:00 é apenas o horário de
+    A hora da descoberta define a janela; 07:30 é apenas o horário de
     entrega, não um requisito da atividade.
     """
     local = agora.astimezone(BRASILIA)
     dias = dias_relevantes(atividade)
     hoje = local.date()
-    if local.hour < 7:
+    if antes_da_abertura(local):
         return "silencio"
     if hoje in dias and local.hour < 21:
         return "imediata"
-    if hoje + timedelta(days=1) in dias and 7 <= local.hour < 12:
+    if hoje + timedelta(days=1) in dias and not antes_da_abertura(local) and local.hour < 12:
         return "imediata"
     if hoje + timedelta(days=1) in dias and 12 <= local.hour < 18:
         return "18h"
@@ -253,8 +258,7 @@ def planejar_vespera(atividades: list[Atividade], memoria: dict[str, Any], agora
             del memoria_itens[chave]
     if texto is None:
         return None
-    limite = datetime.combine(amanha, datetime.min.time(), tzinfo=BRASILIA) + timedelta(hours=7)
-    return Evento("vespera", f"grupo:vespera:{amanha.isoformat()}", texto, limite.astimezone(timezone.utc).isoformat())
+    return Evento("vespera", f"grupo:vespera:{amanha.isoformat()}", texto, _limite_manha(amanha))
 
 _LISTA_URGENTE = re.compile(r"(?<!\w)(lista|exerc[ií]cios?)(?!\w)", re.IGNORECASE)
 
@@ -271,7 +275,7 @@ def _pode_aguardar_07h(evento: Evento, agora: datetime) -> bool:
     # a atividade do dia seguinte fica fora dos avisos e pode atravessar 21:00.
     if descoberta_local.hour >= 18:
         dia_da_manha = hoje + timedelta(days=1)
-    elif descoberta_local.hour < 7:
+    elif antes_da_abertura(descoberta_local):
         dia_da_manha = hoje
     else:
         return False
