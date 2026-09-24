@@ -42,11 +42,11 @@ class CorteCompatibilityTests(unittest.TestCase):
         self.assertFalse(corte_21h(datetime(2026, 9, 15, 20, 59, tzinfo=BRASILIA)))
         self.assertTrue(corte_21h(datetime(2026, 9, 15, 21, 0, tzinfo=BRASILIA)))
 
-    def test_janela_manha_somente_0700(self):
+    def test_janela_manha_somente_0730(self):
         utc = timezone.utc
-        self.assertFalse(janela_manha(datetime(2026, 9, 16, 9, 59, 59, 999999, tzinfo=utc)))
-        self.assertTrue(janela_manha(datetime(2026, 9, 16, 10, 0, 0, tzinfo=utc)))
-        self.assertFalse(janela_manha(datetime(2026, 9, 16, 10, 1, 0, tzinfo=utc)))
+        self.assertFalse(janela_manha(datetime(2026, 9, 16, 10, 29, 59, 999999, tzinfo=utc)))
+        self.assertTrue(janela_manha(datetime(2026, 9, 16, 10, 30, 0, tzinfo=utc)))
+        self.assertFalse(janela_manha(datetime(2026, 9, 16, 10, 31, 0, tzinfo=utc)))
 
     def test_evento_disponivel_contrato_completo(self):
         agora = datetime(2026, 9, 15, 12, 0, tzinfo=timezone.utc)

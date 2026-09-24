@@ -114,7 +114,7 @@ def entregar(fila: OutboxSincronizado, ponte: Any, grupo_jid: str, eventos: list
              agora: datetime | Callable[[], datetime], atividades: list[Atividade] | None = None) -> dict[str, Any]:
     outbox = fila.outbox
     momento = _agora_vivo(agora)
-    # IDs adicionados nesta chamada recebem autorização efêmera às 07:00;
+    # IDs adicionados nesta chamada recebem autorização efêmera às 07:30;
     # isso não depende de qualquer marcador gravado no JSON.
     eventos_atuais: set[str] = set()
     if _corte_21h(momento):
@@ -157,7 +157,7 @@ def entregar(fila: OutboxSincronizado, ponte: Any, grupo_jid: str, eventos: list
         return {"silencio": True, "aguardando": len(outbox.pendentes()), "expirados": corte["expirados"],
                 "pendentes_enviados": 0, "sent": 0, "sem_ack": 0, "sessao": None}
     if em_silencio(atual):
-        # Nunca de madrugada: tudo espera na fila e sai às 07:00 (o que perder o sentido expira).
+        # Nunca de madrugada: tudo espera na fila e sai às 07:30 (o que perder o sentido expira).
         fila.publicar()
         return {"silencio": True, "aguardando": len(outbox.pendentes()), "expirados": expirados_count,
                 "pendentes_enviados": 0, "sent": 0, "sem_ack": 0, "sessao": None}

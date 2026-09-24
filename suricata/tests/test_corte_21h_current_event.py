@@ -1,4 +1,4 @@
-"""Regressão: o corte noturno não deve expirar eventos criados às 07:00."""
+"""Regressão: o corte noturno não deve expirar eventos criados às 07:30."""
 from __future__ import annotations
 
 import json
@@ -34,7 +34,7 @@ class Corte21hEventoAtualTests(unittest.TestCase):
         objeto = self.objetos.ler(OUTBOX)
         return {registro["event_id"]: registro for registro in json.loads(objeto.dados or b"[]")}
 
-    def test_evento_da_rodada_das_07h_e_entregue_mas_pendente_overnight_e_cortada(self):
+    def test_evento_da_rodada_das_0730_e_entregue_mas_pendente_overnight_e_cortada(self):
         noite = self.brt(15, 21)
         pendente = "grupo:overnight:comum"
         self.fila.outbox.adicionar(
@@ -49,7 +49,7 @@ class Corte21hEventoAtualTests(unittest.TestCase):
         self.fila.publicar()
 
         atual = Evento("mudou", "grupo:mudou:rodada-07h", "mudança descoberta agora")
-        resumo = entregar(self.fila, self.ponte, JID, [atual], self.brt(16, 7))
+        resumo = entregar(self.fila, self.ponte, JID, [atual], self.brt(16, 7, 30))
 
         self.assertEqual(resumo["pendentes_enviados"], 1)
         self.assertEqual(self.ponte.lotes[0][0]["event_id"], atual.event_id)
@@ -67,7 +67,7 @@ class Corte21hEventoAtualTests(unittest.TestCase):
                 "texto": "atual",
                 "expira_em": self.brt(16, 12).astimezone(timezone.utc).isoformat(),
             },
-            agora=self.brt(16, 7),
+            agora=self.brt(16, 7, 30),
         )
         self.fila.outbox.adicionar(
             {
@@ -81,7 +81,7 @@ class Corte21hEventoAtualTests(unittest.TestCase):
         self.fila.publicar()
 
         corte = self.fila.outbox.cortar_apos_21h(
-            agora=self.brt(16, 7), eventos_atuais={atual}
+            agora=self.brt(16, 7, 30), eventos_atuais={atual}
         )
         self.fila.publicar()
 

@@ -28,7 +28,7 @@ suricata/
 │   ├── calendario.py           Páscoa, feriados nacionais e dia de aula
 │   ├── classificacao.py        normalização, entidade Atividade e tipos
 │   ├── publico.py              horários, tipos, elegibilidade e textos
-│   ├── corte_rodada.py         predicados do corte 21h e autorização 07h
+│   ├── corte_rodada.py         predicados do corte 21h e autorização 07:30
 │   ├── memoria_rodada.py       compromisso de memória pós-outbox
 │   ├── lotes.py                agrupamento de envios (F42, até 5 por mensagem)
 │   ├── relatorio.py            relatório sanitizado da rodada
@@ -69,7 +69,7 @@ suricata/
 | `agenda_manual.py` | Lê agenda JSON de objetos de estado e transforma itens válidos em atividades complementares. | `rodada.py`; testes de audiência/hardening. | `Objetos*.ler`, `publico.Atividade`, `dia/dia_provavel`; rejeita números não finitos/negativos. |
 | `rodada.py` | Compõe o runtime e mantém a fachada de imports históricos; o fluxo detalhado está nos módulos especializados. | `entrypoint.py`; testes de rodada/E2E. | `execucao`, `coleta`, `planejamento`, `agenda_manual`, Canvas, storage e ponte. |
 | `execucao.py` | Executa a rodada: lease → coleta pronta → memória/planejamento → outbox → corte → ponte → relatório. | `rodada.py`; testes de rodada, entrega, corte e caminho real. | `coleta`, `planejamento`, `agenda_manual`, `corte_rodada`, `memoria_rodada`, `lotes`, `OutboxSincronizado`, `lease_rodada.Lease`, storage, `message_id` e bridge. |
-| `corte_rodada.py` | Predicados puros do corte 21h, janela matinal e autorização 07h (estado inválido nunca autoriza). | `execucao.py` (reexport), `rodada.py`; testes de compatibilidade/corte. | `planejamento._pode_aguardar_07h`, `horario.BRASILIA`; sem I/O. |
+| `corte_rodada.py` | Predicados puros do corte 21h, janela matinal e autorização 07:30 (estado inválido nunca autoriza). | `execucao.py` (reexport), `rodada.py`; testes de compatibilidade/corte. | `planejamento._pode_aguardar_07h`, `horario.BRASILIA`; sem I/O. |
 | `memoria_rodada.py` | Consolida na memória apenas eventos duráveis no outbox; falha de ponte não consome novidade. | `execucao.executar`; testes de compatibilidade. | `horario.BRASILIA`, `planejamento.Evento`; transformação pura. |
 | `lotes.py` | Agrupa claims de novidades da mesma leva em uma mensagem (até 5; id determinístico F42). | `execucao.entregar` (reexport em `rodada`); testes de compatibilidade. | `message_id`, `publico.texto_lote`; função pura. |
 | `outbox.py` | Máquina durável `pending → in_flight → sent` ou `pending → expirado`, com lock, fencing, retry idempotente e corte atômico. | `rodada.py`; testes de outbox/concurrency. | `storage.locking.lock_arquivo`, JSON temporário/fsync/replace; só ACK válido permite `sent`. |
@@ -150,7 +150,7 @@ Todos são offline por desenho: doubles, fixtures sintéticas, diretórios tempo
 | `tests/test_caminho_real_e2e.py` | Executa `main([--mode, rodada])` com Canvas/entrega/estado falsos → pytest/unittest → `entrypoint.py`/`rodada.py`. |
 | `tests/test_canvas.py` | Testa origem, token, payload, status e sanitização → pytest/unittest → `canvas.py`. |
 | `tests/test_container_layout.py` | Testa Docker/contexto, lockfile e exclusão de auth/sessão/segredos → pytest/unittest → `Dockerfile`/árvore. |
-| `tests/test_corte_21h.py` | Testa corte normal e exceção 07:00 → pytest/unittest → `rodada.py`/`outbox.py`. |
+| `tests/test_corte_21h.py` | Testa corte normal e exceção 07:30 → pytest/unittest → `rodada.py`/`outbox.py`. |
 | `tests/test_corte_21h_adversarial.py` | Atravessa relógio, claim/ponte e estados forjados → pytest/unittest → corte/entrega. |
 | `tests/test_corte_21h_current_event.py` | Testa evento atual e autorização explícita na janela → pytest/unittest → `rodada.py`. |
 | `tests/test_delivery.py` | Testa entrega, ACK, timeout, duplicata e IDs → pytest/unittest → `delivery.py`/`outbox.py`. |
@@ -210,7 +210,7 @@ Todos são offline por desenho: doubles, fixtures sintéticas, diretórios tempo
 
 - O relógio operacional é `America/Sao_Paulo`; `publico.SILENCIO=(23,7)` impede mensagens entre 23:00 e 06:59.
 - O corte absoluto em `rodada._corte_21h` começa em 21:00: depois dele, a rodada não reivindica nem chama a ponte.
-- Eventos novos claramente públicos do Canvas que começam e terminam no dia corrente podem ser registrados como exceção para a janela de 07:00; a autorização é validada pelo conteúdo atual, não por uma flag persistida sozinha.
+- Eventos novos claramente públicos do Canvas que começam e terminam no dia corrente podem ser registrados como exceção para a janela de 07:30; a autorização é validada pelo conteúdo atual, não por uma flag persistida sozinha.
 - Às 07:00, apenas o que está explicitamente autorizado pode atravessar; os demais pendentes são expirados pelo corte. Entre 07:00 e 21:00, eventos pendentes podem ser reivindicados; entre 21:00 e 07:00, ficam aguardando ou expiram conforme contrato.
 - O relógio é revalidado depois do claim e antes do efeito externo. Se cruzar 21:00 nesse intervalo, claims voltam a `pending`, o outbox é publicado e nenhum envio ocorre.
 - O Scheduler acordar um Job não autoriza envio por si só. O corte é uma decisão em runtime, revalidada antes de claim/ponte.

@@ -66,7 +66,7 @@ flowchart LR
 ### ⏰ Quando ele roda?
 
 - A rodada **acorda a cada 10 minutos, todos os dias — inclusive fim de semana e feriado** (vai ao Canvas, prepara tudo).
-- Os avisos, porém, só saem nas **janelas da manhã** (07:00), **meio-dia** (12:00) e **véspera** (18:00, para o que vence no dia seguinte). Entre 23:00 e 07:00 é **silêncio total**.
+- Os avisos, porém, só saem nas **janelas da manhã** (07:30), **meio-dia** (12:00) e **véspera** (18:00, para o que vence no dia seguinte). Entre 23:00 e 07:30 é **silêncio total**.
 - O **calendário letivo é respeitado**: véspera não dispara para fim de semana ou feriado (só para dia de aula), e qualquer mensagem é cortada a partir das 21:00 da noite.
 - Resumo: a máquina roda 24/7, mas **mensagem no grupo só na hora certa, para o dia de aula certo**.
 

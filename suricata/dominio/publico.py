@@ -34,19 +34,25 @@ HORA_AVISO_PROVA = 12  # véspera: aviso extra só com prova/quiz amanhã
 HORA_VESPERA = 18  # véspera: resumo do dia seguinte
 ANTECEDENCIA_LEMBRETE = timedelta(minutes=15)  # > intervalo de 10 min: alguma rodada cai antes
 JANELA_CURTA = timedelta(hours=3)
-SILENCIO = (23, 7)  # nunca mandar nada entre 23:00 e 06:59 (titular, 2026-09-14)
+SILENCIO = (23, 7)  # nunca mandar nada entre 23:00 e a ABERTURA (titular, 2026-09-14)
+ABERTURA = (7, 30)  # primeiro aviso do dia às 07:30 BRT (titular, 2026-09-24)
+
+
+def antes_da_abertura(local: datetime) -> bool:
+    """Horário local (BRT) antes das 07:30."""
+    return (local.hour, local.minute) < ABERTURA
 
 
 def em_silencio(agora: datetime) -> bool:
-    hora_local = agora.astimezone(BRASILIA).hour
-    return hora_local >= SILENCIO[0] or hora_local < SILENCIO[1]
+    local = agora.astimezone(BRASILIA)
+    return local.hour >= SILENCIO[0] or antes_da_abertura(local)
 
 
 def fim_do_silencio(agora: datetime) -> datetime:
-    """Próximas 07:00 (Brasília) a partir de um momento dentro da madrugada."""
+    """Próximas 07:30 (Brasília) a partir de um momento dentro da madrugada."""
     local = agora.astimezone(BRASILIA)
     dia_ = local.date() + timedelta(days=1) if local.hour >= SILENCIO[0] else local.date()
-    return datetime(dia_.year, dia_.month, dia_.day, SILENCIO[1], tzinfo=BRASILIA)
+    return datetime(dia_.year, dia_.month, dia_.day, *ABERTURA, tzinfo=BRASILIA)
 
 
 MAX_CHARS = 1500
@@ -73,15 +79,15 @@ def quando_importa(dias: set[date], agora: datetime) -> str | None:
     """``hoje`` / ``amanha`` quando o ritmo normal NÃO cobre a tempo; senão ``None``.
 
     O ritmo normal é a véspera (12:00 para prova/quiz, 18:00 para tudo) nos dias de aula.
-    Entre 07:00 e 11:59, uma novidade de amanhã é avisada imediatamente; depois,
-    a véspera cobre o anúncio até o próximo marco (18:00 ou 07:00).
+    Entre 07:30 e 11:59, uma novidade de amanhã é avisada imediatamente; depois,
+    a véspera cobre o anúncio até o próximo marco (18:00 ou 07:30).
     """
     local = agora.astimezone(BRASILIA)
     hoje = local.date()
     if hoje in dias:
         return "hoje"
     amanha = hoje + timedelta(days=1)
-    if amanha in dias and (7 <= local.hour < HORA_AVISO_PROVA
+    if amanha in dias and (not antes_da_abertura(local) and local.hour < HORA_AVISO_PROVA
                            or local.hour >= HORA_VESPERA or not eh_dia_de_aula(amanha)):
         return "amanha"
     return None
@@ -90,7 +96,7 @@ def quando_importa(dias: set[date], agora: datetime) -> str | None:
 def decidir(atividade: Atividade, agora: datetime) -> str:
     """Filosofia do grupo: avisar só o que é surpresa e útil agora.
 
-    - ``alertar``: acontece/vence hoje, ou amanhã descoberta entre 07:00 e 11:59,
+    - ``alertar``: acontece/vence hoje, ou amanhã descoberta entre 07:30 e 11:59,
       sem véspera pela frente; quiz sem data
       nenhuma (disponível já, o quiz-surpresa típico);
     - ``ignorar_fechado``: já passou;
@@ -219,7 +225,7 @@ def _montar(linhas: list[str | None], atividade: Atividade | None = None) -> str
 def texto_novo(atividade: Atividade, agora: datetime | None = None, todas: list[Atividade] | None = None) -> str:
     """Aviso de publicação-surpresa. Diz QUANDO acontece; o texto é fixado na criação do evento."""
     if agora is not None and em_silencio(agora):
-        agora = fim_do_silencio(agora)  # escrito do ponto de vista de quem lê às 07:00
+        agora = fim_do_silencio(agora)  # escrito do ponto de vista de quem lê às 07:30
     quando_txt = quando_importa(dias_relevantes(atividade), agora) if agora is not None else None
     sufixo = {"hoje": " hoje", "amanha": " amanhã"}.get(quando_txt or "", "")
     chamada = {"quiz": f"quiz{sufixo} no Canvas!", "avaliacao": f"prova{sufixo} no Canvas!"}.get(
