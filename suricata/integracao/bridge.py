@@ -34,7 +34,7 @@ class WhatsAppBridge:
     ) -> None:
         self.storage = storage
         self.node = node
-        self.script = Path(script) if script else Path(__file__).with_name("whatsapp") / "enviar.mjs"
+        self.script = Path(script) if script else Path(__file__).resolve().parent.parent / "whatsapp" / "enviar.mjs"
         self.timeout = timeout
         self._run = run
 

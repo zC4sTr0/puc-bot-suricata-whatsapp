@@ -19,6 +19,10 @@ class BridgeTests(unittest.TestCase):
     def completed(payload, returncode=0):
         return Mock(stdout=json.dumps(payload).encode(), stderr=b"secret=must-not-leak", returncode=returncode)
 
+    def test_script_padrao_existe(self):
+        # Os demais testes injetam script=; este protege o caminho real usado em produção.
+        self.assertTrue(WhatsAppBridge(self.storage).script.is_file())
+
     def test_sessao_ausente_nao_inicia_subprocesso(self):
         self.storage.read_auth.return_value = AuthSnapshot(None, None)
         run = Mock()
