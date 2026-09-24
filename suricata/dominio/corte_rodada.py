@@ -91,7 +91,7 @@ def autorizados_persistidos(fila: Any, atividades: list[Atividade], agora: datet
             descoberta = datetime.fromisoformat(corte["descoberto_em"])
             esperado = Evento.de_atividade("novo", atividade, agora)
             if (autorizacao_corte(esperado, descoberta) == corte
-                    and janela_manha(agora)):
+                    and (janela_manha(agora) or corte_21h(agora))):
                 autorizados.add(registro["event_id"])
         except (KeyError, TypeError, ValueError):
             # Estado persistido não é evidência. Corrupção fica sem

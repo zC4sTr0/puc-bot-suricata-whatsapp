@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import tempfile
 import unittest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from suricata.dominio.corte_rodada import corte_21h, janela_manha
@@ -129,6 +129,32 @@ class TemporalHardeningTests(unittest.TestCase):
             eventos = [item for lote in ponte.lotes for item in lote]
             self.assertEqual([item["event_id"] for item in eventos], ["grupo:novo:100001:9"])
             self.assertEqual(len({item["texto"] for item in eventos}), 1)
+            registros = json.loads(objetos.ler(OUTBOX).dados)
+            self.assertEqual([r["estado"] for r in registros], ["sent"])
+
+    def test_autorizacao_corte_sobrevive_a_rodada_seguinte_antes_da_meia_noite(self):
+        # Regressão 24/09: quiz descoberto às 23:40 expirava na rodada das 23:50.
+        canvas = CanvasFalso()
+        amanha = timedelta(days=1)
+        with tempfile.TemporaryDirectory() as tmp:
+            objetos = ObjetosLocais(Path(tmp))
+            executar(objetos=objetos, canvas=canvas.cliente(), entrega_ligada=False,
+                     grupo_jid=JID, ponte=None, agora=lambda: self.brt(20))
+            canvas.assignments["100001"] = [
+                quiz(9, abre=(self.brt(10, 10) + amanha).astimezone(timezone.utc),
+                     fecha=(self.brt(10, 25) + amanha).astimezone(timezone.utc))
+            ]
+            ponte = PonteFalsa()
+            for hora, minuto in ((23, 40), (23, 50)):
+                executar(objetos=objetos, canvas=canvas.cliente(), entrega_ligada=True,
+                         grupo_jid=JID, ponte=ponte, agora=lambda h=hora, m=minuto: self.brt(h, m))
+                registros = json.loads(objetos.ler(OUTBOX).dados)
+                self.assertEqual([r["estado"] for r in registros], ["pending"])
+            self.assertEqual(ponte.lotes, [])
+            executar(objetos=objetos, canvas=canvas.cliente(), entrega_ligada=True,
+                     grupo_jid=JID, ponte=ponte, agora=lambda: self.brt(7) + amanha)
+            eventos = [item for lote in ponte.lotes for item in lote]
+            self.assertEqual([item["event_id"] for item in eventos], ["grupo:novo:100001:9"])
             registros = json.loads(objetos.ler(OUTBOX).dados)
             self.assertEqual([r["estado"] for r in registros], ["sent"])
 
